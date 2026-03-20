@@ -30,7 +30,14 @@
     "locate": "Locate",
     "goToTags": "Go to Tags",
     "goToProducts": "Go to Products",
-    "updateTag": "Update Tag"
+    "updateTag": "Update Tag",
+    "createStore": "Create store",
+    "editStore": "Edit store",
+    "deleteStore": "Delete store",
+    "save": "Save",
+    "delete": "Delete",
+    "next": "Next",
+    "back": "Back"
   },
   "status": {
     "synced": "Synced",
@@ -57,8 +64,7 @@
     "linkedProduct": "Linked Product",
     "battery": "Battery",
     "signal": "Signal",
-    "lastSync": "Last Sync"
-    ,
+    "lastSync": "Last Sync",
     "selectTag": "Select tag {{id}}",
     "selectProduct": "Select {{name}}"
   },

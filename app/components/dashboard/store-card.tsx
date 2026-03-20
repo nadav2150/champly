@@ -242,13 +242,90 @@ function FooterMeta({
   );
 }
 
-export function StoreCard({ store }: { store: StoreCardData }) {
-  const { t } = useTranslation('stores');
+function IconPencil({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      width="14"
+      height="14"
+      viewBox="0 0 16 16"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden
+    >
+      <path
+        d="M10.5 2.5l3 3L5 14H2v-3L10.5 2.5z"
+        stroke="currentColor"
+        strokeWidth="1.2"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function IconTrash({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      width="14"
+      height="14"
+      viewBox="0 0 16 16"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden
+    >
+      <path
+        d="M3 4h10M6 4V2.5h4V4M6 7v5m4-5v5M5.5 4h5l-.5 8.5h-4L5.5 4z"
+        stroke="currentColor"
+        strokeWidth="1.2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+export function StoreCard({
+  store,
+  onEdit,
+  onDelete,
+}: {
+  store: StoreCardData;
+  onEdit?: (id: string) => void;
+  onDelete?: (id: string) => void;
+}) {
+  const { t } = useTranslation(['stores', 'common']);
   const { pathname } = useLocation();
   const language = getLanguageFromPathname(pathname);
 
   return (
-    <article className="group flex h-full w-full min-w-0 flex-col overflow-hidden rounded-xl border border-content-border/90 bg-white shadow-[0px_4px_16px_-2px_rgba(0,29,34,0.1)] transition duration-200 hover:-translate-y-px hover:border-accent-mint/30 hover:shadow-[0px_8px_20px_-4px_rgba(0,29,34,0.14)]">
+    <article className="group relative flex h-full w-full min-w-0 flex-col overflow-hidden rounded-xl border border-content-border/90 bg-white shadow-[0px_4px_16px_-2px_rgba(0,29,34,0.1)] transition duration-200 hover:-translate-y-px hover:border-accent-mint/30 hover:shadow-[0px_8px_20px_-4px_rgba(0,29,34,0.14)]">
+      {(onEdit || onDelete) && (
+        <div className="absolute start-2 top-2 z-10 flex gap-1">
+          {onEdit ? (
+            <button
+              type="button"
+              onClick={() => onEdit(store.id)}
+              className="flex size-8 items-center justify-center rounded-lg border border-white/25 bg-black/35 text-white shadow-sm backdrop-blur-sm transition hover:bg-black/50"
+              aria-label={t('common:actions.editStore')}
+              title={t('common:actions.editStore')}
+            >
+              <IconPencil className="text-white" />
+            </button>
+          ) : null}
+          {onDelete ? (
+            <button
+              type="button"
+              onClick={() => onDelete(store.id)}
+              className="flex size-8 items-center justify-center rounded-lg border border-red-400/30 bg-black/35 text-red-100 shadow-sm backdrop-blur-sm transition hover:bg-red-500/25"
+              aria-label={t('common:actions.deleteStore')}
+              title={t('common:actions.deleteStore')}
+            >
+              <IconTrash className="text-red-100" />
+            </button>
+          ) : null}
+        </div>
+      )}
       <HeaderWaveArt />
 
       <div className="flex flex-1 flex-col px-3.5 pb-3.5 pt-2.5">

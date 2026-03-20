@@ -59,6 +59,17 @@ export async function listProductPairOptions(db: AppDatabase) {
     .orderBy(asc(products.name));
 }
 
+export async function listProductsWithStoreForAssignment(db: AppDatabase) {
+  return db
+    .select({
+      id: products.id,
+      name: products.name,
+      storeId: products.storeId,
+    })
+    .from(products)
+    .orderBy(asc(products.name));
+}
+
 export async function updateProductFields(
   db: AppDatabase,
   input: {

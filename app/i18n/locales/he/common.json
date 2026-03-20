@@ -30,7 +30,14 @@
     "locate": "איתור",
     "goToTags": "עבור לתגיות",
     "goToProducts": "עבור למוצרים",
-    "updateTag": "עדכן תגית"
+    "updateTag": "עדכן תגית",
+    "createStore": "צור סניף",
+    "editStore": "ערוך סניף",
+    "deleteStore": "מחק סניף",
+    "save": "שמור",
+    "delete": "מחק",
+    "next": "הבא",
+    "back": "חזרה"
   },
   "status": {
     "synced": "מסונכרן",
@@ -57,8 +64,7 @@
     "linkedProduct": "מוצר משויך",
     "battery": "סוללה",
     "signal": "קליטה",
-    "lastSync": "סנכרון אחרון"
-    ,
+    "lastSync": "סנכרון אחרון",
     "selectTag": "בחר תגית {{id}}",
     "selectProduct": "בחר {{name}}"
   },
