@@ -20,6 +20,7 @@
   "priceNis": "מחיר (ש\"ח)",
   "unit": "יחידה",
   "tagPreview": "תצוגת תגית",
+  "noTemplatePreview": "בחר תבנית כדי לראות תצוגה חיה — אותו רינדור כמו על תגית ה-ESL.",
   "template": "תבנית תצוגה",
   "templatePlaceholder": "בחר תבנית",
   "createProduct": "צור מוצר",

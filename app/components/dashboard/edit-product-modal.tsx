@@ -1,7 +1,9 @@
-import { useEffect, useId, useState } from 'react';
+import { useEffect, useId, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { DashboardOutletContext } from '../../types/dashboard-outlet-context';
 import { minorUnitsToDecimalString, parseDecimalToMinorUnits } from '../../lib/money';
+import { parseLayoutJson } from '../../lib/template-layout';
+import { LabelPreview } from './label-preview';
 
 type UnitOption = 'per_unit' | 'per_kg';
 
@@ -15,7 +17,7 @@ export type EditModalProduct = {
   categoryId: string | null;
 };
 
-type TemplateOption = { id: string; name: string };
+type TemplateOption = { id: string; name: string; layoutJson: string | null };
 
 type CategoryRow = DashboardOutletContext['categories'][number];
 
@@ -61,20 +63,49 @@ export function EditProductModal({
     }
   }, [product, open]);
 
+  const selectedTemplate = useMemo(
+    () => templates.find((tpl) => tpl.id === templateId),
+    [templates, templateId],
+  );
+
+  const layout = useMemo(() => {
+    const raw = selectedTemplate?.layoutJson;
+    if (!raw) return null;
+    return parseLayoutJson(raw);
+  }, [selectedTemplate?.layoutJson]);
+
+  const previewData = useMemo(() => {
+    const cat = categories.find((c) => c.id === categoryId);
+    const categoryDisplay = cat
+      ? t(cat.name, { defaultValue: cat.name })
+      : '';
+    const unitLabel =
+      unit === 'per_kg' ? t('common:units.perKg') : t('common:units.perUnit');
+    const displayName = name.trim() || product?.name || '';
+    const priceStr = price.trim() || '0.00';
+    return {
+      name: displayName,
+      price: `₪${priceStr}`,
+      unit: unitLabel,
+      category: categoryDisplay || '—',
+      currency: '₪',
+    };
+  }, [categories, categoryId, name, price, product?.name, t, unit]);
+
   if (!open || !product) {
     return null;
   }
 
   const activeProduct = product;
-  const displayPrice = `₪${price || '0.00'}`;
-  const unitLabel = unit === 'per_kg' ? t('common:units.perKg') : t('common:units.perUnit');
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     onSave({
       id: activeProduct.id,
       name: name.trim() || activeProduct.name,
-      priceCents: parseDecimalToMinorUnits(price.trim() || minorUnitsToDecimalString(activeProduct.priceCents)),
+      priceCents: parseDecimalToMinorUnits(
+        price.trim() || minorUnitsToDecimalString(activeProduct.priceCents),
+      ),
       unit,
       templateId: templateId.length > 0 ? templateId : null,
       categoryId: categoryId.length > 0 ? categoryId : null,
@@ -216,16 +247,19 @@ export function EditProductModal({
 
           <div className="rounded-lg border border-white/15 bg-black/20 p-3 lg:p-4">
             <p className="mb-2 text-xs font-medium text-white/50">{t('products:tagPreview')}</p>
-            <div className="mx-auto flex h-24 w-36 flex-col justify-between rounded-md border-2 border-white/30 bg-linear-to-b from-[#1a3a40] to-dashboard-bg p-2.5 shadow-inner lg:h-28 lg:w-40 lg:p-3">
-              <span className="line-clamp-2 text-center text-xs font-semibold text-white">
-                {name || activeProduct.name}
-              </span>
-              <span className="text-center text-lg font-bold text-accent-mint lg:text-xl">
-                {displayPrice}
-              </span>
-              <span className="text-center text-[10px] text-white/50">
-                {unitLabel}
-              </span>
+            <div className="flex justify-center overflow-x-auto">
+              {layout ? (
+                <LabelPreview
+                  layout={layout}
+                  data={previewData}
+                  scale={0.55}
+                  aria-label={t('products:tagPreview')}
+                />
+              ) : (
+                <div className="flex min-h-[88px] w-full max-w-[200px] items-center justify-center rounded-md border-2 border-dashed border-white/25 px-3 text-center text-xs text-white/45">
+                  {t('products:noTemplatePreview')}
+                </div>
+              )}
             </div>
           </div>
 

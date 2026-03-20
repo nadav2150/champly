@@ -15,5 +15,6 @@ export default [
     route('stores', 'routes/stores.tsx'),
     route('products', 'routes/products.tsx'),
     route('tags', 'routes/tags.tsx'),
+    route('templates', 'routes/templates.tsx'),
   ]),
 ] satisfies RouteConfig;

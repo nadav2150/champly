@@ -20,6 +20,7 @@
   "priceNis": "Price (NIS)",
   "unit": "Unit",
   "tagPreview": "Tag preview",
+  "noTemplatePreview": "Select a template to see a live preview — same render as on the ESL tag.",
   "template": "Display template",
   "templatePlaceholder": "Select a template",
   "createProduct": "Create product",

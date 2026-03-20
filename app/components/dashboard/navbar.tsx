@@ -99,6 +99,35 @@ function IconTag({ className }: { className?: string }) {
   );
 }
 
+function IconTemplate({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      width="20"
+      height="20"
+      viewBox="0 0 20 20"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden
+    >
+      <rect
+        x="3"
+        y="3"
+        width="14"
+        height="14"
+        rx="2"
+        stroke="currentColor"
+        strokeWidth="1.25"
+      />
+      <path
+        d="M3 7h14M8 7v10"
+        stroke="currentColor"
+        strokeWidth="1.25"
+      />
+    </svg>
+  );
+}
+
 function IconChart({ className }: { className?: string }) {
   return (
     <svg
@@ -234,6 +263,7 @@ export function Navbar() {
   const isStores = normalizedPath === '/stores';
   const isProducts = normalizedPath === '/products';
   const isTags = normalizedPath === '/tags';
+  const isTemplates = normalizedPath === '/templates';
 
   return (
     <>
@@ -290,6 +320,16 @@ export function Navbar() {
                 className={isTags ? 'text-dashboard-bg' : 'text-white/80'}
               />
               {t('nav.tags')}
+            </Link>
+            <Link
+              to={toLocalizedPath('/templates', language)}
+              className={isTemplates ? navPillActive : navPillInactive}
+              aria-current={isTemplates ? 'page' : undefined}
+            >
+              <IconTemplate
+                className={isTemplates ? 'text-dashboard-bg' : 'text-white/80'}
+              />
+              {t('nav.templates')}
             </Link>
             <span className="mx-1 h-[18px] w-px bg-white/15" aria-hidden />
             <span className="flex cursor-default items-center gap-2 rounded-full px-4 py-2 text-sm font-medium tracking-[-0.28px] text-white/70">
@@ -379,6 +419,14 @@ export function Navbar() {
         >
           <IconTag className="size-5" />
           {t('nav.tags')}
+        </Link>
+        <Link
+          to={toLocalizedPath('/templates', language)}
+          className={isTemplates ? mobileTabActive : mobileTabInactive}
+          aria-current={isTemplates ? 'page' : undefined}
+        >
+          <IconTemplate className="size-5" />
+          {t('nav.templates')}
         </Link>
       </nav>
     </>

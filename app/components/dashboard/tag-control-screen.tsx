@@ -1,5 +1,6 @@
 import type { ProductTableRow } from '../../db/products.server';
 import type { TagTableRow } from '../../db/tags.server';
+import type { TemplateSelectRow } from '../../db/templates.server';
 import type { DashboardOutletContext } from '../../types/dashboard-outlet-context';
 import { BatchSidebar } from './batch-sidebar';
 import { DashboardHeader } from './dashboard-header';
@@ -11,7 +12,7 @@ type SidebarData = Pick<DashboardOutletContext, 'categories' | 'zones'>;
 type ProductsProps = SidebarData & {
   variant: 'products';
   products: ProductTableRow[];
-  templates: Array<{ id: string; name: string }>;
+  templates: TemplateSelectRow[];
   productStats: { total: number; pending: number; failed: number };
 };
 

@@ -1,0 +1,28 @@
+---
+description: Cloudflare D1 database rules — always use remote, never local
+alwaysApply: true
+---
+
+# Database — Remote Only
+
+This project uses Cloudflare D1 as its database. There is **no local database** — both development and production connect to the **remote** D1 instance.
+
+## Rules
+
+- **NEVER** use `--local` flag with `wrangler d1` commands. Always use `--remote`.
+- The `wrangler.json` D1 binding has `"remote": true` — do not change this.
+- When running seeds, migrations, or queries via `wrangler d1 execute`, always pass `--remote`.
+- Do not reference or rely on `.wrangler/state/` local SQLite files — they are stale/unused.
+
+## Examples
+
+```bash
+# ✅ CORRECT
+npx wrangler d1 execute champty-db --remote --file drizzle/seed.sql
+npx wrangler d1 execute champty-db --remote --command "SELECT * FROM templates;"
+npx wrangler d1 migrations apply champty-db --remote
+
+# ❌ WRONG — never use --local
+npx wrangler d1 execute champty-db --local --file drizzle/seed.sql
+npx wrangler d1 execute champty-db --command "SELECT * FROM templates;"  # missing --remote
+```

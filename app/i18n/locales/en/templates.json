@@ -1,0 +1,30 @@
+{
+  "metaTitle": "Templates — Display Layouts",
+  "metaDescription": "Browse pre-built display templates for electronic shelf labels.",
+  "heading": "Templates",
+  "description": "These layouts are ready to use. Pick one when editing a product — the preview matches what the ESL tag will show.",
+  "kinds": {
+    "price": "Price tag",
+    "promo": "Promotion",
+    "info": "Info card",
+    "showcase": "Showcase"
+  },
+  "variants": "Variants",
+  "variantCount": "{{count}} variant(s)",
+  "noVariants": "No variants yet",
+  "createdAt": "Created",
+  "linkedProducts": "Linked products",
+  "empty": {
+    "title": "No templates available",
+    "description": "System templates have not been loaded yet. Run the database seed to add default layouts."
+  },
+  "gallery": {
+    "samplePreview": "Sample label preview",
+    "noLayout": "No layout defined",
+    "tagModel": "Tag model",
+    "dimensions": "{{w}} × {{h}} px",
+    "preview": "Preview",
+    "closePreview": "Close preview",
+    "elementCount": "{{count}} element(s)"
+  }
+}

@@ -7,12 +7,14 @@ import homeEn from './locales/en/home.json';
 import productsEn from './locales/en/products.json';
 import storesEn from './locales/en/stores.json';
 import tagsEn from './locales/en/tags.json';
+import templatesEn from './locales/en/templates.json';
 import authEn from './locales/en/auth.json';
 import commonHe from './locales/he/common.json';
 import homeHe from './locales/he/home.json';
 import productsHe from './locales/he/products.json';
 import storesHe from './locales/he/stores.json';
 import tagsHe from './locales/he/tags.json';
+import templatesHe from './locales/he/templates.json';
 import authHe from './locales/he/auth.json';
 
 export const resources = {
@@ -22,6 +24,7 @@ export const resources = {
     products: productsEn,
     stores: storesEn,
     tags: tagsEn,
+    templates: templatesEn,
     auth: authEn,
   },
   he: {
@@ -30,6 +33,7 @@ export const resources = {
     products: productsHe,
     stores: storesHe,
     tags: tagsHe,
+    templates: templatesHe,
     auth: authHe,
   },
 } as const;

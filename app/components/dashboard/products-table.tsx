@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useFetcher } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { minorUnitsToDecimalString } from '../../lib/money';
+import type { TemplateSelectRow } from '../../db/templates.server';
 import type { DashboardOutletContext } from '../../types/dashboard-outlet-context';
 import { CreateProductModal } from './create-product-modal';
 import { DeleteProductDialog } from './delete-product-dialog';
@@ -93,7 +94,7 @@ const productKeyByName: Record<string, string> = {
 
 type ProductsTableProps = {
   initialProducts: Product[];
-  templates: Array<{ id: string; name: string }>;
+  templates: TemplateSelectRow[];
   categories: DashboardOutletContext['categories'];
 };
 
