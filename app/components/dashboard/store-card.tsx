@@ -1,5 +1,7 @@
 import type { ComponentType } from 'react';
-import { Link } from 'react-router';
+import { Link, useLocation } from 'react-router';
+import { useTranslation } from 'react-i18next';
+import { getLanguageFromPathname, toLocalizedPath } from '../../i18n/config';
 
 export type StoreCardData = {
   id: string;
@@ -36,7 +38,7 @@ function HeaderWaveArt() {
           opacity="0.5"
         />
       </svg>
-      <div className="absolute right-2 top-2 flex size-7 items-center justify-center rounded-lg border border-white/20 bg-white/10 backdrop-blur-sm">
+      <div className="absolute end-2 top-2 flex size-7 items-center justify-center rounded-lg border border-white/20 bg-white/10 backdrop-blur-sm">
         <IconStoreMini className="size-3.5 text-white" />
       </div>
     </div>
@@ -241,6 +243,10 @@ function FooterMeta({
 }
 
 export function StoreCard({ store }: { store: StoreCardData }) {
+  const { t } = useTranslation('stores');
+  const { pathname } = useLocation();
+  const language = getLanguageFromPathname(pathname);
+
   return (
     <article className="group flex h-full w-full min-w-0 flex-col overflow-hidden rounded-xl border border-content-border/90 bg-white shadow-[0px_4px_16px_-2px_rgba(0,29,34,0.1)] transition duration-200 hover:-translate-y-px hover:border-accent-mint/30 hover:shadow-[0px_8px_20px_-4px_rgba(0,29,34,0.14)]">
       <HeaderWaveArt />
@@ -248,17 +254,17 @@ export function StoreCard({ store }: { store: StoreCardData }) {
       <div className="flex flex-1 flex-col px-3.5 pb-3.5 pt-2.5">
         <div className="flex flex-wrap gap-1.5">
           <StatusPill
-            label="Connected"
+            label={t('connected')}
             value={store.connectedTags}
             variant="mint"
           />
           <StatusPill
-            label="Pending"
+            label={t('pending')}
             value={store.pendingUpdates}
             variant="amber"
           />
           <StatusPill
-            label="Failed"
+            label={t('failed')}
             value={store.failedUpdates}
             variant="rose"
           />
@@ -280,39 +286,39 @@ export function StoreCard({ store }: { store: StoreCardData }) {
           <FooterMeta
             icon={IconTag}
             value={store.connectedTags}
-            label="ESL online"
+            label={t('eslOnline')}
           />
           <FooterMeta
             icon={IconQueue}
             value={store.pendingUpdates}
-            label="in queue"
+            label={t('inQueue')}
           />
           <FooterMeta
             icon={IconAlert}
             value={store.failedUpdates}
-            label="alerts"
+            label={t('alerts')}
           />
         </div>
 
         <div className="mt-2 flex items-center gap-1.5 text-[10px] text-content-primary/40">
           <IconClock className="size-3 shrink-0 text-accent-mint" />
-          <span className="font-medium text-content-primary/55">Sync</span>
+          <span className="font-medium text-content-primary/55">{t('sync')}</span>
           <span>{store.lastSync}</span>
         </div>
 
         <div className="mt-3 flex flex-wrap justify-end gap-1.5">
           <Link
-            to="/products"
+            to={toLocalizedPath('/products', language)}
             className="inline-flex items-center gap-0.5 rounded-full border border-content-border bg-white px-2.5 py-1 text-xs font-semibold text-content-primary shadow-sm transition hover:border-accent-mint/40 hover:bg-surface-subtle"
           >
-            Products
+            {t('products')}
             <IconChevron className="size-3 text-content-primary/35" />
           </Link>
           <Link
-            to="/tags"
+            to={toLocalizedPath('/tags', language)}
             className="inline-flex items-center gap-0.5 rounded-full border border-white bg-accent-mint px-2.5 py-1 text-xs font-semibold text-accent-mint-text shadow-[0px_0px_0px_1px_#162021] transition hover:brightness-95"
           >
-            Tags
+            {t('tags')}
             <IconChevron className="size-3 text-accent-mint-text/70" />
           </Link>
         </div>

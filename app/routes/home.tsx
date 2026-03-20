@@ -1,12 +1,16 @@
 import type { Route } from './+types/home';
 import { HomeDashboard } from '../components/dashboard/home-dashboard';
+import { isSupportedLanguage } from '../i18n/config';
 
-export function meta({}: Route.MetaArgs) {
+export function meta({ params }: Route.MetaArgs) {
+  const isHebrew = isSupportedLanguage(params.lang) && params.lang === 'he';
   return [
-    { title: 'Home — Tag Control' },
+    { title: isHebrew ? 'בית — שליטת תגיות' : 'Home — Tag Control' },
     {
       name: 'description',
-      content: 'Store tag control overview and quick actions.',
+      content: isHebrew
+        ? 'סקירת שליטת תגיות בחנות ופעולות מהירות.'
+        : 'Store tag control overview and quick actions.',
     },
   ];
 }

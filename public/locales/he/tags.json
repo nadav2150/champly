@@ -1,0 +1,23 @@
+{
+  "metaTitle": "תגיות — ניטור חומרה",
+  "metaDescription": "ניטור ושליטה בתגיות מדף פיזיות: סוללה, קליטה, קישוריות ושיוך.",
+  "heading": "תגיות",
+  "subheading": "ניטור ושליטה בתגיות מדף פיזיות",
+  "connected": "מחובר",
+  "lowBat": "סוללה חלשה",
+  "offline": "מנותק",
+  "sync": "סנכרון",
+  "allTags": "כל התגיות",
+  "online": "מחובר",
+  "lowBattery": "סוללה חלשה",
+  "tagInventory": "מלאי תגיות",
+  "unassigned": "לא משויך",
+  "strong": "חזק",
+  "weak": "חלש",
+  "noSignal": "ללא קליטה",
+  "tagsLowBattery": "{{count}} תגית עם סוללה חלשה — בדיקה עכשיו",
+  "tagsLowBattery_plural": "{{count}} תגיות עם סוללה חלשה — בדיקה עכשיו",
+  "tagsOffline": "{{count}} תגית מנותקת",
+  "tagsOffline_plural": "{{count}} תגיות מנותקות",
+  "allTagsHealthy": "כל התגיות תקינות"
+}

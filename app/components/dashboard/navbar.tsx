@@ -1,4 +1,11 @@
 import { Link, useLocation } from 'react-router';
+import { useTranslation } from 'react-i18next';
+import { LanguageToggle } from './language-toggle';
+import {
+  getLanguageFromPathname,
+  isSupportedLanguage,
+  toLocalizedPath,
+} from '../../i18n/config';
 
 function IconHome({ className }: { className?: string }) {
   return (
@@ -188,106 +195,114 @@ const navPillActive =
   'flex items-center gap-2 rounded-full bg-white py-2 pl-2 pr-4 text-sm font-medium tracking-[-0.28px] text-dashboard-bg';
 
 export function Navbar() {
+  const { t } = useTranslation('common');
   const { pathname } = useLocation();
-  const isHome = pathname === '/';
-  const isStores = pathname === '/stores';
-  const isProducts = pathname === '/products';
-  const isTags = pathname === '/tags';
+  const language = getLanguageFromPathname(pathname);
+  const pathSegments = pathname.split('/').filter(Boolean);
+  const basePath = isSupportedLanguage(pathSegments[0])
+    ? `/${pathSegments.slice(1).join('/')}`
+    : pathname;
+  const normalizedPath = basePath === '/' ? '/' : basePath.replace(/\/$/, '') || '/';
+  const isHome = normalizedPath === '/';
+  const isStores = normalizedPath === '/stores';
+  const isProducts = normalizedPath === '/products';
+  const isTags = normalizedPath === '/tags';
 
   return (
     <header
       className="flex w-full max-w-none flex-wrap items-center justify-between gap-x-4 gap-y-4"
-      aria-label="Main navigation"
+      aria-label={t('nav.main')}
     >
       <div className="flex min-w-0 flex-wrap items-center gap-x-8 gap-y-3 lg:gap-12">
         <div
           className="relative size-9 overflow-hidden rounded-lg border border-dashboard-border bg-dashboard-card shadow-[0px_0px_0px_1px_#0d171a]"
           aria-hidden
         >
-          <div className="absolute left-[7px] top-2 h-5 w-2.5 rounded-sm bg-accent-mint" />
-          <div className="absolute left-[17px] top-2 h-5 w-3 rounded-br-sm rounded-tr-sm rounded-bl-[32px] rounded-tl-[32px] bg-[#475c5f]" />
+          <div className="absolute start-[7px] top-2 h-5 w-2.5 rounded-sm bg-accent-mint" />
+          <div className="absolute start-[17px] top-2 h-5 w-3 rounded-br-sm rounded-tr-sm rounded-bl-[32px] rounded-tl-[32px] bg-[#475c5f]" />
         </div>
         <nav className="flex items-center gap-1.5" aria-label="Primary">
           <Link
-            to="/"
+            to={toLocalizedPath('/', language)}
             className={isHome ? navPillActive : navPillInactive}
             aria-current={isHome ? 'page' : undefined}
           >
             <IconHome
               className={isHome ? 'text-dashboard-bg' : 'text-white/80'}
             />
-            Home
+            {t('nav.home')}
           </Link>
           <Link
-            to="/stores"
+            to={toLocalizedPath('/stores', language)}
             className={isStores ? navPillActive : navPillInactive}
             aria-current={isStores ? 'page' : undefined}
           >
             <IconStore
               className={isStores ? 'text-dashboard-bg' : 'text-white/80'}
             />
-            Stores
+            {t('nav.stores')}
           </Link>
           <Link
-            to="/products"
+            to={toLocalizedPath('/products', language)}
             className={isProducts ? navPillActive : navPillInactive}
             aria-current={isProducts ? 'page' : undefined}
           >
             <IconPackage
               className={isProducts ? 'text-dashboard-bg' : 'text-white/80'}
             />
-            Products
+            {t('nav.products')}
           </Link>
           <Link
-            to="/tags"
+            to={toLocalizedPath('/tags', language)}
             className={isTags ? navPillActive : navPillInactive}
             aria-current={isTags ? 'page' : undefined}
           >
             <IconTag
               className={isTags ? 'text-dashboard-bg' : 'text-white/80'}
             />
-            Tags
+            {t('nav.tags')}
           </Link>
           <span className="mx-1 h-[18px] w-px bg-white/15" aria-hidden />
           <span className="flex cursor-default items-center gap-2 rounded-full px-4 py-2 text-sm font-medium tracking-[-0.28px] text-white/70">
             <IconChart />
-            Monitoring
+            {t('nav.monitoring')}
           </span>
         </nav>
       </div>
       <div className="flex items-center gap-4">
         <div className="relative h-10 min-w-[200px] max-w-[349px] flex-1 overflow-hidden rounded-full border border-dashboard-border bg-dashboard-card shadow-[0px_0px_0px_1px_#00161a]">
-          <div className="absolute left-3 top-1/2 flex -translate-y-1/2 items-center gap-2 pr-3">
+          <div className="absolute start-3 top-1/2 flex -translate-y-1/2 items-center gap-2 pe-3">
             <IconSearch className="text-white/50" />
             <span className="text-sm text-white/17">
-              Search products or tags...
+              {t('nav.searchPlaceholder')}
             </span>
           </div>
         </div>
-        <div className="relative flex items-center gap-2.5">
+          <div className="relative flex items-center gap-2.5">
+            <LanguageToggle />
           <div className="relative">
             <button
               type="button"
               className="rounded-full border border-dashboard-tabbar bg-dashboard-bg p-2 shadow-[0px_0px_0px_1px_#00161a]"
-              aria-label="Notifications"
+              aria-label={t('nav.notifications')}
             >
               <IconBell className="text-white/80" />
             </button>
             <span
-              className="absolute -right-0.5 -top-0.5 size-[7px] rounded-full bg-red-500 ring-2 ring-dashboard-bg"
+              className="absolute -end-0.5 -top-0.5 size-[7px] rounded-full bg-red-500 ring-2 ring-dashboard-bg"
               aria-hidden
             />
           </div>
           <button
             type="button"
             className="rounded-full border border-dashboard-tabbar bg-dashboard-bg p-2 shadow-[0px_0px_0px_1px_#00161a]"
-            aria-label="Settings"
+            aria-label={t('nav.settings')}
           >
             <IconSettings className="text-white/80" />
           </button>
           <div
             className="size-9 shrink-0 rounded-full bg-accent-mint/40 ring-2 ring-dashboard-border"
-            aria-label="User avatar"
+            aria-label={t('nav.avatar')}
             role="img"
           />
         </div>

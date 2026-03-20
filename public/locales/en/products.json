@@ -1,0 +1,45 @@
+{
+  "metaTitle": "Products — Catalog & Pricing",
+  "metaDescription": "Manage your product catalog, categories, and pricing. Sync prices to electronic shelf labels.",
+  "heading": "Products",
+  "subheading": "Manage your catalog and pricing",
+  "total": "Total",
+  "pending": "Pending",
+  "issues": "Issues",
+  "allProducts": "All Products",
+  "byCategory": "By Category",
+  "recentlyUpdated": "Recently Updated",
+  "productsNeedSync": "{{count}} products need price sync",
+  "catalogTitle": "Product Catalog",
+  "allProductsFilter": "All products",
+  "syncedFilter": "Synced",
+  "pendingFilter": "Pending",
+  "failedFilter": "Failed",
+  "editProduct": "Edit product",
+  "productName": "Product name",
+  "priceNis": "Price (NIS)",
+  "unit": "Unit",
+  "tagPreview": "Tag preview"
+  ,
+  "categories": {
+    "fruitsVegetables": "Fruits & Vegetables",
+    "drinks": "Drinks",
+    "dairy": "Dairy",
+    "bakery": "Bakery",
+    "snacksSweets": "Snacks & Sweets"
+  },
+  "items": {
+    "tomato": "Tomato",
+    "banana": "Banana",
+    "apple": "Apple",
+    "milk1l": "Milk 1L",
+    "cottageCheese": "Cottage Cheese",
+    "orangeJuice": "Orange Juice",
+    "whiteBread": "White Bread",
+    "chocolateBar": "Chocolate Bar",
+    "water15l": "Water 1.5L",
+    "potatoChips": "Potato Chips",
+    "cucumber": "Cucumber",
+    "greekYogurt": "Greek Yogurt"
+  }
+}

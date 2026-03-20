@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { Tag } from './tag-product';
 import { TAGS_DATA } from './tag-product';
 import { HwStatus, SignalBars } from './tag-status';
@@ -78,15 +79,31 @@ function BatteryBar({ percent }: { percent: number }) {
 
 type TagFilterKey = 'all' | 'online' | 'offline' | 'low_battery' | 'unassigned';
 
-const FILTER_PILLS: { key: TagFilterKey; label: string }[] = [
-  { key: 'all', label: 'All Tags' },
-  { key: 'online', label: 'Online' },
-  { key: 'offline', label: 'Offline' },
-  { key: 'low_battery', label: 'Low Battery' },
-  { key: 'unassigned', label: 'Unassigned' },
+const FILTER_PILLS: { key: TagFilterKey; labelKey: string }[] = [
+  { key: 'all', labelKey: 'tags:allTags' },
+  { key: 'online', labelKey: 'tags:online' },
+  { key: 'offline', labelKey: 'tags:offline' },
+  { key: 'low_battery', labelKey: 'tags:lowBattery' },
+  { key: 'unassigned', labelKey: 'tags:unassigned' },
 ];
 
+const productKeyByName: Record<string, string> = {
+  Tomato: 'products:items.tomato',
+  Banana: 'products:items.banana',
+  Apple: 'products:items.apple',
+  'Milk 1L': 'products:items.milk1l',
+  'Cottage Cheese': 'products:items.cottageCheese',
+  'Orange Juice': 'products:items.orangeJuice',
+  'White Bread': 'products:items.whiteBread',
+  'Chocolate Bar': 'products:items.chocolateBar',
+  'Water 1.5L': 'products:items.water15l',
+  'Potato Chips': 'products:items.potatoChips',
+  Cucumber: 'products:items.cucumber',
+  'Greek Yogurt': 'products:items.greekYogurt',
+};
+
 export function TagsTable() {
+  const { t } = useTranslation(['common', 'tags']);
   const [tags, setTags] = useState<Tag[]>(TAGS_DATA);
   const [filter, setFilter] = useState<TagFilterKey>('all');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -137,13 +154,13 @@ export function TagsTable() {
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex flex-wrap items-center gap-4">
               <div className="flex items-center gap-3 text-base font-medium">
-                <span className="text-black">Tag Inventory</span>
+                <span className="text-black">{t('tags:tagInventory')}</span>
                 <span className="text-sm text-black/30">{tags.length}</span>
               </div>
               <span className="hidden h-[26px] w-px bg-black/10 sm:block" />
-              <div className="flex w-full max-w-[270px] items-center gap-2 rounded-[10px] border border-[#ddd] bg-white py-1.5 pl-2 pr-3 sm:w-[270px]">
+              <div className="flex w-full max-w-[270px] items-center gap-2 rounded-[10px] border border-[#ddd] bg-white py-1.5 ps-2 pe-3 sm:w-[270px]">
                 <IconSearch className="text-black/40" />
-                <span className="text-sm text-black/40">Search by Tag ID</span>
+                <span className="text-sm text-black/40">{t('common:table.searchTagId')}</span>
               </div>
             </div>
             <button
@@ -152,11 +169,11 @@ export function TagsTable() {
               disabled={selectedIds.size === 0}
               className="rounded-full border border-dashboard-border bg-dashboard-card px-4 py-2 text-sm font-medium text-white shadow-sm disabled:cursor-not-allowed disabled:opacity-40"
             >
-              Bulk Sync
+              {t('common:actions.bulkSync')}
             </button>
           </div>
           <div className="flex flex-wrap gap-2">
-            {FILTER_PILLS.map(({ key, label }) => (
+            {FILTER_PILLS.map(({ key, labelKey }) => (
               <button
                 key={key}
                 type="button"
@@ -167,14 +184,14 @@ export function TagsTable() {
                     : 'bg-white text-black/70 ring-1 ring-black/10 hover:bg-surface-subtle'
                 }`}
               >
-                {label}
+                {t(labelKey)}
               </button>
             ))}
           </div>
         </div>
         <div className="min-h-0 flex-1 overflow-auto p-3">
           <div className="overflow-x-auto rounded-lg border border-content-border bg-white shadow-sm">
-            <table className="w-full min-w-[920px] border-collapse text-left text-sm">
+            <table className="w-full min-w-[920px] border-collapse text-start text-sm">
               <thead>
                 <tr className="border-b border-content-border bg-surface-subtle/50">
                   <th className="w-12 p-3" scope="col">
@@ -182,20 +199,20 @@ export function TagsTable() {
                       type="button"
                       onClick={toggleSelectAll}
                       className="mx-auto flex size-5 items-center justify-center rounded border border-content-border bg-white shadow-sm"
-                      aria-label="Select all rows"
+                      aria-label={t('common:table.selectAllRows')}
                     >
                       {selectedIds.size === filtered.length && filtered.length > 0 ? (
                         <span className="text-churn-low">✓</span>
                       ) : null}
                     </button>
                   </th>
-                  <th className="w-28 p-3" scope="col"><HeaderCell>Tag ID</HeaderCell></th>
-                  <th className="p-3" scope="col"><HeaderCell>Linked Product</HeaderCell></th>
-                  <th className="w-36 p-3" scope="col"><HeaderCell>Battery</HeaderCell></th>
-                  <th className="w-28 p-3" scope="col"><HeaderCell>Signal</HeaderCell></th>
-                  <th className="w-28 p-3" scope="col"><HeaderCell>Status</HeaderCell></th>
-                  <th className="w-28 p-3" scope="col"><HeaderCell>Last Sync</HeaderCell></th>
-                  <th className="w-40 p-3" scope="col"><HeaderCell>Action</HeaderCell></th>
+                  <th className="w-28 p-3" scope="col"><HeaderCell>{t('common:table.tagId')}</HeaderCell></th>
+                  <th className="p-3" scope="col"><HeaderCell>{t('common:table.linkedProduct')}</HeaderCell></th>
+                  <th className="w-36 p-3" scope="col"><HeaderCell>{t('common:table.battery')}</HeaderCell></th>
+                  <th className="w-28 p-3" scope="col"><HeaderCell>{t('common:table.signal')}</HeaderCell></th>
+                  <th className="w-28 p-3" scope="col"><HeaderCell>{t('common:table.syncStatus')}</HeaderCell></th>
+                  <th className="w-28 p-3" scope="col"><HeaderCell>{t('common:table.lastSync')}</HeaderCell></th>
+                  <th className="w-40 p-3" scope="col"><HeaderCell>{t('common:table.action')}</HeaderCell></th>
                 </tr>
               </thead>
               <tbody>
@@ -213,7 +230,7 @@ export function TagsTable() {
                               ? 'border-[#028254] bg-churn-low text-white'
                               : 'border-content-border bg-white'
                           }`}
-                          aria-label={`Select tag ${tag.tagId}`}
+                          aria-label={t('common:table.selectTag', { id: tag.tagId })}
                         >
                           {selected ? '✓' : ''}
                         </button>
@@ -225,9 +242,11 @@ export function TagsTable() {
                       </td>
                       <td className="p-3 align-middle">
                         {tag.linkedProduct ? (
-                          <span className="text-sm text-[#18171c]">{tag.linkedProduct}</span>
+                          <span className="text-sm text-[#18171c]">
+                            {t(productKeyByName[tag.linkedProduct] ?? tag.linkedProduct)}
+                          </span>
                         ) : (
-                          <span className="text-xs italic text-churn-med">— Unassigned —</span>
+                          <span className="text-xs italic text-churn-med">{t('common:table.unassigned')}</span>
                         )}
                       </td>
                       <td className="p-3 align-middle">
@@ -250,7 +269,7 @@ export function TagsTable() {
                               className="inline-flex items-center gap-1 rounded-[10px] border border-accent-mint/30 bg-accent-mint/10 px-2.5 py-1.5 text-xs font-medium text-churn-low shadow-sm"
                             >
                               <IconLink className="shrink-0" />
-                              Pair
+                              {t('common:actions.pair')}
                             </button>
                           ) : (
                             <button
@@ -258,7 +277,7 @@ export function TagsTable() {
                               className="inline-flex items-center gap-1 rounded-[10px] border border-[#ddd] bg-white px-2.5 py-1.5 text-xs font-medium text-[#18171c] shadow-sm"
                             >
                               <IconSwap className="shrink-0" />
-                              Replace
+                              {t('common:actions.replace')}
                             </button>
                           )}
                           <button
@@ -266,7 +285,7 @@ export function TagsTable() {
                             className="inline-flex items-center gap-1 rounded-[10px] border border-blue-200 bg-blue-50 px-2.5 py-1.5 text-xs font-medium text-blue-600 shadow-sm"
                           >
                             <IconLocate className="shrink-0" />
-                            Locate
+                            {t('common:actions.locate')}
                           </button>
                         </div>
                       </td>

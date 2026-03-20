@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { EditProductModal } from './edit-product-modal';
 import type { Product } from './tag-product';
 import { PRODUCTS_DATA } from './tag-product';
@@ -50,11 +51,11 @@ function HeaderCell({ children }: { children: ReactNode }) {
 
 type FilterKey = 'all' | TagSyncStatus;
 
-const FILTER_PILLS: { key: FilterKey; label: string }[] = [
-  { key: 'all', label: 'All products' },
-  { key: 'updated', label: 'Synced' },
-  { key: 'pending', label: 'Pending' },
-  { key: 'failed', label: 'Failed' },
+const FILTER_PILLS: { key: FilterKey; labelKey: string }[] = [
+  { key: 'all', labelKey: 'products:allProductsFilter' },
+  { key: 'updated', labelKey: 'products:syncedFilter' },
+  { key: 'pending', labelKey: 'products:pendingFilter' },
+  { key: 'failed', labelKey: 'products:failedFilter' },
 ];
 
 const CATEGORY_EMOJI: Record<string, string> = {
@@ -65,7 +66,31 @@ const CATEGORY_EMOJI: Record<string, string> = {
   'Snacks & Sweets': '⭐',
 };
 
+const categoryKeyByName: Record<string, string> = {
+  'Fruits & Vegetables': 'products:categories.fruitsVegetables',
+  Drinks: 'products:categories.drinks',
+  Dairy: 'products:categories.dairy',
+  Bakery: 'products:categories.bakery',
+  'Snacks & Sweets': 'products:categories.snacksSweets',
+};
+
+const productKeyByName: Record<string, string> = {
+  Tomato: 'products:items.tomato',
+  Banana: 'products:items.banana',
+  Apple: 'products:items.apple',
+  'Milk 1L': 'products:items.milk1l',
+  'Cottage Cheese': 'products:items.cottageCheese',
+  'Orange Juice': 'products:items.orangeJuice',
+  'White Bread': 'products:items.whiteBread',
+  'Chocolate Bar': 'products:items.chocolateBar',
+  'Water 1.5L': 'products:items.water15l',
+  'Potato Chips': 'products:items.potatoChips',
+  Cucumber: 'products:items.cucumber',
+  'Greek Yogurt': 'products:items.greekYogurt',
+};
+
 export function ProductsTable() {
+  const { t } = useTranslation(['common', 'products']);
   const [products, setProducts] = useState<Product[]>(PRODUCTS_DATA);
   const [statusFilter, setStatusFilter] = useState<FilterKey>('all');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -133,13 +158,13 @@ export function ProductsTable() {
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="flex flex-wrap items-center gap-4">
                 <div className="flex items-center gap-3 text-base font-medium">
-                  <span className="text-black">Product Catalog</span>
+                  <span className="text-black">{t('products:catalogTitle')}</span>
                   <span className="text-sm text-black/30">{products.length}</span>
                 </div>
                 <span className="hidden h-[26px] w-px bg-black/10 sm:block" />
-                <div className="flex w-full max-w-[270px] items-center gap-2 rounded-[10px] border border-[#ddd] bg-white py-1.5 pl-2 pr-3 sm:w-[270px]">
+                <div className="flex w-full max-w-[270px] items-center gap-2 rounded-[10px] border border-[#ddd] bg-white py-1.5 ps-2 pe-3 sm:w-[270px]">
                   <IconSearch className="text-black/40" />
-                  <span className="text-sm text-black/40">Search products</span>
+                  <span className="text-sm text-black/40">{t('common:table.searchProducts')}</span>
                 </div>
               </div>
               <button
@@ -148,11 +173,11 @@ export function ProductsTable() {
                 disabled={selectedIds.size === 0}
                 className="rounded-full border border-dashboard-border bg-dashboard-card px-4 py-2 text-sm font-medium text-white shadow-sm disabled:cursor-not-allowed disabled:opacity-40"
               >
-                Bulk price update
+                {t('common:actions.bulkPriceUpdate')}
               </button>
             </div>
             <div className="flex flex-wrap gap-2">
-              {FILTER_PILLS.map(({ key, label }) => (
+              {FILTER_PILLS.map(({ key, labelKey }) => (
                 <button
                   key={key}
                   type="button"
@@ -163,14 +188,14 @@ export function ProductsTable() {
                       : 'bg-white text-black/70 ring-1 ring-black/10 hover:bg-surface-subtle'
                   }`}
                 >
-                  {label}
+                  {t(labelKey)}
                 </button>
               ))}
             </div>
           </div>
           <div className="min-h-0 flex-1 overflow-auto p-3">
             <div className="overflow-x-auto rounded-lg border border-content-border bg-white shadow-sm">
-              <table className="w-full min-w-[760px] border-collapse text-left text-sm">
+              <table className="w-full min-w-[760px] border-collapse text-start text-sm">
                 <thead>
                   <tr className="border-b border-content-border bg-surface-subtle/50">
                     <th className="w-12 p-3" scope="col">
@@ -178,18 +203,18 @@ export function ProductsTable() {
                         type="button"
                         onClick={toggleSelectAll}
                         className="mx-auto flex size-5 items-center justify-center rounded border border-content-border bg-white shadow-sm"
-                        aria-label="Select all rows"
+                        aria-label={t('common:table.selectAllRows')}
                       >
                         {selectedIds.size === filtered.length && filtered.length > 0 ? (
                           <span className="text-churn-low">✓</span>
                         ) : null}
                       </button>
                     </th>
-                    <th className="p-3" scope="col"><HeaderCell>Name</HeaderCell></th>
-                    <th className="w-36 p-3" scope="col"><HeaderCell>Category</HeaderCell></th>
-                    <th className="w-24 p-3" scope="col"><HeaderCell>Price</HeaderCell></th>
-                    <th className="w-32 p-3" scope="col"><HeaderCell>Sync Status</HeaderCell></th>
-                    <th className="w-36 p-3" scope="col"><HeaderCell>Action</HeaderCell></th>
+                    <th className="p-3" scope="col"><HeaderCell>{t('common:table.name')}</HeaderCell></th>
+                    <th className="w-36 p-3" scope="col"><HeaderCell>{t('common:table.category')}</HeaderCell></th>
+                    <th className="w-24 p-3" scope="col"><HeaderCell>{t('common:table.price')}</HeaderCell></th>
+                    <th className="w-32 p-3" scope="col"><HeaderCell>{t('common:table.syncStatus')}</HeaderCell></th>
+                    <th className="w-36 p-3" scope="col"><HeaderCell>{t('common:table.action')}</HeaderCell></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -197,6 +222,8 @@ export function ProductsTable() {
                     const selected = selectedIds.has(product.id);
                     const rowBg = selected ? 'bg-surface-muted' : 'bg-white hover:bg-surface-subtle/80';
                     const emoji = CATEGORY_EMOJI[product.category] ?? '📦';
+                    const translatedName = t(productKeyByName[product.name] ?? product.name);
+                    const translatedCategory = t(categoryKeyByName[product.category] ?? product.category);
                     return (
                       <tr key={product.id} className={`border-b border-black/6 ${rowBg}`}>
                         <td className="p-3 align-middle">
@@ -208,7 +235,7 @@ export function ProductsTable() {
                                 ? 'border-[#028254] bg-churn-low text-white'
                                 : 'border-content-border bg-white'
                             }`}
-                            aria-label={`Select ${product.name}`}
+                            aria-label={t('common:table.selectProduct', { name: translatedName })}
                           >
                             {selected ? '✓' : ''}
                           </button>
@@ -218,10 +245,10 @@ export function ProductsTable() {
                             <div className="flex size-9 shrink-0 items-center justify-center rounded-md border border-[#d8d8d8] bg-white p-1 shadow-sm">
                               <span className="text-lg" aria-hidden>{emoji}</span>
                             </div>
-                            <span className="font-medium text-[#18171c]">{product.name}</span>
+                            <span className="font-medium text-[#18171c]">{translatedName}</span>
                           </div>
                         </td>
-                        <td className="p-3 align-middle text-xs text-black/60">{product.category}</td>
+                        <td className="p-3 align-middle text-xs text-black/60">{translatedCategory}</td>
                         <td className="p-3 align-middle tabular-nums text-[#18171c]">₪{product.price}</td>
                         <td className="p-3 align-middle">
                           <TagStatus status={product.syncStatus} />
@@ -234,7 +261,7 @@ export function ProductsTable() {
                               className="inline-flex items-center gap-1.5 rounded-[10px] border border-[#ddd] bg-white px-3 py-1.5 text-xs font-medium text-[#18171c] shadow-sm"
                             >
                               <IconPencil className="shrink-0" />
-                              Edit
+                              {t('common:actions.edit')}
                             </button>
                             {!product.tagId ? (
                               <button
@@ -242,7 +269,7 @@ export function ProductsTable() {
                                 className="inline-flex items-center gap-1.5 rounded-[10px] border border-accent-mint/30 bg-accent-mint/10 px-3 py-1.5 text-xs font-medium text-churn-low shadow-sm"
                               >
                                 <IconLink className="shrink-0" />
-                                Assign Tag
+                                {t('common:actions.assignTag')}
                               </button>
                             ) : null}
                           </div>

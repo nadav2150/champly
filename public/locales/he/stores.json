@@ -1,0 +1,36 @@
+{
+  "metaTitle": "סניפים",
+  "metaDescription": "ניהול מיקומי סניפים ורכזות ESL.",
+  "heading": "סניפים",
+  "description": "כל מיקום מציג את מצב תגיות ה-ESL במבט אחד — תגיות מחוברות, תור, כשלים וסנכרון אחרון מול הרכזת.",
+  "connected": "מחובר",
+  "pending": "ממתין",
+  "failed": "נכשל",
+  "eslOnline": "ESL מחובר",
+  "inQueue": "בתור",
+  "alerts": "התראות",
+  "sync": "סנכרון",
+  "products": "מוצרים",
+  "tags": "תגיות",
+  "zones": {
+    "aisle1Fresh": "מעבר 1 — טרי",
+    "aisle2DairyDrinks": "מעבר 2 — חלב ומשקאות",
+    "aisle3Bakery": "מעבר 3 — מאפייה",
+    "aisle4Snacks": "מעבר 4 — חטיפים",
+    "unassigned": "לא משויך"
+  },
+  "searchCategory": "חפש קטגוריה",
+  "searchZone": "חפש אזור",
+  "productCategories": "קטגוריות מוצרים",
+  "storeZones": "אזורי סניף",
+  "storeNames": {
+    "mainStreet": "רחוב ראשי",
+    "northBranch": "סניף צפון",
+    "expressCorner": "פינת אקספרס"
+  },
+  "storeAddresses": {
+    "mainStreet": "רח׳ הרצל 12, תל אביב",
+    "northBranch": "שד׳ ויצמן 4, חיפה",
+    "expressCorner": "חנות 3, קניון סנטר"
+  }
+}

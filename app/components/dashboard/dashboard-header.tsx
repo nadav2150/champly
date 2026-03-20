@@ -1,4 +1,5 @@
 import { PRODUCTS_DATA, TAGS_DATA } from './tag-product';
+import { useTranslation } from 'react-i18next';
 
 function IconChevronRight({ className }: { className?: string }) {
   return (
@@ -82,6 +83,7 @@ function getTagStats() {
 }
 
 export function DashboardHeader({ variant = 'tags' }: DashboardHeaderProps) {
+  const { t } = useTranslation(['common', 'products', 'tags']);
   const isProducts = variant === 'products';
 
   if (isProducts) {
@@ -97,27 +99,27 @@ export function DashboardHeader({ variant = 'tags' }: DashboardHeaderProps) {
             <div className="flex items-center gap-6">
               <div>
                 <h1 id="products-heading" className="text-xl font-medium leading-7 text-white">
-                  Products
+                  {t('products:heading')}
                 </h1>
                 <p className="text-xs leading-4 text-white/50">
-                  Manage your catalog and pricing
+                  {t('products:subheading')}
                 </p>
               </div>
               <div className="hidden h-8 w-px bg-white/10 sm:block" aria-hidden />
               <div className="hidden items-center gap-5 sm:flex lg:gap-7">
                 <div className="flex items-center gap-1.5">
                   <StatDot color="green" />
-                  <span className="text-xs text-white/50">Total</span>
+                  <span className="text-xs text-white/50">{t('products:total')}</span>
                   <span className="text-sm font-semibold text-white">{stats.total}</span>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <StatDot color="amber" />
-                  <span className="text-xs text-white/50">Pending</span>
+                  <span className="text-xs text-white/50">{t('products:pending')}</span>
                   <span className="text-sm font-semibold text-white">{stats.pending}</span>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <StatDot color="red" />
-                  <span className="text-xs text-white/50">Issues</span>
+                  <span className="text-xs text-white/50">{t('products:issues')}</span>
                   <span className="text-sm font-semibold text-white">{stats.failed}</span>
                 </div>
               </div>
@@ -126,17 +128,17 @@ export function DashboardHeader({ variant = 'tags' }: DashboardHeaderProps) {
               className="relative flex max-w-[280px] items-center gap-2 overflow-hidden rounded-lg border border-white/16 bg-dashboard-bg px-3 py-2 shadow-[0px_0px_0px_1px_#162021,0px_1px_0px_0px_#2e464b]"
               role="status"
             >
-              <div className="pointer-events-none absolute -bottom-16 -right-16 size-36 rounded-full bg-accent-mint/10 blur-2xl" aria-hidden />
+              <div className="pointer-events-none absolute -bottom-16 -end-16 size-36 rounded-full bg-accent-mint/10 blur-2xl" aria-hidden />
               <IconPackage className="relative shrink-0 text-white/80" />
               <p className="relative min-w-0 flex-1 truncate text-xs font-medium text-white">
                 {stats.pending > 0
-                  ? `${stats.pending} products need price sync`
-                  : 'All prices synced'}
+                  ? t('products:productsNeedSync', { count: stats.pending })
+                  : t('common:status.allPricesSynced')}
               </p>
               <button
                 type="button"
                 className="relative shrink-0 rounded-full border border-white/36 bg-[#152a2d] p-1 shadow-sm"
-                aria-label="Sync prices now"
+                aria-label={t('common:actions.syncNow')}
               >
                 <IconChevronRight className="text-white" />
               </button>
@@ -147,20 +149,20 @@ export function DashboardHeader({ variant = 'tags' }: DashboardHeaderProps) {
             <div className="flex w-full items-center justify-between gap-2">
               <div className="flex items-center gap-1.5">
                 <span className="rounded-full border border-[rgba(233,232,237,0.2)] bg-white/20 px-4 py-1 text-xs font-medium text-white shadow-sm">
-                  All Products
+                  {t('products:allProducts')}
                 </span>
-                {['By Category', 'Recently Updated'].map((t) => (
-                  <span key={t} className="cursor-default rounded-full px-4 py-1 text-xs text-white/70">
-                    {t}
+                {[t('products:byCategory'), t('products:recentlyUpdated')].map((label) => (
+                  <span key={label} className="cursor-default rounded-full px-4 py-1 text-xs text-white/70">
+                    {label}
                   </span>
                 ))}
               </div>
               <div className="flex items-center gap-2">
-                <button type="button" className="rounded-full border border-white/36 bg-[#475c5f] p-1.5 shadow-sm" aria-label="More options">
+                <button type="button" className="rounded-full border border-white/36 bg-[#475c5f] p-1.5 shadow-sm" aria-label={t('common:actions.moreOptions')}>
                   <IconDots className="text-white" />
                 </button>
-                <button type="button" className="relative flex items-center gap-1.5 rounded-full border border-white bg-accent-mint py-1 pl-3 pr-2 text-xs font-medium text-accent-mint-text shadow-sm">
-                  Add Product
+                <button type="button" className="relative flex items-center gap-1.5 rounded-full border border-white bg-accent-mint py-1 ps-3 pe-2 text-xs font-medium text-accent-mint-text shadow-sm">
+                  {t('common:actions.addProduct')}
                   <IconPlus className="text-accent-mint-text" />
                   <span className="pointer-events-none absolute inset-0 rounded-full shadow-[inset_0px_2px_3px_0px_rgba(255,255,255,0.3)]" aria-hidden />
                 </button>
@@ -184,32 +186,32 @@ export function DashboardHeader({ variant = 'tags' }: DashboardHeaderProps) {
           <div className="flex items-center gap-6">
             <div>
               <h1 id="tags-heading" className="text-xl font-medium leading-7 text-white">
-                Tags
+                {t('tags:heading')}
               </h1>
               <p className="text-xs leading-4 text-white/50">
-                Monitor and control physical shelf tags
+                {t('tags:subheading')}
               </p>
             </div>
             <div className="hidden h-8 w-px bg-white/10 sm:block" aria-hidden />
             <div className="hidden items-center gap-5 sm:flex lg:gap-7">
               <div className="flex items-center gap-1.5">
                 <StatDot color="green" />
-                <span className="text-xs text-white/50">Connected</span>
+                <span className="text-xs text-white/50">{t('tags:connected')}</span>
                 <span className="text-sm font-semibold text-white">{stats.online}</span>
               </div>
               <div className="flex items-center gap-1.5">
                 <StatDot color="amber" />
-                <span className="text-xs text-white/50">Low bat</span>
+                <span className="text-xs text-white/50">{t('tags:lowBat')}</span>
                 <span className="text-sm font-semibold text-white">{stats.lowBattery}</span>
               </div>
               <div className="flex items-center gap-1.5">
                 <StatDot color="red" />
-                <span className="text-xs text-white/50">Offline</span>
+                <span className="text-xs text-white/50">{t('tags:offline')}</span>
                 <span className="text-sm font-semibold text-white">{stats.offline}</span>
               </div>
               <div className="flex items-center gap-1.5">
                 <IconClock className="shrink-0 text-accent-mint" />
-                <span className="text-xs text-white/50">Sync</span>
+                <span className="text-xs text-white/50">{t('tags:sync')}</span>
                 <span className="text-sm font-semibold text-white">10s ago</span>
               </div>
             </div>
@@ -218,19 +220,19 @@ export function DashboardHeader({ variant = 'tags' }: DashboardHeaderProps) {
             className="relative flex max-w-[280px] items-center gap-2 overflow-hidden rounded-lg border border-white/16 bg-dashboard-bg px-3 py-2 shadow-[0px_0px_0px_1px_#162021,0px_1px_0px_0px_#2e464b]"
             role="status"
           >
-            <div className="pointer-events-none absolute -bottom-16 -right-16 size-36 rounded-full bg-accent-mint/10 blur-2xl" aria-hidden />
+            <div className="pointer-events-none absolute -bottom-16 -end-16 size-36 rounded-full bg-accent-mint/10 blur-2xl" aria-hidden />
             <IconTag className="relative shrink-0 text-white/80" />
             <p className="relative min-w-0 flex-1 truncate text-xs font-medium text-white">
               {stats.lowBattery > 0
-                ? `${stats.lowBattery} tag${stats.lowBattery > 1 ? 's' : ''} low battery — check now`
+                ? t('tags:tagsLowBattery', { count: stats.lowBattery })
                 : stats.offline > 0
-                  ? `${stats.offline} tag${stats.offline > 1 ? 's' : ''} offline`
-                  : 'All tags healthy'}
+                  ? t('tags:tagsOffline', { count: stats.offline })
+                  : t('tags:allTagsHealthy')}
             </p>
             <button
               type="button"
               className="relative shrink-0 rounded-full border border-white/36 bg-[#152a2d] p-1 shadow-sm"
-              aria-label="Review tag alerts"
+              aria-label={t('common:actions.reviewAlerts')}
             >
               <IconChevronRight className="text-white" />
             </button>
@@ -241,20 +243,20 @@ export function DashboardHeader({ variant = 'tags' }: DashboardHeaderProps) {
           <div className="flex w-full items-center justify-between gap-2">
             <div className="flex items-center gap-1.5">
               <span className="rounded-full border border-[rgba(233,232,237,0.2)] bg-white/20 px-4 py-1 text-xs font-medium text-white shadow-sm">
-                All Tags
+                {t('tags:allTags')}
               </span>
-              {['Online', 'Offline', 'Low Battery'].map((t) => (
-                <span key={t} className="cursor-default rounded-full px-4 py-1 text-xs text-white/70">
-                  {t}
+              {[t('tags:online'), t('tags:offline'), t('tags:lowBattery')].map((label) => (
+                <span key={label} className="cursor-default rounded-full px-4 py-1 text-xs text-white/70">
+                  {label}
                 </span>
               ))}
             </div>
             <div className="flex items-center gap-2">
-              <button type="button" className="rounded-full border border-white/36 bg-[#475c5f] p-1.5 shadow-sm" aria-label="More options">
+              <button type="button" className="rounded-full border border-white/36 bg-[#475c5f] p-1.5 shadow-sm" aria-label={t('common:actions.moreOptions')}>
                 <IconDots className="text-white" />
               </button>
-              <button type="button" className="relative flex items-center gap-1.5 rounded-full border border-white bg-accent-mint py-1 pl-3 pr-2 text-xs font-medium text-accent-mint-text shadow-sm">
-                Pair New Tag
+              <button type="button" className="relative flex items-center gap-1.5 rounded-full border border-white bg-accent-mint py-1 ps-3 pe-2 text-xs font-medium text-accent-mint-text shadow-sm">
+                {t('common:actions.pairNewTag')}
                 <IconPlus className="text-accent-mint-text" />
                 <span className="pointer-events-none absolute inset-0 rounded-full shadow-[inset_0px_2px_3px_0px_rgba(255,255,255,0.3)]" aria-hidden />
               </button>

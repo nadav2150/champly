@@ -1,0 +1,36 @@
+{
+  "metaTitle": "Stores",
+  "metaDescription": "Manage store locations and ESL hubs.",
+  "heading": "Stores",
+  "description": "Each location shows ESL health at a glance — connected tags, queue, failures, and last hub sync. Open the tag console to push prices and layouts.",
+  "connected": "Connected",
+  "pending": "Pending",
+  "failed": "Failed",
+  "eslOnline": "ESL online",
+  "inQueue": "in queue",
+  "alerts": "alerts",
+  "sync": "Sync",
+  "products": "Products",
+  "tags": "Tags",
+  "zones": {
+    "aisle1Fresh": "Aisle 1 — Fresh",
+    "aisle2DairyDrinks": "Aisle 2 — Dairy & Drinks",
+    "aisle3Bakery": "Aisle 3 — Bakery",
+    "aisle4Snacks": "Aisle 4 — Snacks",
+    "unassigned": "Unassigned"
+  },
+  "searchCategory": "Search category",
+  "searchZone": "Search zone",
+  "productCategories": "Product categories",
+  "storeZones": "Store zones",
+  "storeNames": {
+    "mainStreet": "Main Street",
+    "northBranch": "North Branch",
+    "expressCorner": "Express Corner"
+  },
+  "storeAddresses": {
+    "mainStreet": "12 Herzl St., Tel Aviv",
+    "northBranch": "4 Weizmann Blvd., Haifa",
+    "expressCorner": "Shop 3, Mall Center"
+  }
+}

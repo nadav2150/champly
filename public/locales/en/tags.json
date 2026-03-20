@@ -1,0 +1,23 @@
+{
+  "metaTitle": "Tags — Hardware Monitor",
+  "metaDescription": "Monitor and control physical shelf tags: battery levels, signal strength, connectivity, and pairing.",
+  "heading": "Tags",
+  "subheading": "Monitor and control physical shelf tags",
+  "connected": "Connected",
+  "lowBat": "Low bat",
+  "offline": "Offline",
+  "sync": "Sync",
+  "allTags": "All Tags",
+  "online": "Online",
+  "lowBattery": "Low Battery",
+  "tagInventory": "Tag Inventory",
+  "unassigned": "Unassigned",
+  "strong": "Strong",
+  "weak": "Weak",
+  "noSignal": "No signal",
+  "tagsLowBattery": "{{count}} tag low battery — check now",
+  "tagsLowBattery_plural": "{{count}} tags low battery — check now",
+  "tagsOffline": "{{count}} tag offline",
+  "tagsOffline_plural": "{{count}} tags offline",
+  "allTagsHealthy": "All tags healthy"
+}

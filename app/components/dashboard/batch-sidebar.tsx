@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next';
+
 export type CategoryItem = {
   id: string;
   name: string;
@@ -9,11 +11,11 @@ export type CategoryItem = {
 };
 
 export const CATEGORIES: CategoryItem[] = [
-  { id: '1', name: 'Fruits & Vegetables', productCount: 12, icon: '🥕', selected: true, connectedTags: 11, pendingTags: 1 },
-  { id: '2', name: 'Drinks', productCount: 8, icon: '🥤', connectedTags: 7, pendingTags: 1 },
-  { id: '3', name: 'Dairy', productCount: 6, icon: '🧀', connectedTags: 6, pendingTags: 0 },
-  { id: '4', name: 'Bakery', productCount: 4, icon: '🍞', connectedTags: 4, pendingTags: 0 },
-  { id: '5', name: 'Snacks & Sweets', productCount: 5, icon: '⭐', connectedTags: 4, pendingTags: 1 },
+  { id: '1', name: 'products:categories.fruitsVegetables', productCount: 12, icon: '🥕', selected: true, connectedTags: 11, pendingTags: 1 },
+  { id: '2', name: 'products:categories.drinks', productCount: 8, icon: '🥤', connectedTags: 7, pendingTags: 1 },
+  { id: '3', name: 'products:categories.dairy', productCount: 6, icon: '🧀', connectedTags: 6, pendingTags: 0 },
+  { id: '4', name: 'products:categories.bakery', productCount: 4, icon: '🍞', connectedTags: 4, pendingTags: 0 },
+  { id: '5', name: 'products:categories.snacksSweets', productCount: 5, icon: '⭐', connectedTags: 4, pendingTags: 1 },
 ];
 
 type ZoneItem = {
@@ -26,15 +28,15 @@ type ZoneItem = {
 };
 
 const ZONES: ZoneItem[] = [
-  { id: 'z1', name: 'Aisle 1 — Fresh', totalTags: 6, onlineTags: 5, lowBattery: 0, selected: true },
-  { id: 'z2', name: 'Aisle 2 — Dairy & Drinks', totalTags: 4, onlineTags: 4, lowBattery: 1 },
-  { id: 'z3', name: 'Aisle 3 — Bakery', totalTags: 3, onlineTags: 3, lowBattery: 0 },
-  { id: 'z4', name: 'Aisle 4 — Snacks', totalTags: 3, onlineTags: 2, lowBattery: 1 },
-  { id: 'z5', name: 'Unassigned', totalTags: 2, onlineTags: 2, lowBattery: 0 },
+  { id: 'z1', name: 'stores:zones.aisle1Fresh', totalTags: 6, onlineTags: 5, lowBattery: 0, selected: true },
+  { id: 'z2', name: 'stores:zones.aisle2DairyDrinks', totalTags: 4, onlineTags: 4, lowBattery: 1 },
+  { id: 'z3', name: 'stores:zones.aisle3Bakery', totalTags: 3, onlineTags: 3, lowBattery: 0 },
+  { id: 'z4', name: 'stores:zones.aisle4Snacks', totalTags: 3, onlineTags: 2, lowBattery: 1 },
+  { id: 'z5', name: 'stores:zones.unassigned', totalTags: 2, onlineTags: 2, lowBattery: 0 },
 ];
 
 export function getSelectedCategoryName(): string {
-  return CATEGORIES.find((c) => c.selected)?.name ?? 'Fruits & Vegetables';
+  return CATEGORIES.find((c) => c.selected)?.name ?? 'products:categories.fruitsVegetables';
 }
 
 export function getSelectedCategoryCount(): number {
@@ -75,6 +77,7 @@ function IconChevronDown({ className }: { className?: string }) {
 }
 
 function CategoryCard({ category }: { category: CategoryItem }) {
+  const { t } = useTranslation(['common', 'products']);
   const selected = category.selected;
   return (
     <article
@@ -89,18 +92,18 @@ function CategoryCard({ category }: { category: CategoryItem }) {
           {category.icon}
         </div>
         <div className="min-w-0">
-          <h3 className="text-sm font-medium tracking-[-0.56px] text-content-primary">{category.name}</h3>
-          <p className="text-[10px] leading-4 tracking-[-0.1px] text-black/50">{category.productCount} Products</p>
+          <h3 className="text-sm font-medium tracking-[-0.56px] text-content-primary">{t(category.name)}</h3>
+          <p className="text-[10px] leading-4 tracking-[-0.1px] text-black/50">{category.productCount} {t('products:heading')}</p>
         </div>
       </div>
       <div className="h-px w-full bg-content-border/80" aria-hidden />
       <div className="flex items-center justify-between gap-2 text-[10px]">
         <div>
-          <p className="text-black/50">Connected</p>
+          <p className="text-black/50">{t('common:status.connected')}</p>
           <p className="font-medium text-churn-low">{category.connectedTags}</p>
         </div>
-        <div className="text-right">
-          <p className="text-black/50">Pending</p>
+        <div className="text-end">
+          <p className="text-black/50">{t('common:status.pending')}</p>
           <p className="font-medium text-churn-med">{category.pendingTags}</p>
         </div>
       </div>
@@ -109,6 +112,7 @@ function CategoryCard({ category }: { category: CategoryItem }) {
 }
 
 function ZoneCard({ zone }: { zone: ZoneItem }) {
+  const { t } = useTranslation(['common', 'tags']);
   const selected = zone.selected;
   const offlineTags = zone.totalTags - zone.onlineTags;
   return (
@@ -127,22 +131,22 @@ function ZoneCard({ zone }: { zone: ZoneItem }) {
           </svg>
         </div>
         <div className="min-w-0">
-          <h3 className="text-sm font-medium tracking-[-0.56px] text-content-primary">{zone.name}</h3>
-          <p className="text-[10px] leading-4 tracking-[-0.1px] text-black/50">{zone.totalTags} Tags</p>
+          <h3 className="text-sm font-medium tracking-[-0.56px] text-content-primary">{t(zone.name)}</h3>
+          <p className="text-[10px] leading-4 tracking-[-0.1px] text-black/50">{zone.totalTags} {t('tags:heading')}</p>
         </div>
       </div>
       <div className="h-px w-full bg-content-border/80" aria-hidden />
       <div className="flex items-center justify-between gap-2 text-[10px]">
         <div>
-          <p className="text-black/50">Online</p>
+          <p className="text-black/50">{t('common:status.online')}</p>
           <p className="font-medium text-churn-low">{zone.onlineTags}</p>
         </div>
         <div className="text-center">
-          <p className="text-black/50">Offline</p>
+          <p className="text-black/50">{t('common:status.offline')}</p>
           <p className={`font-medium ${offlineTags > 0 ? 'text-churn-high' : 'text-black/40'}`}>{offlineTags}</p>
         </div>
-        <div className="text-right">
-          <p className="text-black/50">Low Bat</p>
+        <div className="text-end">
+          <p className="text-black/50">{t('tags:lowBat')}</p>
           <p className={`font-medium ${zone.lowBattery > 0 ? 'text-churn-med' : 'text-black/40'}`}>{zone.lowBattery}</p>
         </div>
       </div>
@@ -155,25 +159,26 @@ type BatchSidebarProps = {
 };
 
 export function BatchSidebar({ variant = 'products' }: BatchSidebarProps) {
+  const { t } = useTranslation(['common', 'products', 'tags']);
   const isProducts = variant === 'products';
   return (
     <aside
       className="flex w-full shrink-0 flex-col overflow-hidden rounded-xl border border-[#e2e2e4] bg-surface-muted lg:w-[341px] lg:max-w-[341px]"
-      aria-label={isProducts ? 'Product categories' : 'Store zones'}
+      aria-label={isProducts ? t('stores:productCategories') : t('stores:storeZones')}
     >
       <div className="flex gap-3 border-b border-content-border bg-surface-muted p-3 shadow-[0px_1px_0px_0px_white]">
-        <div className="flex flex-1 items-center gap-2 rounded-[10px] border border-[#ddd] bg-white py-1.5 pl-2 pr-3">
+        <div className="flex flex-1 items-center gap-2 rounded-[10px] border border-[#ddd] bg-white py-1.5 ps-2 pe-3">
           <IconSearch className="text-black/40" />
           <span className="text-sm text-black/40">
-            {isProducts ? 'Search category' : 'Search zone'}
+            {isProducts ? t('stores:searchCategory') : t('stores:searchZone')}
           </span>
         </div>
         <button
           type="button"
-          className="flex h-auto items-center gap-2 rounded-[10px] border border-[#ddd] bg-white py-1.5 pl-2 pr-3 shadow-[0px_1px_0px_0px_#ddd,0px_2px_2px_0px_rgba(0,0,0,0.05)]"
+          className="flex h-auto items-center gap-2 rounded-[10px] border border-[#ddd] bg-white py-1.5 ps-2 pe-3 shadow-[0px_1px_0px_0px_#ddd,0px_2px_2px_0px_rgba(0,0,0,0.05)]"
         >
           <IconFilter className="text-black" />
-          <span className="text-sm text-black">Sort</span>
+          <span className="text-sm text-black">{t('common:actions.sort')}</span>
           <IconChevronDown className="text-black/60" />
         </button>
       </div>

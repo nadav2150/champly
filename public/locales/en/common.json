@@ -1,0 +1,74 @@
+{
+  "nav": {
+    "main": "Main navigation",
+    "home": "Home",
+    "stores": "Stores",
+    "products": "Products",
+    "tags": "Tags",
+    "monitoring": "Monitoring",
+    "searchPlaceholder": "Search products or tags...",
+    "notifications": "Notifications",
+    "settings": "Settings",
+    "avatar": "User avatar",
+    "switchLanguage": "עברית"
+  },
+  "actions": {
+    "cancel": "Cancel",
+    "sort": "Sort",
+    "moreOptions": "More options",
+    "syncNow": "Sync prices now",
+    "reviewAlerts": "Review tag alerts",
+    "addProduct": "Add Product",
+    "pairNewTag": "Pair New Tag",
+    "bulkSync": "Bulk Sync",
+    "bulkPriceUpdate": "Bulk price update",
+    "edit": "Edit",
+    "assignTag": "Assign Tag",
+    "pair": "Pair",
+    "replace": "Replace",
+    "locate": "Locate",
+    "goToTags": "Go to Tags",
+    "goToProducts": "Go to Products",
+    "updateTag": "Update Tag"
+  },
+  "status": {
+    "synced": "Synced",
+    "pending": "Pending",
+    "failed": "Failed",
+    "online": "Online",
+    "offline": "Offline",
+    "lowBattery": "Low Battery",
+    "connected": "Connected",
+    "allTagsHealthy": "All tags healthy",
+    "allPricesSynced": "All prices synced"
+  },
+  "table": {
+    "selectAllRows": "Select all rows",
+    "searchProducts": "Search products",
+    "searchTagId": "Search by Tag ID",
+    "unassigned": "— Unassigned —",
+    "name": "Name",
+    "category": "Category",
+    "price": "Price",
+    "syncStatus": "Sync Status",
+    "action": "Action",
+    "tagId": "Tag ID",
+    "linkedProduct": "Linked Product",
+    "battery": "Battery",
+    "signal": "Signal",
+    "lastSync": "Last Sync"
+    ,
+    "selectTag": "Select tag {{id}}",
+    "selectProduct": "Select {{name}}"
+  },
+  "errors": {
+    "oops": "Oops!",
+    "unexpected": "An unexpected error occurred.",
+    "error": "Error",
+    "notFound": "The requested page could not be found."
+  },
+  "units": {
+    "perKg": "per kg",
+    "perUnit": "per unit"
+  }
+}

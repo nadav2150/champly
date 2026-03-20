@@ -5,10 +5,19 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
+  useLocation,
 } from "react-router";
+import { useEffect } from "react";
+import { I18nextProvider, useTranslation } from "react-i18next";
 
 import type { Route } from "./+types/root";
 import "./app.css";
+import i18next, { setI18nLanguage } from "./i18n/i18n.client";
+import {
+  getDocumentDirection,
+  getLanguageFromPathname,
+  type SupportedLanguage,
+} from "./i18n/config";
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -19,13 +28,21 @@ export const links: Route.LinksFunction = () => [
   },
   {
     rel: "stylesheet",
-    href: "https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap",
+    href: "https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap",
   },
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {
+  const { pathname } = useLocation();
+  const language = getLanguageFromPathname(pathname);
+  const dir = getDocumentDirection(language);
+
+  useEffect(() => {
+    setI18nLanguage(language);
+  }, [language]);
+
   return (
-    <html lang="en">
+    <html lang={language} dir={dir}>
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -42,19 +59,30 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-  return <Outlet />;
+  return (
+    <I18nextProvider i18n={i18next}>
+      <Outlet />
+    </I18nextProvider>
+  );
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
-  let message = "Oops!";
-  let details = "An unexpected error occurred.";
+  const { pathname } = useLocation();
+  const language = getLanguageFromPathname(pathname) as SupportedLanguage;
+  const { t } = useTranslation("common");
+  useEffect(() => {
+    setI18nLanguage(language);
+  }, [language]);
+
+  let message = t("errors.oops");
+  let details = t("errors.unexpected");
   let stack: string | undefined;
 
   if (isRouteErrorResponse(error)) {
-    message = error.status === 404 ? "404" : "Error";
+    message = error.status === 404 ? "404" : t("errors.error");
     details =
       error.status === 404
-        ? "The requested page could not be found."
+        ? t("errors.notFound")
         : error.statusText || details;
   } else if (import.meta.env.DEV && error && error instanceof Error) {
     details = error.message;

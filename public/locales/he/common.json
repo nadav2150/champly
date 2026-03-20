@@ -1,0 +1,74 @@
+{
+  "nav": {
+    "main": "ניווט ראשי",
+    "home": "בית",
+    "stores": "סניפים",
+    "products": "מוצרים",
+    "tags": "תגיות",
+    "monitoring": "ניטור",
+    "searchPlaceholder": "חפש מוצרים או תגיות...",
+    "notifications": "התראות",
+    "settings": "הגדרות",
+    "avatar": "פרופיל משתמש",
+    "switchLanguage": "English"
+  },
+  "actions": {
+    "cancel": "ביטול",
+    "sort": "מיון",
+    "moreOptions": "אפשרויות נוספות",
+    "syncNow": "סנכרן מחירים עכשיו",
+    "reviewAlerts": "בדוק התראות תגיות",
+    "addProduct": "הוסף מוצר",
+    "pairNewTag": "שייך תגית חדשה",
+    "bulkSync": "סנכרון מרובה",
+    "bulkPriceUpdate": "עדכון מחירים מרובה",
+    "edit": "עריכה",
+    "assignTag": "שיוך תגית",
+    "pair": "שיוך",
+    "replace": "החלפה",
+    "locate": "איתור",
+    "goToTags": "עבור לתגיות",
+    "goToProducts": "עבור למוצרים",
+    "updateTag": "עדכן תגית"
+  },
+  "status": {
+    "synced": "מסונכרן",
+    "pending": "ממתין",
+    "failed": "נכשל",
+    "online": "מחובר",
+    "offline": "מנותק",
+    "lowBattery": "סוללה חלשה",
+    "connected": "מחובר",
+    "allTagsHealthy": "כל התגיות תקינות",
+    "allPricesSynced": "כל המחירים מסונכרנים"
+  },
+  "table": {
+    "selectAllRows": "בחר את כל השורות",
+    "searchProducts": "חפש מוצרים",
+    "searchTagId": "חפש לפי מזהה תגית",
+    "unassigned": "— לא משויך —",
+    "name": "שם",
+    "category": "קטגוריה",
+    "price": "מחיר",
+    "syncStatus": "סטטוס סנכרון",
+    "action": "פעולה",
+    "tagId": "מזהה תגית",
+    "linkedProduct": "מוצר משויך",
+    "battery": "סוללה",
+    "signal": "קליטה",
+    "lastSync": "סנכרון אחרון"
+    ,
+    "selectTag": "בחר תגית {{id}}",
+    "selectProduct": "בחר {{name}}"
+  },
+  "errors": {
+    "oops": "אופס!",
+    "unexpected": "אירעה שגיאה לא צפויה.",
+    "error": "שגיאה",
+    "notFound": "העמוד המבוקש לא נמצא."
+  },
+  "units": {
+    "perKg": "לק״ג",
+    "perUnit": "ליחידה"
+  }
+}

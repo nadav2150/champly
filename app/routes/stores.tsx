@@ -1,8 +1,10 @@
 import type { Route } from './+types/stores';
+import { useTranslation } from 'react-i18next';
 import {
   StoreCard,
   type StoreCardData,
 } from '../components/dashboard/store-card';
+import { isSupportedLanguage } from '../i18n/config';
 
 const STORES: StoreCardData[] = [
   {
@@ -34,14 +36,22 @@ const STORES: StoreCardData[] = [
   },
 ];
 
-export function meta({}: Route.MetaArgs) {
+export function meta({ params }: Route.MetaArgs) {
+  const isHebrew = isSupportedLanguage(params.lang) && params.lang === 'he';
   return [
-    { title: 'Stores' },
-    { name: 'description', content: 'Manage store locations and ESL hubs.' },
+    { title: isHebrew ? 'סניפים' : 'Stores' },
+    {
+      name: 'description',
+      content: isHebrew
+        ? 'ניהול מיקומי סניפים ורכזות ESL.'
+        : 'Manage store locations and ESL hubs.',
+    },
   ];
 }
 
 export default function StoresPage() {
+  const { t } = useTranslation('stores');
+
   return (
     <div className="flex w-full flex-1 flex-col overflow-auto px-4 pb-8 pt-6 sm:px-6 lg:px-8">
       <section
@@ -52,18 +62,37 @@ export default function StoresPage() {
           id="stores-heading"
           className="text-3xl font-medium text-white md:text-4xl"
         >
-          Stores
+          {t('heading')}
         </h1>
         <p className="mt-2 max-w-2xl text-sm text-white/50">
-          Each location shows ESL health at a glance — connected tags, queue,
-          failures, and last hub sync. Open the tag console to push prices and
-          layouts.
+          {t('description')}
         </p>
       </section>
       <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
-        {STORES.map((s) => (
-          <StoreCard key={s.id} store={s} />
-        ))}
+        {STORES.map((s) => {
+          const storeNameKey =
+            s.id === '1'
+              ? 'storeNames.mainStreet'
+              : s.id === '2'
+                ? 'storeNames.northBranch'
+                : 'storeNames.expressCorner';
+          const storeAddressKey =
+            s.id === '1'
+              ? 'storeAddresses.mainStreet'
+              : s.id === '2'
+                ? 'storeAddresses.northBranch'
+                : 'storeAddresses.expressCorner';
+          return (
+            <StoreCard
+              key={s.id}
+              store={{
+                ...s,
+                name: t(storeNameKey),
+                address: t(storeAddressKey),
+              }}
+            />
+          );
+        })}
       </div>
     </div>
   );
