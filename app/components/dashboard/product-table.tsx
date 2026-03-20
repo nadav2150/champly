@@ -172,13 +172,13 @@ export function TagsTable() {
               {t('common:actions.bulkSync')}
             </button>
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex gap-2 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:flex-wrap lg:overflow-visible">
             {FILTER_PILLS.map(({ key, labelKey }) => (
               <button
                 key={key}
                 type="button"
                 onClick={() => setFilter(key)}
-                className={`rounded-full px-4 py-1.5 text-sm font-medium transition ${
+                className={`shrink-0 rounded-full px-4 py-1.5 text-sm font-medium transition ${
                   filter === key
                     ? 'bg-dashboard-card text-white shadow-sm'
                     : 'bg-white text-black/70 ring-1 ring-black/10 hover:bg-surface-subtle'
@@ -189,7 +189,8 @@ export function TagsTable() {
             ))}
           </div>
         </div>
-        <div className="min-h-0 flex-1 overflow-auto p-3">
+        {/* Desktop table */}
+        <div className="hidden min-h-0 flex-1 overflow-auto p-3 lg:block">
           <div className="overflow-x-auto rounded-lg border border-content-border bg-white shadow-sm">
             <table className="w-full min-w-[920px] border-collapse text-start text-sm">
               <thead>
@@ -294,6 +295,72 @@ export function TagsTable() {
                 })}
               </tbody>
             </table>
+          </div>
+        </div>
+
+        {/* Mobile card list */}
+        <div className="min-h-0 flex-1 overflow-auto p-2 lg:hidden">
+          <div className="flex flex-col gap-2">
+            {filtered.map((tag) => {
+              const batteryColor =
+                tag.battery > 50 ? 'bg-churn-low' : tag.battery > 25 ? 'bg-churn-med' : 'bg-churn-high';
+              return (
+                <article
+                  key={tag.id}
+                  className="rounded-lg border border-content-border bg-white p-3 shadow-sm"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="rounded bg-[#f0f4f5] px-2 py-1 font-mono text-sm font-semibold text-[#18171c]">
+                      {tag.tagId}
+                    </span>
+                    <HwStatus status={tag.status} />
+                  </div>
+                  <div className="mt-2 text-sm text-[#18171c]">
+                    {tag.linkedProduct ? (
+                      t(productKeyByName[tag.linkedProduct] ?? tag.linkedProduct)
+                    ) : (
+                      <span className="text-xs italic text-churn-med">{t('common:table.unassigned')}</span>
+                    )}
+                  </div>
+                  <div className="mt-2 flex items-center gap-3">
+                    <div className="flex items-center gap-1.5">
+                      <div className="h-2 w-12 overflow-hidden rounded-full bg-black/10">
+                        <div className={`h-full rounded-full ${batteryColor}`} style={{ width: `${tag.battery}%` }} />
+                      </div>
+                      <span className="text-[10px] font-medium tabular-nums text-black/60">{tag.battery}%</span>
+                    </div>
+                    <SignalBars strength={tag.signal} />
+                    <span className="text-[10px] text-black/40">{tag.lastSync}</span>
+                  </div>
+                  <div className="mt-3 flex gap-2">
+                    {!tag.linkedProduct ? (
+                      <button
+                        type="button"
+                        className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-accent-mint/30 bg-accent-mint/10 py-2 text-xs font-medium text-churn-low active:bg-accent-mint/20"
+                      >
+                        <IconLink className="shrink-0" />
+                        {t('common:actions.pair')}
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-[#ddd] bg-white py-2 text-xs font-medium text-[#18171c] active:bg-surface-subtle"
+                      >
+                        <IconSwap className="shrink-0" />
+                        {t('common:actions.replace')}
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50 py-2 text-xs font-medium text-blue-600 active:bg-blue-100"
+                    >
+                      <IconLocate className="shrink-0" />
+                      {t('common:actions.locate')}
+                    </button>
+                  </div>
+                </article>
+              );
+            })}
           </div>
         </div>
       </div>

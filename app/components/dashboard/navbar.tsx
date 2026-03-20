@@ -194,6 +194,11 @@ const navPillInactive =
 const navPillActive =
   'flex items-center gap-2 rounded-full bg-white py-2 pl-2 pr-4 text-sm font-medium tracking-[-0.28px] text-dashboard-bg';
 
+const mobileTabBase =
+  'flex flex-1 flex-col items-center gap-1 py-2 text-[10px] font-medium transition';
+const mobileTabInactive = `${mobileTabBase} text-white/50`;
+const mobileTabActive = `${mobileTabBase} text-accent-mint`;
+
 export function Navbar() {
   const { t } = useTranslation('common');
   const { pathname } = useLocation();
@@ -209,104 +214,146 @@ export function Navbar() {
   const isTags = normalizedPath === '/tags';
 
   return (
-    <header
-      className="flex w-full max-w-none flex-wrap items-center justify-between gap-x-4 gap-y-4"
-      aria-label={t('nav.main')}
-    >
-      <div className="flex min-w-0 flex-wrap items-center gap-x-8 gap-y-3 lg:gap-12">
-        <div
-          className="relative size-9 overflow-hidden rounded-lg border border-dashboard-border bg-dashboard-card shadow-[0px_0px_0px_1px_#0d171a]"
-          aria-hidden
-        >
-          <div className="absolute start-[7px] top-2 h-5 w-2.5 rounded-sm bg-accent-mint" />
-          <div className="absolute start-[17px] top-2 h-5 w-3 rounded-br-sm rounded-tr-sm rounded-bl-[32px] rounded-tl-[32px] bg-[#475c5f]" />
-        </div>
-        <nav className="flex items-center gap-1.5" aria-label="Primary">
-          <Link
-            to={toLocalizedPath('/', language)}
-            className={isHome ? navPillActive : navPillInactive}
-            aria-current={isHome ? 'page' : undefined}
+    <>
+      {/* Desktop top navbar -- hidden on mobile */}
+      <header
+        className="hidden w-full max-w-none flex-wrap items-center justify-between gap-x-4 gap-y-4 lg:flex"
+        aria-label={t('nav.main')}
+      >
+        <div className="flex min-w-0 flex-wrap items-center gap-x-8 gap-y-3 lg:gap-12">
+          <div
+            className="relative size-9 overflow-hidden rounded-lg border border-dashboard-border bg-dashboard-card shadow-[0px_0px_0px_1px_#0d171a]"
+            aria-hidden
           >
-            <IconHome
-              className={isHome ? 'text-dashboard-bg' : 'text-white/80'}
-            />
-            {t('nav.home')}
-          </Link>
-          <Link
-            to={toLocalizedPath('/stores', language)}
-            className={isStores ? navPillActive : navPillInactive}
-            aria-current={isStores ? 'page' : undefined}
-          >
-            <IconStore
-              className={isStores ? 'text-dashboard-bg' : 'text-white/80'}
-            />
-            {t('nav.stores')}
-          </Link>
-          <Link
-            to={toLocalizedPath('/products', language)}
-            className={isProducts ? navPillActive : navPillInactive}
-            aria-current={isProducts ? 'page' : undefined}
-          >
-            <IconPackage
-              className={isProducts ? 'text-dashboard-bg' : 'text-white/80'}
-            />
-            {t('nav.products')}
-          </Link>
-          <Link
-            to={toLocalizedPath('/tags', language)}
-            className={isTags ? navPillActive : navPillInactive}
-            aria-current={isTags ? 'page' : undefined}
-          >
-            <IconTag
-              className={isTags ? 'text-dashboard-bg' : 'text-white/80'}
-            />
-            {t('nav.tags')}
-          </Link>
-          <span className="mx-1 h-[18px] w-px bg-white/15" aria-hidden />
-          <span className="flex cursor-default items-center gap-2 rounded-full px-4 py-2 text-sm font-medium tracking-[-0.28px] text-white/70">
-            <IconChart />
-            {t('nav.monitoring')}
-          </span>
-        </nav>
-      </div>
-      <div className="flex items-center gap-4">
-        <div className="relative h-10 min-w-[200px] max-w-[349px] flex-1 overflow-hidden rounded-full border border-dashboard-border bg-dashboard-card shadow-[0px_0px_0px_1px_#00161a]">
-          <div className="absolute start-3 top-1/2 flex -translate-y-1/2 items-center gap-2 pe-3">
-            <IconSearch className="text-white/50" />
-            <span className="text-sm text-white/17">
-              {t('nav.searchPlaceholder')}
-            </span>
+            <div className="absolute start-[7px] top-2 h-5 w-2.5 rounded-sm bg-accent-mint" />
+            <div className="absolute start-[17px] top-2 h-5 w-3 rounded-br-sm rounded-tr-sm rounded-bl-[32px] rounded-tl-[32px] bg-[#475c5f]" />
           </div>
+          <nav className="flex items-center gap-1.5" aria-label="Primary">
+            <Link
+              to={toLocalizedPath('/', language)}
+              className={isHome ? navPillActive : navPillInactive}
+              aria-current={isHome ? 'page' : undefined}
+            >
+              <IconHome
+                className={isHome ? 'text-dashboard-bg' : 'text-white/80'}
+              />
+              {t('nav.home')}
+            </Link>
+            <Link
+              to={toLocalizedPath('/stores', language)}
+              className={isStores ? navPillActive : navPillInactive}
+              aria-current={isStores ? 'page' : undefined}
+            >
+              <IconStore
+                className={isStores ? 'text-dashboard-bg' : 'text-white/80'}
+              />
+              {t('nav.stores')}
+            </Link>
+            <Link
+              to={toLocalizedPath('/products', language)}
+              className={isProducts ? navPillActive : navPillInactive}
+              aria-current={isProducts ? 'page' : undefined}
+            >
+              <IconPackage
+                className={isProducts ? 'text-dashboard-bg' : 'text-white/80'}
+              />
+              {t('nav.products')}
+            </Link>
+            <Link
+              to={toLocalizedPath('/tags', language)}
+              className={isTags ? navPillActive : navPillInactive}
+              aria-current={isTags ? 'page' : undefined}
+            >
+              <IconTag
+                className={isTags ? 'text-dashboard-bg' : 'text-white/80'}
+              />
+              {t('nav.tags')}
+            </Link>
+            <span className="mx-1 h-[18px] w-px bg-white/15" aria-hidden />
+            <span className="flex cursor-default items-center gap-2 rounded-full px-4 py-2 text-sm font-medium tracking-[-0.28px] text-white/70">
+              <IconChart />
+              {t('nav.monitoring')}
+            </span>
+          </nav>
         </div>
-          <div className="relative flex items-center gap-2.5">
-            <LanguageToggle />
-          <div className="relative">
+        <div className="flex items-center gap-4">
+          <div className="relative h-10 min-w-[200px] max-w-[349px] flex-1 overflow-hidden rounded-full border border-dashboard-border bg-dashboard-card shadow-[0px_0px_0px_1px_#00161a]">
+            <div className="absolute start-3 top-1/2 flex -translate-y-1/2 items-center gap-2 pe-3">
+              <IconSearch className="text-white/50" />
+              <span className="text-sm text-white/17">
+                {t('nav.searchPlaceholder')}
+              </span>
+            </div>
+          </div>
+            <div className="relative flex items-center gap-2.5">
+              <LanguageToggle />
+            <div className="relative">
+              <button
+                type="button"
+                className="rounded-full border border-dashboard-tabbar bg-dashboard-bg p-2 shadow-[0px_0px_0px_1px_#00161a]"
+                aria-label={t('nav.notifications')}
+              >
+                <IconBell className="text-white/80" />
+              </button>
+              <span
+                className="absolute -end-0.5 -top-0.5 size-[7px] rounded-full bg-red-500 ring-2 ring-dashboard-bg"
+                aria-hidden
+              />
+            </div>
             <button
               type="button"
               className="rounded-full border border-dashboard-tabbar bg-dashboard-bg p-2 shadow-[0px_0px_0px_1px_#00161a]"
-              aria-label={t('nav.notifications')}
+              aria-label={t('nav.settings')}
             >
-              <IconBell className="text-white/80" />
+              <IconSettings className="text-white/80" />
             </button>
-            <span
-              className="absolute -end-0.5 -top-0.5 size-[7px] rounded-full bg-red-500 ring-2 ring-dashboard-bg"
-              aria-hidden
+            <div
+              className="size-9 shrink-0 rounded-full bg-accent-mint/40 ring-2 ring-dashboard-border"
+              aria-label={t('nav.avatar')}
+              role="img"
             />
           </div>
-          <button
-            type="button"
-            className="rounded-full border border-dashboard-tabbar bg-dashboard-bg p-2 shadow-[0px_0px_0px_1px_#00161a]"
-            aria-label={t('nav.settings')}
-          >
-            <IconSettings className="text-white/80" />
-          </button>
-          <div
-            className="size-9 shrink-0 rounded-full bg-accent-mint/40 ring-2 ring-dashboard-border"
-            aria-label={t('nav.avatar')}
-            role="img"
-          />
         </div>
-      </div>
-    </header>
+      </header>
+
+      {/* Mobile bottom tab bar -- hidden on desktop */}
+      <nav
+        className="fixed inset-x-0 bottom-0 z-50 flex items-center border-t border-dashboard-border bg-dashboard-bg pb-[env(safe-area-inset-bottom)] lg:hidden"
+        aria-label={t('nav.main')}
+      >
+        <Link
+          to={toLocalizedPath('/', language)}
+          className={isHome ? mobileTabActive : mobileTabInactive}
+          aria-current={isHome ? 'page' : undefined}
+        >
+          <IconHome className="size-5" />
+          {t('nav.home')}
+        </Link>
+        <Link
+          to={toLocalizedPath('/stores', language)}
+          className={isStores ? mobileTabActive : mobileTabInactive}
+          aria-current={isStores ? 'page' : undefined}
+        >
+          <IconStore className="size-5" />
+          {t('nav.stores')}
+        </Link>
+        <Link
+          to={toLocalizedPath('/products', language)}
+          className={isProducts ? mobileTabActive : mobileTabInactive}
+          aria-current={isProducts ? 'page' : undefined}
+        >
+          <IconPackage className="size-5" />
+          {t('nav.products')}
+        </Link>
+        <Link
+          to={toLocalizedPath('/tags', language)}
+          className={isTags ? mobileTabActive : mobileTabInactive}
+          aria-current={isTags ? 'page' : undefined}
+        >
+          <IconTag className="size-5" />
+          {t('nav.tags')}
+        </Link>
+      </nav>
+    </>
   );
 }

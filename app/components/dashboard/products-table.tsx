@@ -176,13 +176,13 @@ export function ProductsTable() {
                 {t('common:actions.bulkPriceUpdate')}
               </button>
             </div>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex gap-2 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:flex-wrap lg:overflow-visible">
               {FILTER_PILLS.map(({ key, labelKey }) => (
                 <button
                   key={key}
                   type="button"
                   onClick={() => setStatusFilter(key)}
-                  className={`rounded-full px-4 py-1.5 text-sm font-medium transition ${
+                  className={`shrink-0 rounded-full px-4 py-1.5 text-sm font-medium transition ${
                     statusFilter === key
                       ? 'bg-dashboard-card text-white shadow-sm'
                       : 'bg-white text-black/70 ring-1 ring-black/10 hover:bg-surface-subtle'
@@ -193,7 +193,8 @@ export function ProductsTable() {
               ))}
             </div>
           </div>
-          <div className="min-h-0 flex-1 overflow-auto p-3">
+          {/* Desktop table */}
+          <div className="hidden min-h-0 flex-1 overflow-auto p-3 lg:block">
             <div className="overflow-x-auto rounded-lg border border-content-border bg-white shadow-sm">
               <table className="w-full min-w-[760px] border-collapse text-start text-sm">
                 <thead>
@@ -279,6 +280,41 @@ export function ProductsTable() {
                   })}
                 </tbody>
               </table>
+            </div>
+          </div>
+
+          {/* Mobile card list */}
+          <div className="min-h-0 flex-1 overflow-auto p-2 lg:hidden">
+            <div className="flex flex-col gap-2">
+              {filtered.map((product) => {
+                const emoji = CATEGORY_EMOJI[product.category] ?? '📦';
+                const translatedName = t(productKeyByName[product.name] ?? product.name);
+                const translatedCategory = t(categoryKeyByName[product.category] ?? product.category);
+                return (
+                  <button
+                    key={product.id}
+                    type="button"
+                    onClick={() => { setEditProduct(product); setModalOpen(true); }}
+                    className="flex w-full items-center gap-3 rounded-lg border border-content-border bg-white p-3 text-start shadow-sm active:bg-surface-subtle"
+                  >
+                    <div className="flex size-10 shrink-0 items-center justify-center rounded-lg border border-[#d8d8d8] bg-white shadow-sm">
+                      <span className="text-xl" aria-hidden>{emoji}</span>
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="truncate text-sm font-medium text-[#18171c]">{translatedName}</span>
+                        <span className="shrink-0 tabular-nums text-sm font-semibold text-[#18171c]">₪{product.price}</span>
+                      </div>
+                      <div className="mt-1 flex items-center gap-2">
+                        <span className="text-xs text-black/50">{translatedCategory}</span>
+                        <span className="text-black/20">·</span>
+                        <TagStatus status={product.syncStatus} />
+                      </div>
+                    </div>
+                    <IconPencil className="shrink-0 text-black/30" />
+                  </button>
+                );
+              })}
             </div>
           </div>
         </div>

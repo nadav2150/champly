@@ -162,31 +162,76 @@ export function BatchSidebar({ variant = 'products' }: BatchSidebarProps) {
   const { t } = useTranslation(['common', 'products', 'tags']);
   const isProducts = variant === 'products';
   return (
-    <aside
-      className="flex w-full shrink-0 flex-col overflow-hidden rounded-xl border border-[#e2e2e4] bg-surface-muted lg:w-[341px] lg:max-w-[341px]"
-      aria-label={isProducts ? t('stores:productCategories') : t('stores:storeZones')}
-    >
-      <div className="flex gap-3 border-b border-content-border bg-surface-muted p-3 shadow-[0px_1px_0px_0px_white]">
-        <div className="flex flex-1 items-center gap-2 rounded-[10px] border border-[#ddd] bg-white py-1.5 ps-2 pe-3">
-          <IconSearch className="text-black/40" />
-          <span className="text-sm text-black/40">
-            {isProducts ? t('stores:searchCategory') : t('stores:searchZone')}
-          </span>
+    <>
+      {/* Desktop vertical sidebar */}
+      <aside
+        className="hidden w-full shrink-0 flex-col overflow-hidden rounded-xl border border-[#e2e2e4] bg-surface-muted lg:flex lg:w-[341px] lg:max-w-[341px]"
+        aria-label={isProducts ? t('stores:productCategories') : t('stores:storeZones')}
+      >
+        <div className="flex gap-3 border-b border-content-border bg-surface-muted p-3 shadow-[0px_1px_0px_0px_white]">
+          <div className="flex flex-1 items-center gap-2 rounded-[10px] border border-[#ddd] bg-white py-1.5 ps-2 pe-3">
+            <IconSearch className="text-black/40" />
+            <span className="text-sm text-black/40">
+              {isProducts ? t('stores:searchCategory') : t('stores:searchZone')}
+            </span>
+          </div>
+          <button
+            type="button"
+            className="flex h-auto items-center gap-2 rounded-[10px] border border-[#ddd] bg-white py-1.5 ps-2 pe-3 shadow-[0px_1px_0px_0px_#ddd,0px_2px_2px_0px_rgba(0,0,0,0.05)]"
+          >
+            <IconFilter className="text-black" />
+            <span className="text-sm text-black">{t('common:actions.sort')}</span>
+            <IconChevronDown className="text-black/60" />
+          </button>
         </div>
-        <button
-          type="button"
-          className="flex h-auto items-center gap-2 rounded-[10px] border border-[#ddd] bg-white py-1.5 ps-2 pe-3 shadow-[0px_1px_0px_0px_#ddd,0px_2px_2px_0px_rgba(0,0,0,0.05)]"
-        >
-          <IconFilter className="text-black" />
-          <span className="text-sm text-black">{t('common:actions.sort')}</span>
-          <IconChevronDown className="text-black/60" />
-        </button>
-      </div>
-      <div className="flex flex-col gap-3 overflow-y-auto p-3">
+        <div className="flex flex-col gap-3 overflow-y-auto p-3">
+          {isProducts
+            ? CATEGORIES.map((c) => <CategoryCard key={c.id} category={c} />)
+            : ZONES.map((z) => <ZoneCard key={z.id} zone={z} />)}
+        </div>
+      </aside>
+
+      {/* Mobile horizontal chip strip */}
+      <div
+        className="flex gap-2 overflow-x-auto px-1 py-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:hidden"
+        role="tablist"
+        aria-label={isProducts ? t('stores:productCategories') : t('stores:storeZones')}
+      >
         {isProducts
-          ? CATEGORIES.map((c) => <CategoryCard key={c.id} category={c} />)
-          : ZONES.map((z) => <ZoneCard key={z.id} zone={z} />)}
+          ? CATEGORIES.map((c) => (
+              <button
+                key={c.id}
+                type="button"
+                role="tab"
+                aria-selected={c.selected}
+                className={`flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium shadow-sm ${
+                  c.selected
+                    ? 'border border-batch-selected-border bg-batch-selected-bg text-churn-low'
+                    : 'border border-content-border bg-white text-content-primary'
+                }`}
+              >
+                <span aria-hidden>{c.icon}</span>
+                {t(c.name)}
+                <span className="tabular-nums text-black/40">{c.productCount}</span>
+              </button>
+            ))
+          : ZONES.map((z) => (
+              <button
+                key={z.id}
+                type="button"
+                role="tab"
+                aria-selected={z.selected}
+                className={`flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium shadow-sm ${
+                  z.selected
+                    ? 'border border-batch-selected-border bg-batch-selected-bg text-churn-low'
+                    : 'border border-content-border bg-white text-content-primary'
+                }`}
+              >
+                {t(z.name)}
+                <span className="tabular-nums text-black/40">{z.totalTags}</span>
+              </button>
+            ))}
       </div>
-    </aside>
+    </>
   );
 }
