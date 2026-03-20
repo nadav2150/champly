@@ -1,5 +1,6 @@
 import { useEffect, useId, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import type { DashboardOutletContext } from '../../types/dashboard-outlet-context';
 import { minorUnitsToDecimalString, parseDecimalToMinorUnits } from '../../lib/money';
 
 type UnitOption = 'per_unit' | 'per_kg';
@@ -11,14 +12,18 @@ export type EditModalProduct = {
   hardwareTagId: string;
   unit: UnitOption;
   templateId: string | null;
+  categoryId: string | null;
 };
 
 type TemplateOption = { id: string; name: string };
+
+type CategoryRow = DashboardOutletContext['categories'][number];
 
 type EditProductModalProps = {
   open: boolean;
   product: EditModalProduct | null;
   templates: TemplateOption[];
+  categories: CategoryRow[];
   onClose: () => void;
   onSave: (payload: {
     id: string;
@@ -26,6 +31,7 @@ type EditProductModalProps = {
     priceCents: number;
     unit: UnitOption;
     templateId: string | null;
+    categoryId: string | null;
   }) => void;
 };
 
@@ -33,6 +39,7 @@ export function EditProductModal({
   open,
   product,
   templates,
+  categories,
   onClose,
   onSave,
 }: EditProductModalProps) {
@@ -42,6 +49,7 @@ export function EditProductModal({
   const [price, setPrice] = useState('');
   const [unit, setUnit] = useState<UnitOption>('per_kg');
   const [templateId, setTemplateId] = useState<string>('');
+  const [categoryId, setCategoryId] = useState<string>('');
 
   useEffect(() => {
     if (product && open) {
@@ -49,6 +57,7 @@ export function EditProductModal({
       setPrice(minorUnitsToDecimalString(product.priceCents));
       setUnit(product.unit);
       setTemplateId(product.templateId ?? '');
+      setCategoryId(product.categoryId ?? '');
     }
   }, [product, open]);
 
@@ -68,6 +77,7 @@ export function EditProductModal({
       priceCents: parseDecimalToMinorUnits(price.trim() || minorUnitsToDecimalString(activeProduct.priceCents)),
       unit,
       templateId: templateId.length > 0 ? templateId : null,
+      categoryId: categoryId.length > 0 ? categoryId : null,
     });
     onClose();
   }
@@ -157,6 +167,28 @@ export function EditProductModal({
             >
               <option value="per_kg">{t('common:units.perKg')}</option>
               <option value="per_unit">{t('common:units.perUnit')}</option>
+            </select>
+          </div>
+
+          <div>
+            <label
+              htmlFor={`${formId}-category`}
+              className="mb-1 block text-xs font-medium text-white/60"
+            >
+              {t('products:category')}
+            </label>
+            <select
+              id={`${formId}-category`}
+              value={categoryId}
+              onChange={(e) => setCategoryId(e.target.value)}
+              className="w-full rounded-lg border border-white/20 bg-dashboard-bg px-3 py-2.5 text-sm text-white focus:border-accent-mint focus:outline-none lg:py-2"
+            >
+              <option value="">{t('products:selectCategory')}</option>
+              {categories.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {t(c.name, { defaultValue: c.name })}
+                </option>
+              ))}
             </select>
           </div>
 

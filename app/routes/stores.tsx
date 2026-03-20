@@ -1,6 +1,6 @@
 import type { Route } from './+types/stores';
 import { useCallback, useMemo, useState } from 'react';
-import { useLoaderData } from 'react-router';
+import { data, useLoaderData } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { CreateStoreModal } from '../components/dashboard/create-store-modal';
 import { DeleteStoreDialog } from '../components/dashboard/delete-store-dialog';
@@ -13,7 +13,10 @@ import {
   type StoreCardData,
 } from '../components/dashboard/store-card';
 import { getDb } from '../db/client.server';
-import { listProductsWithStoreForAssignment } from '../db/products.server';
+import {
+  allProductIdsOwnedByUser,
+  listProductsWithStoreForAssignment,
+} from '../db/products.server';
 import {
   createStore,
   deleteStore,
@@ -23,6 +26,7 @@ import {
   updateStore,
 } from '../db/stores.server';
 import { isSupportedLanguage } from '../i18n/config';
+import { requireUser } from '../lib/require-user.server';
 
 function parseStringIdArray(raw: string): string[] {
   try {
@@ -69,15 +73,17 @@ function parseZonesUpdate(raw: string): StoreZoneInput[] {
   }
 }
 
-export async function loader({ context }: Route.LoaderArgs) {
+export async function loader({ request, context }: Route.LoaderArgs) {
+  const env = context.cloudflare.env;
+  const { user, headers } = await requireUser(request, env);
   const db = getDb(context);
   const [stores, catalogProducts] = await Promise.all([
-    listStoresWithAggregates(db),
-    listProductsWithStoreForAssignment(db),
+    listStoresWithAggregates(db, user.id),
+    listProductsWithStoreForAssignment(db, user.id),
   ]);
 
   const details = await Promise.all(
-    stores.map((s) => getStoreById(db, s.id)),
+    stores.map((s) => getStoreById(db, user.id, s.id)),
   );
 
   const editStoreById: Record<string, EditStoreDetail> = {};
@@ -98,10 +104,15 @@ export async function loader({ context }: Route.LoaderArgs) {
     stores.map((s) => [s.id, s.name] as const),
   );
 
-  return { stores, catalogProducts, storeNameById, editStoreById };
+  return data(
+    { stores, catalogProducts, storeNameById, editStoreById },
+    { headers },
+  );
 }
 
 export async function action({ request, context }: Route.ActionArgs) {
+  const env = context.cloudflare.env;
+  const { user, headers } = await requireUser(request, env);
   const formData = await request.formData();
   const intent = String(formData.get('intent') ?? '');
   const db = getDb(context);
@@ -110,7 +121,7 @@ export async function action({ request, context }: Route.ActionArgs) {
     const name = String(formData.get('name') ?? '').trim();
     const address = String(formData.get('address') ?? '').trim();
     if (!name || !address) {
-      return { ok: false as const, error: 'validation' };
+      return data({ ok: false as const, error: 'validation' }, { headers });
     }
     const zoneNames = parseZoneNamesCreate(
       String(formData.get('zonesJson') ?? '[]'),
@@ -118,8 +129,20 @@ export async function action({ request, context }: Route.ActionArgs) {
     const productIds = parseStringIdArray(
       String(formData.get('productIdsJson') ?? '[]'),
     );
-    await createStore(db, { name, address, zoneNames, productIds });
-    return { ok: true as const };
+    if (productIds.length > 0) {
+      const allOwned = await allProductIdsOwnedByUser(db, user.id, productIds);
+      if (!allOwned) {
+        return data({ ok: false as const, error: 'forbidden' }, { headers });
+      }
+    }
+    await createStore(db, {
+      userId: user.id,
+      name,
+      address,
+      zoneNames,
+      productIds,
+    });
+    return data({ ok: true as const }, { headers });
   }
 
   if (intent === 'update-store') {
@@ -127,26 +150,38 @@ export async function action({ request, context }: Route.ActionArgs) {
     const name = String(formData.get('name') ?? '').trim();
     const address = String(formData.get('address') ?? '').trim();
     if (!id || !name || !address) {
-      return { ok: false as const, error: 'validation' };
+      return data({ ok: false as const, error: 'validation' }, { headers });
     }
     const zones = parseZonesUpdate(String(formData.get('zonesJson') ?? '[]'));
     const productIds = parseStringIdArray(
       String(formData.get('productIdsJson') ?? '[]'),
     );
-    await updateStore(db, { id, name, address, zones, productIds });
-    return { ok: true as const };
+    const updated = await updateStore(db, user.id, {
+      id,
+      name,
+      address,
+      zones,
+      productIds,
+    });
+    if (!updated) {
+      return data({ ok: false as const, error: 'forbidden' }, { headers });
+    }
+    return data({ ok: true as const }, { headers });
   }
 
   if (intent === 'delete-store') {
     const id = String(formData.get('id') ?? '').trim();
     if (!id) {
-      return { ok: false as const, error: 'validation' };
+      return data({ ok: false as const, error: 'validation' }, { headers });
     }
-    await deleteStore(db, id);
-    return { ok: true as const };
+    const deleted = await deleteStore(db, user.id, id);
+    if (!deleted) {
+      return data({ ok: false as const, error: 'forbidden' }, { headers });
+    }
+    return data({ ok: true as const }, { headers });
   }
 
-  return { ok: false as const, error: 'unknown' };
+  return data({ ok: false as const, error: 'unknown' }, { headers });
 }
 
 export function meta({ params }: Route.MetaArgs) {

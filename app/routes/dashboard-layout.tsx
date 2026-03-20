@@ -1,27 +1,20 @@
-import { data, Outlet, redirect, useLoaderData } from 'react-router';
+import { data, Outlet, useLoaderData } from 'react-router';
 import { Navbar } from '../components/dashboard/navbar';
 import { getDb } from '../db/client.server';
 import { listCategoriesWithCounts } from '../db/categories.server';
 import { listZonesWithStats } from '../db/zones.server';
-import { createSupabaseServerClient } from '../lib/supabase.server';
+import { requireUser } from '../lib/require-user.server';
 import type { DashboardOutletContext } from '../types/dashboard-outlet-context';
 import type { Route } from './+types/dashboard-layout';
 
 export async function loader({ request, context }: Route.LoaderArgs) {
   const env = context.cloudflare.env;
-  const { supabase, headers } = createSupabaseServerClient(request, env);
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    throw redirect('/login', { headers });
-  }
+  const { user, headers } = await requireUser(request, env);
 
   const db = getDb(context);
   const [categories, zones] = await Promise.all([
-    listCategoriesWithCounts(db),
-    listZonesWithStats(db),
+    listCategoriesWithCounts(db, user.id),
+    listZonesWithStats(db, user.id),
   ]);
 
   return data({ user, categories, zones }, { headers });

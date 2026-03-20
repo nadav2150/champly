@@ -48,6 +48,7 @@ export function TagControlScreen(props: TagControlScreenProps) {
             <ProductsTable
               initialProducts={props.products}
               templates={props.templates}
+              categories={categories}
             />
           ) : (
             <TagsTable

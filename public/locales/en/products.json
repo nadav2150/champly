@@ -22,6 +22,16 @@
   "tagPreview": "Tag preview",
   "template": "Display template",
   "templatePlaceholder": "Select a template",
+  "createProduct": "Create product",
+  "deleteProduct": "Delete product",
+  "deleteProductConfirmTitle": "Delete this product?",
+  "deleteProductConfirmMessage": "Linked tags will be unassigned. This cannot be undone.",
+  "category": "Category",
+  "selectCategory": "Select category",
+  "createCategory": "New category",
+  "categoryName": "Category name",
+  "categoryIcon": "Icon (emoji)",
+  "validationNamePrice": "Enter a valid name and price.",
   "empty": {
     "title": "No products yet",
     "description": "Add your first product to start managing your catalog and syncing prices to shelf labels."

@@ -20,6 +20,8 @@
     "syncNow": "סנכרן מחירים עכשיו",
     "reviewAlerts": "בדוק התראות תגיות",
     "addProduct": "הוסף מוצר",
+    "createProduct": "צור מוצר",
+    "deleteProduct": "מחק מוצר",
     "pairNewTag": "שייך תגית חדשה",
     "bulkSync": "סנכרון מרובה",
     "bulkPriceUpdate": "עדכון מחירים מרובה",

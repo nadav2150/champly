@@ -20,6 +20,8 @@
     "syncNow": "Sync prices now",
     "reviewAlerts": "Review tag alerts",
     "addProduct": "Add Product",
+    "createProduct": "Create product",
+    "deleteProduct": "Delete product",
     "pairNewTag": "Pair New Tag",
     "bulkSync": "Bulk Sync",
     "bulkPriceUpdate": "Bulk price update",

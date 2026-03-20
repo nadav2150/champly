@@ -22,6 +22,16 @@
   "tagPreview": "תצוגת תגית",
   "template": "תבנית תצוגה",
   "templatePlaceholder": "בחר תבנית",
+  "createProduct": "צור מוצר",
+  "deleteProduct": "מחק מוצר",
+  "deleteProductConfirmTitle": "למחוק את המוצר?",
+  "deleteProductConfirmMessage": "תגיות משויכות ינותקו. לא ניתן לבטל.",
+  "category": "קטגוריה",
+  "selectCategory": "בחר קטגוריה",
+  "createCategory": "קטגוריה חדשה",
+  "categoryName": "שם הקטגוריה",
+  "categoryIcon": "אייקון (אימוג׳י)",
+  "validationNamePrice": "הזן שם ומחיר תקינים.",
   "empty": {
     "title": "אין מוצרים עדיין",
     "description": "הוסף את המוצר הראשון שלך כדי להתחיל לנהל את הקטלוג ולסנכרן מחירים לתגיות מדף."

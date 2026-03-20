@@ -1,9 +1,16 @@
 import { and, count, eq, inArray } from 'drizzle-orm';
 import type { AppDatabase } from './client.server';
+import { allProductIdsOwnedByUser } from './products.server';
 import { products, stores, syncJobs, tags, zones } from './schema.server';
 
-export async function listStoresWithAggregates(db: AppDatabase) {
-  const storeList = await db.select().from(stores);
+export async function listStoresWithAggregates(
+  db: AppDatabase,
+  userId: string,
+) {
+  const storeList = await db
+    .select()
+    .from(stores)
+    .where(eq(stores.userId, userId));
   const out: Array<{
     id: string;
     name: string;
@@ -51,8 +58,15 @@ export async function listStoresWithAggregates(db: AppDatabase) {
 
 export type StoreZoneInput = { id?: string; name: string };
 
-export async function getStoreById(db: AppDatabase, storeId: string) {
-  const [row] = await db.select().from(stores).where(eq(stores.id, storeId));
+export async function getStoreById(
+  db: AppDatabase,
+  userId: string,
+  storeId: string,
+) {
+  const [row] = await db
+    .select()
+    .from(stores)
+    .where(and(eq(stores.id, storeId), eq(stores.userId, userId)));
   if (!row) {
     return null;
   }
@@ -84,6 +98,7 @@ function newId(prefix: string) {
 export async function createStore(
   db: AppDatabase,
   input: {
+    userId: string;
     name: string;
     address: string;
     zoneNames: string[];
@@ -94,6 +109,7 @@ export async function createStore(
 
   await db.insert(stores).values({
     id: storeId,
+    userId: input.userId,
     name: input.name.trim(),
     address: input.address.trim(),
     lastSync: null,
@@ -125,6 +141,7 @@ export async function createStore(
 
 export async function updateStore(
   db: AppDatabase,
+  userId: string,
   input: {
     id: string;
     name: string;
@@ -132,8 +149,16 @@ export async function updateStore(
     zones: StoreZoneInput[];
     productIds: string[];
   },
-) {
+): Promise<boolean> {
   const storeId = input.id;
+
+  const [owned] = await db
+    .select({ id: stores.id })
+    .from(stores)
+    .where(and(eq(stores.id, storeId), eq(stores.userId, userId)));
+  if (!owned) {
+    return false;
+  }
 
   await db
     .update(stores)
@@ -193,14 +218,32 @@ export async function updateStore(
     .where(eq(products.storeId, storeId));
 
   if (input.productIds.length > 0) {
+    const ok = await allProductIdsOwnedByUser(db, userId, input.productIds);
+    if (!ok) {
+      return false;
+    }
     await db
       .update(products)
       .set({ storeId })
       .where(inArray(products.id, input.productIds));
   }
+
+  return true;
 }
 
-export async function deleteStore(db: AppDatabase, storeId: string) {
+export async function deleteStore(
+  db: AppDatabase,
+  userId: string,
+  storeId: string,
+): Promise<boolean> {
+  const [owned] = await db
+    .select({ id: stores.id })
+    .from(stores)
+    .where(and(eq(stores.id, storeId), eq(stores.userId, userId)));
+  if (!owned) {
+    return false;
+  }
+
   await db.delete(syncJobs).where(eq(syncJobs.storeId, storeId));
 
   const storeZones = await db
@@ -223,4 +266,5 @@ export async function deleteStore(db: AppDatabase, storeId: string) {
     .where(eq(products.storeId, storeId));
 
   await db.delete(stores).where(eq(stores.id, storeId));
+  return true;
 }

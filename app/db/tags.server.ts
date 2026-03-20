@@ -1,6 +1,7 @@
-import { eq } from 'drizzle-orm';
+import { and, eq, inArray, isNotNull, isNull, or } from 'drizzle-orm';
 import type { AppDatabase } from './client.server';
-import { products, tags } from './schema.server';
+import { listOwnedProductIds, productOwnedByUser } from './products.server';
+import { products, stores, tags, zones } from './schema.server';
 
 export type TagTableRow = {
   id: string;
@@ -14,14 +15,74 @@ export type TagTableRow = {
   zoneId: string | null;
 };
 
-export async function listTagsForTable(db: AppDatabase) {
+async function listZoneIdsForUser(db: AppDatabase, userId: string) {
+  const rows = await db
+    .select({ id: zones.id })
+    .from(zones)
+    .innerJoin(stores, eq(zones.storeId, stores.id))
+    .where(eq(stores.userId, userId));
+  return rows.map((r) => r.id);
+}
+
+export async function tagOwnedByUser(
+  db: AppDatabase,
+  userId: string,
+  tagInternalId: string,
+): Promise<boolean> {
+  const [tagRow] = await db
+    .select()
+    .from(tags)
+    .where(eq(tags.id, tagInternalId));
+  if (!tagRow) {
+    return false;
+  }
+
+  if (tagRow.zoneId) {
+    const [z] = await db
+      .select({ id: zones.id })
+      .from(zones)
+      .innerJoin(stores, eq(zones.storeId, stores.id))
+      .where(and(eq(zones.id, tagRow.zoneId), eq(stores.userId, userId)));
+    return !!z;
+  }
+
+  if (tagRow.linkedProductId) {
+    return productOwnedByUser(db, userId, tagRow.linkedProductId);
+  }
+
+  return false;
+}
+
+export async function listTagsForTable(db: AppDatabase, userId: string) {
+  const zoneIds = await listZoneIdsForUser(db, userId);
+  const productIds = await listOwnedProductIds(db, userId);
+
+  const visibility: ReturnType<typeof and>[] = [];
+  if (zoneIds.length > 0) {
+    visibility.push(and(isNotNull(tags.zoneId), inArray(tags.zoneId, zoneIds)));
+  }
+  if (productIds.length > 0) {
+    visibility.push(
+      and(
+        isNull(tags.zoneId),
+        isNotNull(tags.linkedProductId),
+        inArray(tags.linkedProductId, productIds),
+      ),
+    );
+  }
+
+  if (visibility.length === 0) {
+    return [];
+  }
+
   const rows = await db
     .select({
       tag: tags,
       productName: products.name,
     })
     .from(tags)
-    .leftJoin(products, eq(tags.linkedProductId, products.id));
+    .leftJoin(products, eq(tags.linkedProductId, products.id))
+    .where(or(...visibility));
 
   const out: TagTableRow[] = rows.map(({ tag, productName }) => ({
     id: tag.id,
@@ -39,11 +100,23 @@ export async function listTagsForTable(db: AppDatabase) {
 
 export async function linkTagToProduct(
   db: AppDatabase,
+  userId: string,
   tagInternalId: string,
   productId: string | null,
-) {
+): Promise<boolean> {
+  const okTag = await tagOwnedByUser(db, userId, tagInternalId);
+  if (!okTag) {
+    return false;
+  }
+  if (productId) {
+    const okProd = await productOwnedByUser(db, userId, productId);
+    if (!okProd) {
+      return false;
+    }
+  }
   await db
     .update(tags)
     .set({ linkedProductId: productId })
     .where(eq(tags.id, tagInternalId));
+  return true;
 }

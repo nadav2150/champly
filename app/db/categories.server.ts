@@ -2,8 +2,14 @@ import { and, count, eq } from 'drizzle-orm';
 import type { AppDatabase } from './client.server';
 import { categories, products, tags } from './schema.server';
 
-export async function listCategoriesWithCounts(db: AppDatabase) {
-  const cats = await db.select().from(categories);
+export async function listCategoriesWithCounts(
+  db: AppDatabase,
+  userId: string,
+) {
+  const cats = await db
+    .select()
+    .from(categories)
+    .where(eq(categories.userId, userId));
   const rows: Array<{
     id: string;
     name: string;
@@ -46,4 +52,24 @@ export async function listCategoriesWithCounts(db: AppDatabase) {
   }
 
   return rows;
+}
+
+function newId(prefix: string) {
+  return `${prefix}_${crypto.randomUUID().replace(/-/g, '')}`;
+}
+
+export async function createCategory(
+  db: AppDatabase,
+  input: { userId: string; name: string; icon: string },
+) {
+  const id = newId('cat');
+  const name = input.name.trim();
+  const icon = input.icon.trim() || '📦';
+  await db.insert(categories).values({
+    id,
+    userId: input.userId,
+    name,
+    icon,
+  });
+  return { id, name, icon };
 }

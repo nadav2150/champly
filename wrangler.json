@@ -12,7 +12,8 @@
       "binding": "DB",
       "database_name": "champty-db",
       "database_id": "ca618a89-12b0-431b-83c1-6dcc46db16f6",
-      "migrations_dir": "drizzle/migrations"
+      "migrations_dir": "drizzle/migrations",
+      "remote": true
     }
   ]
 }

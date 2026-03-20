@@ -1,9 +1,14 @@
 import { eq } from 'drizzle-orm';
 import type { AppDatabase } from './client.server';
-import { tags, zones } from './schema.server';
+import { stores, tags, zones } from './schema.server';
 
-export async function listZonesWithStats(db: AppDatabase) {
-  const zs = await db.select().from(zones);
+export async function listZonesWithStats(db: AppDatabase, userId: string) {
+  const zs = await db
+    .select()
+    .from(zones)
+    .innerJoin(stores, eq(zones.storeId, stores.id))
+    .where(eq(stores.userId, userId));
+
   const result: Array<{
     id: string;
     name: string;
@@ -13,7 +18,8 @@ export async function listZonesWithStats(db: AppDatabase) {
     lowBattery: number;
   }> = [];
 
-  for (const z of zs) {
+  for (const row of zs) {
+    const z = row.zones;
     const zoneTags = await db.select().from(tags).where(eq(tags.zoneId, z.id));
     const totalTags = zoneTags.length;
     const onlineTags = zoneTags.filter((t) => t.status === 'online').length;

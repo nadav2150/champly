@@ -1,17 +1,31 @@
 import { index, integer, sqliteTable, text } from 'drizzle-orm/sqlite-core';
 
-export const stores = sqliteTable('stores', {
-  id: text('id').primaryKey(),
-  name: text('name').notNull(),
-  address: text('address').notNull(),
-  lastSync: text('last_sync'),
-});
+export const stores = sqliteTable(
+  'stores',
+  {
+    id: text('id').primaryKey(),
+    userId: text('user_id').notNull(),
+    name: text('name').notNull(),
+    address: text('address').notNull(),
+    lastSync: text('last_sync'),
+  },
+  (table) => ({
+    userIdx: index('idx_stores_user_id').on(table.userId),
+  }),
+);
 
-export const categories = sqliteTable('categories', {
-  id: text('id').primaryKey(),
-  name: text('name').notNull(),
-  icon: text('icon').notNull(),
-});
+export const categories = sqliteTable(
+  'categories',
+  {
+    id: text('id').primaryKey(),
+    userId: text('user_id').notNull(),
+    name: text('name').notNull(),
+    icon: text('icon').notNull(),
+  },
+  (table) => ({
+    userIdx: index('idx_categories_user_id').on(table.userId),
+  }),
+);
 
 export const zones = sqliteTable('zones', {
   id: text('id').primaryKey(),

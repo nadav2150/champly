@@ -1,8 +1,11 @@
 import type { ReactNode } from 'react';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useFetcher } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { minorUnitsToDecimalString } from '../../lib/money';
+import type { DashboardOutletContext } from '../../types/dashboard-outlet-context';
+import { CreateProductModal } from './create-product-modal';
+import { DeleteProductDialog } from './delete-product-dialog';
 import { EditProductModal } from './edit-product-modal';
 import type { Product } from './tag-product';
 import { TagStatus, type TagSyncStatus } from './tag-status';
@@ -37,6 +40,20 @@ function IconLink({ className }: { className?: string }) {
     <svg className={className} width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
       <path d="M6.5 9.5a3 3 0 004.24 0l2-2a3 3 0 00-4.24-4.24L7.5 4.26" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round" />
       <path d="M9.5 6.5a3 3 0 00-4.24 0l-2 2a3 3 0 004.24 4.24l1-1" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function IconTrash({ className }: { className?: string }) {
+  return (
+    <svg className={className} width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+      <path
+        d="M3 4h10M6 4V2.5h4V4M6 7v5m4-5v5M5.5 4h5l-.5 8.5h-4L5.5 4z"
+        stroke="currentColor"
+        strokeWidth="1.2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </svg>
   );
 }
@@ -77,9 +94,14 @@ const productKeyByName: Record<string, string> = {
 type ProductsTableProps = {
   initialProducts: Product[];
   templates: Array<{ id: string; name: string }>;
+  categories: DashboardOutletContext['categories'];
 };
 
-export function ProductsTable({ initialProducts, templates }: ProductsTableProps) {
+export function ProductsTable({
+  initialProducts,
+  templates,
+  categories,
+}: ProductsTableProps) {
   const { t } = useTranslation(['common', 'products']);
   const fetcher = useFetcher();
   const [products, setProducts] = useState<Product[]>(initialProducts);
@@ -87,6 +109,11 @@ export function ProductsTable({ initialProducts, templates }: ProductsTableProps
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [editProduct, setEditProduct] = useState<Product | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [createOpen, setCreateOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
 
   useEffect(() => {
     setProducts(initialProducts);
@@ -114,39 +141,48 @@ export function ProductsTable({ initialProducts, templates }: ProductsTableProps
     }
   }
 
-  function handleSaveProduct(payload: {
-    id: string;
-    name: string;
-    priceCents: number;
-    unit: 'per_unit' | 'per_kg';
-    templateId: string | null;
-  }) {
-    const fd = new FormData();
-    fd.set('intent', 'update-product');
-    fd.set('id', payload.id);
-    fd.set('name', payload.name);
-    fd.set('priceCents', String(payload.priceCents));
-    fd.set('unit', payload.unit);
-    if (payload.templateId) {
-      fd.set('templateId', payload.templateId);
-    }
-    fetcher.submit(fd, { method: 'post' });
+  const handleSaveProduct = useCallback(
+    (payload: {
+      id: string;
+      name: string;
+      priceCents: number;
+      unit: 'per_unit' | 'per_kg';
+      templateId: string | null;
+      categoryId: string | null;
+    }) => {
+      const fd = new FormData();
+      fd.set('intent', 'update-product');
+      fd.set('id', payload.id);
+      fd.set('name', payload.name);
+      fd.set('priceCents', String(payload.priceCents));
+      fd.set('unit', payload.unit);
+      if (payload.templateId) {
+        fd.set('templateId', payload.templateId);
+      }
+      fd.set('categoryId', payload.categoryId ?? '');
+      fetcher.submit(fd, { method: 'post' });
 
-    setProducts((prev) =>
-      prev.map((p) =>
-        p.id === payload.id
-          ? {
-              ...p,
-              name: payload.name,
-              priceCents: payload.priceCents,
-              unit: payload.unit,
-              templateId: payload.templateId,
-              syncStatus: 'pending',
-            }
-          : p,
-      ),
-    );
-  }
+      const cat = categories.find((c) => c.id === payload.categoryId);
+      setProducts((prev) =>
+        prev.map((p) =>
+          p.id === payload.id
+            ? {
+                ...p,
+                name: payload.name,
+                priceCents: payload.priceCents,
+                unit: payload.unit,
+                templateId: payload.templateId,
+                categoryId: payload.categoryId,
+                categoryName: cat?.name ?? p.categoryName,
+                categoryIcon: cat?.icon ?? p.categoryIcon,
+                syncStatus: 'pending',
+              }
+            : p,
+        ),
+      );
+    },
+    [categories, fetcher],
+  );
 
   function handleBulkPriceUpdate() {
     if (selectedIds.size === 0) return;
@@ -173,20 +209,64 @@ export function ProductsTable({ initialProducts, templates }: ProductsTableProps
         hardwareTagId: editProduct.hardwareTagId ?? '—',
         unit: editProduct.unit,
         templateId: editProduct.templateId,
+        categoryId: editProduct.categoryId,
       }
     : null;
 
+  const openDelete = useCallback((p: Product) => {
+    const displayName = t(productKeyByName[p.name] ?? p.name);
+    setDeleteTarget({ id: p.id, name: displayName });
+  }, [t]);
+
+  const sharedModals = (
+    <>
+      <CreateProductModal
+        open={createOpen}
+        onClose={() => setCreateOpen(false)}
+        categories={categories}
+        templates={templates}
+      />
+      <EditProductModal
+        open={modalOpen}
+        product={modalProduct}
+        templates={templates}
+        categories={categories}
+        onClose={() => {
+          setModalOpen(false);
+          setEditProduct(null);
+        }}
+        onSave={handleSaveProduct}
+      />
+      <DeleteProductDialog
+        open={deleteTarget !== null}
+        productId={deleteTarget?.id ?? null}
+        productName={deleteTarget?.name ?? ''}
+        onClose={() => setDeleteTarget(null)}
+      />
+    </>
+  );
+
   if (products.length === 0) {
     return (
-      <div className="relative flex min-h-0 min-w-0 flex-1 flex-col items-center justify-center overflow-hidden rounded-xl border border-[#e2e2e4] bg-white shadow-[0px_4px_6px_0px_rgba(207,207,207,0.1)]">
-        <div className="flex flex-col items-center gap-4 p-12 text-center">
-          <div className="flex size-16 items-center justify-center rounded-2xl border border-[#e2e2e4] bg-surface-subtle">
-            <span className="text-3xl">📦</span>
+      <>
+        <div className="relative flex min-h-0 min-w-0 flex-1 flex-col items-center justify-center overflow-hidden rounded-xl border border-[#e2e2e4] bg-white shadow-[0px_4px_6px_0px_rgba(207,207,207,0.1)]">
+          <div className="flex flex-col items-center gap-4 p-12 text-center">
+            <div className="flex size-16 items-center justify-center rounded-2xl border border-[#e2e2e4] bg-surface-subtle">
+              <span className="text-3xl">📦</span>
+            </div>
+            <h2 className="text-xl font-medium text-[#18171c]">{t('products:empty.title')}</h2>
+            <p className="max-w-sm text-sm text-black/50">{t('products:empty.description')}</p>
+            <button
+              type="button"
+              onClick={() => setCreateOpen(true)}
+              className="mt-2 rounded-full border border-dashboard-border bg-dashboard-card px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:brightness-110"
+            >
+              {t('common:actions.createProduct')}
+            </button>
           </div>
-          <h2 className="text-xl font-medium text-[#18171c]">{t('products:empty.title')}</h2>
-          <p className="max-w-sm text-sm text-black/50">{t('products:empty.description')}</p>
         </div>
-      </div>
+        {sharedModals}
+      </>
     );
   }
 
@@ -207,14 +287,23 @@ export function ProductsTable({ initialProducts, templates }: ProductsTableProps
                   <span className="text-sm text-black/40">{t('common:table.searchProducts')}</span>
                 </div>
               </div>
-              <button
-                type="button"
-                onClick={handleBulkPriceUpdate}
-                disabled={selectedIds.size === 0 || fetcher.state !== 'idle'}
-                className="rounded-full border border-dashboard-border bg-dashboard-card px-4 py-2 text-sm font-medium text-white shadow-sm disabled:cursor-not-allowed disabled:opacity-40"
-              >
-                {t('common:actions.bulkPriceUpdate')}
-              </button>
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setCreateOpen(true)}
+                  className="rounded-full border border-dashboard-border bg-dashboard-card px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:brightness-110"
+                >
+                  {t('common:actions.createProduct')}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleBulkPriceUpdate}
+                  disabled={selectedIds.size === 0 || fetcher.state !== 'idle'}
+                  className="rounded-full border border-dashboard-border bg-dashboard-card px-4 py-2 text-sm font-medium text-white shadow-sm disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  {t('common:actions.bulkPriceUpdate')}
+                </button>
+              </div>
             </div>
             <div className="flex gap-2 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:flex-wrap lg:overflow-visible">
               {FILTER_PILLS.map(({ key, labelKey }) => (
@@ -312,6 +401,14 @@ export function ProductsTable({ initialProducts, templates }: ProductsTableProps
                                 {t('common:actions.assignTag')}
                               </button>
                             ) : null}
+                            <button
+                              type="button"
+                              onClick={() => openDelete(product)}
+                              className="inline-flex items-center gap-1.5 rounded-[10px] border border-red-200 bg-white px-3 py-1.5 text-xs font-medium text-red-700 shadow-sm"
+                              aria-label={t('common:actions.deleteProduct')}
+                            >
+                              <IconTrash className="shrink-0" />
+                            </button>
                           </div>
                         </td>
                       </tr>
@@ -329,28 +426,43 @@ export function ProductsTable({ initialProducts, templates }: ProductsTableProps
                 const translatedName = t(productKeyByName[product.name] ?? product.name);
                 const translatedCategory = t(product.categoryName);
                 return (
-                  <button
+                  <div
                     key={product.id}
-                    type="button"
-                    onClick={() => { setEditProduct(product); setModalOpen(true); }}
-                    className="flex w-full items-center gap-3 rounded-lg border border-content-border bg-white p-3 text-start shadow-sm active:bg-surface-subtle"
+                    className="flex w-full items-stretch gap-2 rounded-lg border border-content-border bg-white p-2 shadow-sm"
                   >
-                    <div className="flex size-10 shrink-0 items-center justify-center rounded-lg border border-[#d8d8d8] bg-white shadow-sm">
-                      <span className="text-xl" aria-hidden>{emoji}</span>
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="truncate text-sm font-medium text-[#18171c]">{translatedName}</span>
-                        <span className="shrink-0 tabular-nums text-sm font-semibold text-[#18171c]">₪{minorUnitsToDecimalString(product.priceCents)}</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEditProduct(product);
+                        setModalOpen(true);
+                      }}
+                      className="flex min-w-0 flex-1 items-center gap-3 rounded-md p-1 text-start active:bg-surface-subtle"
+                    >
+                      <div className="flex size-10 shrink-0 items-center justify-center rounded-lg border border-[#d8d8d8] bg-white shadow-sm">
+                        <span className="text-xl" aria-hidden>{emoji}</span>
                       </div>
-                      <div className="mt-1 flex items-center gap-2">
-                        <span className="text-xs text-black/50">{translatedCategory}</span>
-                        <span className="text-black/20">·</span>
-                        <TagStatus status={product.syncStatus} />
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="truncate text-sm font-medium text-[#18171c]">{translatedName}</span>
+                          <span className="shrink-0 tabular-nums text-sm font-semibold text-[#18171c]">₪{minorUnitsToDecimalString(product.priceCents)}</span>
+                        </div>
+                        <div className="mt-1 flex items-center gap-2">
+                          <span className="text-xs text-black/50">{translatedCategory}</span>
+                          <span className="text-black/20">·</span>
+                          <TagStatus status={product.syncStatus} />
+                        </div>
                       </div>
-                    </div>
-                    <IconPencil className="shrink-0 text-black/30" />
-                  </button>
+                      <IconPencil className="shrink-0 text-black/30" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => openDelete(product)}
+                      className="flex shrink-0 items-center justify-center rounded-md border border-red-100 px-2 text-red-700"
+                      aria-label={t('common:actions.deleteProduct')}
+                    >
+                      <IconTrash />
+                    </button>
+                  </div>
                 );
               })}
             </div>
@@ -358,13 +470,7 @@ export function ProductsTable({ initialProducts, templates }: ProductsTableProps
         </div>
       </div>
 
-      <EditProductModal
-        open={modalOpen}
-        product={modalProduct}
-        templates={templates}
-        onClose={() => { setModalOpen(false); setEditProduct(null); }}
-        onSave={handleSaveProduct}
-      />
+      {sharedModals}
     </>
   );
 }

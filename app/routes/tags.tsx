@@ -1,24 +1,29 @@
 import type { Route } from './+types/tags';
-import { useLoaderData, useOutletContext } from 'react-router';
+import { data, useLoaderData, useOutletContext } from 'react-router';
 import { TagControlScreen } from '../components/dashboard/tag-control-screen';
 import { getDb } from '../db/client.server';
 import { listProductPairOptions } from '../db/products.server';
 import { linkTagToProduct, listTagsForTable } from '../db/tags.server';
 import { getTagHeaderStats } from '../db/stats.server';
 import { isSupportedLanguage } from '../i18n/config';
+import { requireUser } from '../lib/require-user.server';
 import type { DashboardOutletContext } from '../types/dashboard-outlet-context';
 
-export async function loader({ context }: Route.LoaderArgs) {
+export async function loader({ request, context }: Route.LoaderArgs) {
+  const env = context.cloudflare.env;
+  const { user, headers } = await requireUser(request, env);
   const db = getDb(context);
   const [tags, tagStats, productOptions] = await Promise.all([
-    listTagsForTable(db),
-    getTagHeaderStats(db),
-    listProductPairOptions(db),
+    listTagsForTable(db, user.id),
+    getTagHeaderStats(db, user.id),
+    listProductPairOptions(db, user.id),
   ]);
-  return { tags, tagStats, productOptions };
+  return data({ tags, tagStats, productOptions }, { headers });
 }
 
 export async function action({ request, context }: Route.ActionArgs) {
+  const env = context.cloudflare.env;
+  const { user, headers } = await requireUser(request, env);
   const formData = await request.formData();
   const intent = String(formData.get('intent') ?? '');
   const db = getDb(context);
@@ -30,11 +35,19 @@ export async function action({ request, context }: Route.ActionArgs) {
       productIdRaw && String(productIdRaw).length > 0
         ? String(productIdRaw)
         : null;
-    await linkTagToProduct(db, tagInternalId, productId);
-    return { ok: true as const };
+    const linked = await linkTagToProduct(
+      db,
+      user.id,
+      tagInternalId,
+      productId,
+    );
+    if (!linked) {
+      return data({ ok: false as const, error: 'forbidden' }, { headers });
+    }
+    return data({ ok: true as const }, { headers });
   }
 
-  return { ok: false as const };
+  return data({ ok: false as const }, { headers });
 }
 
 export function meta({ params }: Route.MetaArgs) {
