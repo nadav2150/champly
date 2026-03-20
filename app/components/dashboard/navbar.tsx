@@ -1,0 +1,297 @@
+import { Link, useLocation } from 'react-router';
+
+function IconHome({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      width="20"
+      height="20"
+      viewBox="0 0 20 20"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden
+    >
+      <path
+        d="M3 10.5L10 4l7 6.5V16a1 1 0 01-1 1h-4.5v-4H8.5v4H4a1 1 0 01-1-1v-5.5z"
+        stroke="currentColor"
+        strokeWidth="1.25"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function IconStore({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      width="20"
+      height="20"
+      viewBox="0 0 20 20"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden
+    >
+      <path
+        d="M3 8l7-5 7 5v9a1 1 0 01-1 1H4a1 1 0 01-1-1V8z"
+        stroke="currentColor"
+        strokeWidth="1.25"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M8 18v-5h4v5M6 8h.01M10 8h.01M14 8h.01"
+        stroke="currentColor"
+        strokeWidth="1.25"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+function IconPackage({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      width="20"
+      height="20"
+      viewBox="0 0 20 20"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden
+    >
+      <path
+        d="M3 6l7-3 7 3v10l-7 3-7-3V6z"
+        stroke="currentColor"
+        strokeWidth="1.25"
+        strokeLinejoin="round"
+      />
+      <path d="M3 6l7 3 7-3M10 9v9" stroke="currentColor" strokeWidth="1.25" />
+    </svg>
+  );
+}
+
+function IconTag({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      width="20"
+      height="20"
+      viewBox="0 0 20 20"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden
+    >
+      <path
+        d="M3.5 11.5L11.5 3.5a2 2 0 012.8 0l2.2 2.2a2 2 0 010 2.8L8.5 16.5H3v-5.5l.5-.5z"
+        stroke="currentColor"
+        strokeWidth="1.25"
+        strokeLinejoin="round"
+      />
+      <circle cx="6.5" cy="6.5" r="1" fill="currentColor" />
+    </svg>
+  );
+}
+
+function IconChart({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      width="20"
+      height="20"
+      viewBox="0 0 20 20"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden
+    >
+      <path
+        d="M4 16V10M10 16V4M16 16v-6"
+        stroke="currentColor"
+        strokeWidth="1.25"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+function IconSearch({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      width="20"
+      height="20"
+      viewBox="0 0 20 20"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden
+    >
+      <circle cx="8.5" cy="8.5" r="5" stroke="currentColor" strokeWidth="1.25" />
+      <path
+        d="M12.5 12.5L16 16"
+        stroke="currentColor"
+        strokeWidth="1.25"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+function IconBell({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      width="20"
+      height="20"
+      viewBox="0 0 20 20"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden
+    >
+      <path
+        d="M10 3a4 4 0 00-4 4v2.5L4 12v1h12v-1l-2-2.5V7a4 4 0 00-4-4zM8 14a2 2 0 004 0"
+        stroke="currentColor"
+        strokeWidth="1.25"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function IconSettings({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      width="20"
+      height="20"
+      viewBox="0 0 20 20"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden
+    >
+      <path
+        d="M10 12.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5z"
+        stroke="currentColor"
+        strokeWidth="1.25"
+      />
+      <path
+        d="M16.5 10.5v-1l-1.8-.6-.5-1.5 1-1.5-1.4-1.4-1.5 1-1.5-.5-1.8-1h-1l-.6 1.8-1.5.5-1.5-1-1.4 1.4 1 1.5-.5 1.5-1.8.6v1l1.8.6.5 1.5-1 1.5 1.4 1.4 1.5-1 1.5.5 1.8 1h1l.6-1.8 1.5-.5 1.5 1 1.4-1.4-1-1.5.5-1.5 1.8-.6z"
+        stroke="currentColor"
+        strokeWidth="1.25"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+const navPillInactive =
+  'flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium tracking-[-0.28px] text-white/70 transition hover:text-white/90';
+const navPillActive =
+  'flex items-center gap-2 rounded-full bg-white py-2 pl-2 pr-4 text-sm font-medium tracking-[-0.28px] text-dashboard-bg';
+
+export function Navbar() {
+  const { pathname } = useLocation();
+  const isHome = pathname === '/';
+  const isStores = pathname === '/stores';
+  const isProducts = pathname === '/products';
+  const isTags = pathname === '/tags';
+
+  return (
+    <header
+      className="flex w-full max-w-none flex-wrap items-center justify-between gap-x-4 gap-y-4"
+      aria-label="Main navigation"
+    >
+      <div className="flex min-w-0 flex-wrap items-center gap-x-8 gap-y-3 lg:gap-12">
+        <div
+          className="relative size-9 overflow-hidden rounded-lg border border-dashboard-border bg-dashboard-card shadow-[0px_0px_0px_1px_#0d171a]"
+          aria-hidden
+        >
+          <div className="absolute left-[7px] top-2 h-5 w-2.5 rounded-sm bg-accent-mint" />
+          <div className="absolute left-[17px] top-2 h-5 w-3 rounded-br-sm rounded-tr-sm rounded-bl-[32px] rounded-tl-[32px] bg-[#475c5f]" />
+        </div>
+        <nav className="flex items-center gap-1.5" aria-label="Primary">
+          <Link
+            to="/"
+            className={isHome ? navPillActive : navPillInactive}
+            aria-current={isHome ? 'page' : undefined}
+          >
+            <IconHome
+              className={isHome ? 'text-dashboard-bg' : 'text-white/80'}
+            />
+            Home
+          </Link>
+          <Link
+            to="/stores"
+            className={isStores ? navPillActive : navPillInactive}
+            aria-current={isStores ? 'page' : undefined}
+          >
+            <IconStore
+              className={isStores ? 'text-dashboard-bg' : 'text-white/80'}
+            />
+            Stores
+          </Link>
+          <Link
+            to="/products"
+            className={isProducts ? navPillActive : navPillInactive}
+            aria-current={isProducts ? 'page' : undefined}
+          >
+            <IconPackage
+              className={isProducts ? 'text-dashboard-bg' : 'text-white/80'}
+            />
+            Products
+          </Link>
+          <Link
+            to="/tags"
+            className={isTags ? navPillActive : navPillInactive}
+            aria-current={isTags ? 'page' : undefined}
+          >
+            <IconTag
+              className={isTags ? 'text-dashboard-bg' : 'text-white/80'}
+            />
+            Tags
+          </Link>
+          <span className="mx-1 h-[18px] w-px bg-white/15" aria-hidden />
+          <span className="flex cursor-default items-center gap-2 rounded-full px-4 py-2 text-sm font-medium tracking-[-0.28px] text-white/70">
+            <IconChart />
+            Monitoring
+          </span>
+        </nav>
+      </div>
+      <div className="flex items-center gap-4">
+        <div className="relative h-10 min-w-[200px] max-w-[349px] flex-1 overflow-hidden rounded-full border border-dashboard-border bg-dashboard-card shadow-[0px_0px_0px_1px_#00161a]">
+          <div className="absolute left-3 top-1/2 flex -translate-y-1/2 items-center gap-2 pr-3">
+            <IconSearch className="text-white/50" />
+            <span className="text-sm text-white/17">
+              Search products or tags...
+            </span>
+          </div>
+        </div>
+        <div className="relative flex items-center gap-2.5">
+          <div className="relative">
+            <button
+              type="button"
+              className="rounded-full border border-dashboard-tabbar bg-dashboard-bg p-2 shadow-[0px_0px_0px_1px_#00161a]"
+              aria-label="Notifications"
+            >
+              <IconBell className="text-white/80" />
+            </button>
+            <span
+              className="absolute -right-0.5 -top-0.5 size-[7px] rounded-full bg-red-500 ring-2 ring-dashboard-bg"
+              aria-hidden
+            />
+          </div>
+          <button
+            type="button"
+            className="rounded-full border border-dashboard-tabbar bg-dashboard-bg p-2 shadow-[0px_0px_0px_1px_#00161a]"
+            aria-label="Settings"
+          >
+            <IconSettings className="text-white/80" />
+          </button>
+          <div
+            className="size-9 shrink-0 rounded-full bg-accent-mint/40 ring-2 ring-dashboard-border"
+            aria-label="User avatar"
+            role="img"
+          />
+        </div>
+      </div>
+    </header>
+  );
+}
