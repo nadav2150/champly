@@ -1,22 +1,60 @@
+import type { ProductTableRow } from '../../db/products.server';
+import type { TagTableRow } from '../../db/tags.server';
+import type { DashboardOutletContext } from '../../types/dashboard-outlet-context';
 import { BatchSidebar } from './batch-sidebar';
 import { DashboardHeader } from './dashboard-header';
 import { TagsTable } from './product-table';
 import { ProductsTable } from './products-table';
 
-export type TagControlScreenProps = {
-  variant?: 'tags' | 'products';
+type SidebarData = Pick<DashboardOutletContext, 'categories' | 'zones'>;
+
+type ProductsProps = SidebarData & {
+  variant: 'products';
+  products: ProductTableRow[];
+  templates: Array<{ id: string; name: string }>;
+  productStats: { total: number; pending: number; failed: number };
 };
 
-export function TagControlScreen({ variant = 'tags' }: TagControlScreenProps) {
+type TagsProps = SidebarData & {
+  variant: 'tags';
+  tags: TagTableRow[];
+  tagStats: {
+    online: number;
+    lowBattery: number;
+    offline: number;
+    total: number;
+  };
+  productOptions: Array<{ id: string; name: string }>;
+};
+
+export type TagControlScreenProps = ProductsProps | TagsProps;
+
+export function TagControlScreen(props: TagControlScreenProps) {
+  const { variant, categories, zones } = props;
+
   return (
     <div className="flex min-h-0 w-full flex-1 flex-col overflow-auto px-3 pb-2 pt-3 sm:px-6 lg:overflow-hidden lg:px-8 lg:pb-3 lg:pt-4">
       <div className="shrink-0">
-        <DashboardHeader variant={variant} />
+        {variant === 'products' ? (
+          <DashboardHeader variant="products" productStats={props.productStats} />
+        ) : (
+          <DashboardHeader variant="tags" tagStats={props.tagStats} />
+        )}
       </div>
       <div className="mt-2 flex min-h-0 w-full flex-1 flex-col rounded-xl border border-surface-muted bg-white p-2 shadow-[0px_4px_6px_0px_rgba(207,207,207,0.1)] lg:mt-3 lg:p-3">
         <div className="flex min-h-0 w-full flex-1 flex-col gap-2 lg:flex-row lg:items-stretch lg:gap-3">
-          <BatchSidebar variant={variant} />
-          {variant === 'products' ? <ProductsTable /> : <TagsTable />}
+          <BatchSidebar variant={variant} categories={categories} zones={zones} />
+          {variant === 'products' ? (
+            <ProductsTable
+              initialProducts={props.products}
+              templates={props.templates}
+            />
+          ) : (
+            <TagsTable
+              initialTags={props.tags}
+              productOptions={props.productOptions}
+            />
+          )}
         </div>
       </div>
     </div>

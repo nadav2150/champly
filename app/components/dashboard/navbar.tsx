@@ -1,4 +1,4 @@
-import { Link, useLocation } from 'react-router';
+import { Form, Link, useLocation } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { LanguageToggle } from './language-toggle';
 import {
@@ -189,6 +189,28 @@ function IconSettings({ className }: { className?: string }) {
   );
 }
 
+function IconLogout({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      width="20"
+      height="20"
+      viewBox="0 0 20 20"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden
+    >
+      <path
+        d="M7 17H4a1 1 0 01-1-1V4a1 1 0 011-1h3M13 14l4-4-4-4M17 10H7"
+        stroke="currentColor"
+        strokeWidth="1.25"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 const navPillInactive =
   'flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium tracking-[-0.28px] text-white/70 transition hover:text-white/90';
 const navPillActive =
@@ -307,11 +329,16 @@ export function Navbar() {
             >
               <IconSettings className="text-white/80" />
             </button>
-            <div
-              className="size-9 shrink-0 rounded-full bg-accent-mint/40 ring-2 ring-dashboard-border"
-              aria-label={t('nav.avatar')}
-              role="img"
-            />
+            <Form method="post" action="/logout">
+              <button
+                type="submit"
+                className="rounded-full border border-dashboard-tabbar bg-dashboard-bg p-2 shadow-[0px_0px_0px_1px_#00161a] transition hover:border-red-500/40 hover:bg-red-500/10"
+                aria-label={t('nav.logout')}
+                title={t('nav.logout')}
+              >
+                <IconLogout className="text-white/80" />
+              </button>
+            </Form>
           </div>
         </div>
       </header>

@@ -1,4 +1,3 @@
-import { PRODUCTS_DATA, TAGS_DATA } from './tag-product';
 import { useTranslation } from 'react-i18next';
 
 function IconChevronRight({ className }: { className?: string }) {
@@ -64,30 +63,27 @@ function StatDot({ color }: { color: 'green' | 'amber' | 'red' }) {
   return <span className={`size-1.5 shrink-0 rounded-full ${c}`} aria-hidden />;
 }
 
-type DashboardHeaderProps = {
-  variant?: 'tags' | 'products';
-};
+type DashboardHeaderProps =
+  | {
+      variant: 'products';
+      productStats: { total: number; pending: number; failed: number };
+    }
+  | {
+      variant: 'tags';
+      tagStats: {
+        online: number;
+        lowBattery: number;
+        offline: number;
+        total: number;
+      };
+    };
 
-function getProductStats() {
-  const total = PRODUCTS_DATA.length;
-  const pending = PRODUCTS_DATA.filter((p) => p.syncStatus === 'pending').length;
-  const failed = PRODUCTS_DATA.filter((p) => p.syncStatus === 'failed').length;
-  return { total, pending, failed };
-}
-
-function getTagStats() {
-  const online = TAGS_DATA.filter((t) => t.status === 'online').length;
-  const lowBattery = TAGS_DATA.filter((t) => t.battery <= 25).length;
-  const offline = TAGS_DATA.filter((t) => t.status === 'offline').length;
-  return { online, lowBattery, offline, total: TAGS_DATA.length };
-}
-
-export function DashboardHeader({ variant = 'tags' }: DashboardHeaderProps) {
+export function DashboardHeader(props: DashboardHeaderProps) {
   const { t } = useTranslation(['common', 'products', 'tags']);
-  const isProducts = variant === 'products';
+  const isProducts = props.variant === 'products';
 
   if (isProducts) {
-    const stats = getProductStats();
+    const stats = props.productStats;
     return (
       <>
         <section
@@ -183,7 +179,7 @@ export function DashboardHeader({ variant = 'tags' }: DashboardHeaderProps) {
     );
   }
 
-  const stats = getTagStats();
+  const stats = props.tagStats;
   return (
     <>
       <section

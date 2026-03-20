@@ -1,9 +1,10 @@
 import type { ReactNode } from 'react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { useFetcher } from 'react-router';
 import { useTranslation } from 'react-i18next';
+import { minorUnitsToDecimalString } from '../../lib/money';
 import { EditProductModal } from './edit-product-modal';
 import type { Product } from './tag-product';
-import { PRODUCTS_DATA } from './tag-product';
 import { TagStatus, type TagSyncStatus } from './tag-status';
 
 function IconSearch({ className }: { className?: string }) {
@@ -58,22 +59,6 @@ const FILTER_PILLS: { key: FilterKey; labelKey: string }[] = [
   { key: 'failed', labelKey: 'products:failedFilter' },
 ];
 
-const CATEGORY_EMOJI: Record<string, string> = {
-  'Fruits & Vegetables': '🥕',
-  'Drinks': '🥤',
-  'Dairy': '🧀',
-  'Bakery': '🍞',
-  'Snacks & Sweets': '⭐',
-};
-
-const categoryKeyByName: Record<string, string> = {
-  'Fruits & Vegetables': 'products:categories.fruitsVegetables',
-  Drinks: 'products:categories.drinks',
-  Dairy: 'products:categories.dairy',
-  Bakery: 'products:categories.bakery',
-  'Snacks & Sweets': 'products:categories.snacksSweets',
-};
-
 const productKeyByName: Record<string, string> = {
   Tomato: 'products:items.tomato',
   Banana: 'products:items.banana',
@@ -89,13 +74,23 @@ const productKeyByName: Record<string, string> = {
   'Greek Yogurt': 'products:items.greekYogurt',
 };
 
-export function ProductsTable() {
+type ProductsTableProps = {
+  initialProducts: Product[];
+  templates: Array<{ id: string; name: string }>;
+};
+
+export function ProductsTable({ initialProducts, templates }: ProductsTableProps) {
   const { t } = useTranslation(['common', 'products']);
-  const [products, setProducts] = useState<Product[]>(PRODUCTS_DATA);
+  const fetcher = useFetcher();
+  const [products, setProducts] = useState<Product[]>(initialProducts);
   const [statusFilter, setStatusFilter] = useState<FilterKey>('all');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [editProduct, setEditProduct] = useState<Product | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
+
+  useEffect(() => {
+    setProducts(initialProducts);
+  }, [initialProducts]);
 
   const filtered = useMemo(() => {
     if (statusFilter === 'all') return products;
@@ -119,16 +114,35 @@ export function ProductsTable() {
     }
   }
 
-  function handleUpdateProduct(payload: {
+  function handleSaveProduct(payload: {
     id: string;
     name: string;
-    price: string;
+    priceCents: number;
     unit: 'per_unit' | 'per_kg';
+    templateId: string | null;
   }) {
+    const fd = new FormData();
+    fd.set('intent', 'update-product');
+    fd.set('id', payload.id);
+    fd.set('name', payload.name);
+    fd.set('priceCents', String(payload.priceCents));
+    fd.set('unit', payload.unit);
+    if (payload.templateId) {
+      fd.set('templateId', payload.templateId);
+    }
+    fetcher.submit(fd, { method: 'post' });
+
     setProducts((prev) =>
       prev.map((p) =>
         p.id === payload.id
-          ? { ...p, name: payload.name, price: payload.price, unit: payload.unit, syncStatus: 'pending' as const }
+          ? {
+              ...p,
+              name: payload.name,
+              priceCents: payload.priceCents,
+              unit: payload.unit,
+              templateId: payload.templateId,
+              syncStatus: 'pending',
+            }
           : p,
       ),
     );
@@ -136,6 +150,11 @@ export function ProductsTable() {
 
   function handleBulkPriceUpdate() {
     if (selectedIds.size === 0) return;
+    const fd = new FormData();
+    fd.set('intent', 'bulk-price-update');
+    fd.set('ids', JSON.stringify([...selectedIds]));
+    fetcher.submit(fd, { method: 'post' });
+
     setProducts((prev) =>
       prev.map((p) =>
         selectedIds.has(p.id)
@@ -147,8 +166,29 @@ export function ProductsTable() {
   }
 
   const modalProduct = editProduct
-    ? { id: editProduct.id, name: editProduct.name, price: editProduct.price, tagId: editProduct.tagId ?? '—', status: editProduct.syncStatus, battery: 0, lastUpdate: '' }
+    ? {
+        id: editProduct.id,
+        name: editProduct.name,
+        priceCents: editProduct.priceCents,
+        hardwareTagId: editProduct.hardwareTagId ?? '—',
+        unit: editProduct.unit,
+        templateId: editProduct.templateId,
+      }
     : null;
+
+  if (products.length === 0) {
+    return (
+      <div className="relative flex min-h-0 min-w-0 flex-1 flex-col items-center justify-center overflow-hidden rounded-xl border border-[#e2e2e4] bg-white shadow-[0px_4px_6px_0px_rgba(207,207,207,0.1)]">
+        <div className="flex flex-col items-center gap-4 p-12 text-center">
+          <div className="flex size-16 items-center justify-center rounded-2xl border border-[#e2e2e4] bg-surface-subtle">
+            <span className="text-3xl">📦</span>
+          </div>
+          <h2 className="text-xl font-medium text-[#18171c]">{t('products:empty.title')}</h2>
+          <p className="max-w-sm text-sm text-black/50">{t('products:empty.description')}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -161,7 +201,7 @@ export function ProductsTable() {
                   <span className="text-black">{t('products:catalogTitle')}</span>
                   <span className="text-sm text-black/30">{products.length}</span>
                 </div>
-                <span className="hidden h-[26px] w-px bg-black/10 sm:block" />
+                <span className="hidden h-[26px] w-px bg-black/10 sm:block" aria-hidden />
                 <div className="flex w-full max-w-[270px] items-center gap-2 rounded-[10px] border border-[#ddd] bg-white py-1.5 ps-2 pe-3 sm:w-[270px]">
                   <IconSearch className="text-black/40" />
                   <span className="text-sm text-black/40">{t('common:table.searchProducts')}</span>
@@ -170,7 +210,7 @@ export function ProductsTable() {
               <button
                 type="button"
                 onClick={handleBulkPriceUpdate}
-                disabled={selectedIds.size === 0}
+                disabled={selectedIds.size === 0 || fetcher.state !== 'idle'}
                 className="rounded-full border border-dashboard-border bg-dashboard-card px-4 py-2 text-sm font-medium text-white shadow-sm disabled:cursor-not-allowed disabled:opacity-40"
               >
                 {t('common:actions.bulkPriceUpdate')}
@@ -193,7 +233,6 @@ export function ProductsTable() {
               ))}
             </div>
           </div>
-          {/* Desktop table */}
           <div className="hidden min-h-0 flex-1 overflow-auto p-3 lg:block">
             <div className="overflow-x-auto rounded-lg border border-content-border bg-white shadow-sm">
               <table className="w-full min-w-[760px] border-collapse text-start text-sm">
@@ -222,9 +261,9 @@ export function ProductsTable() {
                   {filtered.map((product) => {
                     const selected = selectedIds.has(product.id);
                     const rowBg = selected ? 'bg-surface-muted' : 'bg-white hover:bg-surface-subtle/80';
-                    const emoji = CATEGORY_EMOJI[product.category] ?? '📦';
+                    const emoji = product.categoryIcon;
                     const translatedName = t(productKeyByName[product.name] ?? product.name);
-                    const translatedCategory = t(categoryKeyByName[product.category] ?? product.category);
+                    const translatedCategory = t(product.categoryName);
                     return (
                       <tr key={product.id} className={`border-b border-black/6 ${rowBg}`}>
                         <td className="p-3 align-middle">
@@ -250,7 +289,7 @@ export function ProductsTable() {
                           </div>
                         </td>
                         <td className="p-3 align-middle text-xs text-black/60">{translatedCategory}</td>
-                        <td className="p-3 align-middle tabular-nums text-[#18171c]">₪{product.price}</td>
+                        <td className="p-3 align-middle tabular-nums text-[#18171c]">₪{minorUnitsToDecimalString(product.priceCents)}</td>
                         <td className="p-3 align-middle">
                           <TagStatus status={product.syncStatus} />
                         </td>
@@ -264,7 +303,7 @@ export function ProductsTable() {
                               <IconPencil className="shrink-0" />
                               {t('common:actions.edit')}
                             </button>
-                            {!product.tagId ? (
+                            {!product.hardwareTagId ? (
                               <button
                                 type="button"
                                 className="inline-flex items-center gap-1.5 rounded-[10px] border border-accent-mint/30 bg-accent-mint/10 px-3 py-1.5 text-xs font-medium text-churn-low shadow-sm"
@@ -283,13 +322,12 @@ export function ProductsTable() {
             </div>
           </div>
 
-          {/* Mobile card list */}
           <div className="min-h-0 flex-1 overflow-auto p-2 lg:hidden">
             <div className="flex flex-col gap-2">
               {filtered.map((product) => {
-                const emoji = CATEGORY_EMOJI[product.category] ?? '📦';
+                const emoji = product.categoryIcon;
                 const translatedName = t(productKeyByName[product.name] ?? product.name);
-                const translatedCategory = t(categoryKeyByName[product.category] ?? product.category);
+                const translatedCategory = t(product.categoryName);
                 return (
                   <button
                     key={product.id}
@@ -303,7 +341,7 @@ export function ProductsTable() {
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center justify-between gap-2">
                         <span className="truncate text-sm font-medium text-[#18171c]">{translatedName}</span>
-                        <span className="shrink-0 tabular-nums text-sm font-semibold text-[#18171c]">₪{product.price}</span>
+                        <span className="shrink-0 tabular-nums text-sm font-semibold text-[#18171c]">₪{minorUnitsToDecimalString(product.priceCents)}</span>
                       </div>
                       <div className="mt-1 flex items-center gap-2">
                         <span className="text-xs text-black/50">{translatedCategory}</span>
@@ -323,8 +361,9 @@ export function ProductsTable() {
       <EditProductModal
         open={modalOpen}
         product={modalProduct}
+        templates={templates}
         onClose={() => { setModalOpen(false); setEditProduct(null); }}
-        onUpdateTag={handleUpdateProduct}
+        onSave={handleSaveProduct}
       />
     </>
   );

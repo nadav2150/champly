@@ -2,16 +2,18 @@ import i18next from 'i18next';
 import { initReactI18next } from 'react-i18next';
 
 import { defaultLanguage, type SupportedLanguage } from './config';
-import commonEn from '../../public/locales/en/common.json';
-import homeEn from '../../public/locales/en/home.json';
-import productsEn from '../../public/locales/en/products.json';
-import storesEn from '../../public/locales/en/stores.json';
-import tagsEn from '../../public/locales/en/tags.json';
-import commonHe from '../../public/locales/he/common.json';
-import homeHe from '../../public/locales/he/home.json';
-import productsHe from '../../public/locales/he/products.json';
-import storesHe from '../../public/locales/he/stores.json';
-import tagsHe from '../../public/locales/he/tags.json';
+import commonEn from './locales/en/common.json';
+import homeEn from './locales/en/home.json';
+import productsEn from './locales/en/products.json';
+import storesEn from './locales/en/stores.json';
+import tagsEn from './locales/en/tags.json';
+import authEn from './locales/en/auth.json';
+import commonHe from './locales/he/common.json';
+import homeHe from './locales/he/home.json';
+import productsHe from './locales/he/products.json';
+import storesHe from './locales/he/stores.json';
+import tagsHe from './locales/he/tags.json';
+import authHe from './locales/he/auth.json';
 
 export const resources = {
   en: {
@@ -20,6 +22,7 @@ export const resources = {
     products: productsEn,
     stores: storesEn,
     tags: tagsEn,
+    auth: authEn,
   },
   he: {
     common: commonHe,
@@ -27,6 +30,7 @@ export const resources = {
     products: productsHe,
     stores: storesHe,
     tags: tagsHe,
+    auth: authHe,
   },
 } as const;
 

@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { useFetcher } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import type { Tag } from './tag-product';
-import { TAGS_DATA } from './tag-product';
 import { HwStatus, SignalBars } from './tag-status';
 
 function IconSearch({ className }: { className?: string }) {
@@ -102,18 +102,76 @@ const productKeyByName: Record<string, string> = {
   'Greek Yogurt': 'products:items.greekYogurt',
 };
 
-export function TagsTable() {
+function translateLinkedName(
+  t: (key: string) => string,
+  name: string | null,
+) {
+  if (!name) return null;
+  const key = productKeyByName[name];
+  return key ? t(key) : name;
+}
+
+type PairTagFormProps = {
+  tagInternalId: string;
+  productOptions: Array<{ id: string; name: string }>;
+};
+
+function PairTagForm({ tagInternalId, productOptions }: PairTagFormProps) {
   const { t } = useTranslation(['common', 'tags']);
-  const [tags, setTags] = useState<Tag[]>(TAGS_DATA);
+  const fetcher = useFetcher();
+  const [productId, setProductId] = useState('');
+
+  return (
+    <fetcher.Form method="post" className="flex flex-wrap items-center gap-1">
+      <input type="hidden" name="intent" value="link-product" />
+      <input type="hidden" name="tagInternalId" value={tagInternalId} />
+      <select
+        name="productId"
+        value={productId}
+        onChange={(e) => setProductId(e.target.value)}
+        className="max-w-[140px] rounded-md border border-content-border bg-white px-2 py-1 text-xs text-[#18171c]"
+        aria-label={t('tags:pairSelectProduct')}
+      >
+        <option value="">{t('tags:pairSelectProduct')}</option>
+        {productOptions.map((p) => (
+          <option key={p.id} value={p.id}>
+            {p.name}
+          </option>
+        ))}
+      </select>
+      <button
+        type="submit"
+        disabled={!productId || fetcher.state !== 'idle'}
+        className="inline-flex items-center gap-1 rounded-[10px] border border-accent-mint/30 bg-accent-mint/10 px-2 py-1 text-xs font-medium text-churn-low shadow-sm disabled:opacity-40"
+      >
+        <IconLink className="shrink-0" />
+        {t('common:actions.pair')}
+      </button>
+    </fetcher.Form>
+  );
+}
+
+type TagsTableProps = {
+  initialTags: Tag[];
+  productOptions: Array<{ id: string; name: string }>;
+};
+
+export function TagsTable({ initialTags, productOptions }: TagsTableProps) {
+  const { t } = useTranslation(['common', 'tags', 'products']);
+  const [tags, setTags] = useState<Tag[]>(initialTags);
   const [filter, setFilter] = useState<TagFilterKey>('all');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
+  useEffect(() => {
+    setTags(initialTags);
+  }, [initialTags]);
+
   const filtered = useMemo(() => {
     switch (filter) {
-      case 'online': return tags.filter((t) => t.status === 'online');
-      case 'offline': return tags.filter((t) => t.status === 'offline');
-      case 'low_battery': return tags.filter((t) => t.battery <= 25);
-      case 'unassigned': return tags.filter((t) => !t.linkedProduct);
+      case 'online': return tags.filter((x) => x.status === 'online');
+      case 'offline': return tags.filter((x) => x.status === 'offline');
+      case 'low_battery': return tags.filter((x) => x.battery <= 25);
+      case 'unassigned': return tags.filter((x) => !x.linkedProductId);
       default: return tags;
     }
   }, [tags, filter]);
@@ -131,20 +189,34 @@ export function TagsTable() {
     if (selectedIds.size === filtered.length && filtered.length > 0) {
       setSelectedIds(new Set());
     } else {
-      setSelectedIds(new Set(filtered.map((t) => t.id)));
+      setSelectedIds(new Set(filtered.map((x) => x.id)));
     }
   }
 
   function handleBulkSync() {
     if (selectedIds.size === 0) return;
     setTags((prev) =>
-      prev.map((t) =>
-        selectedIds.has(t.id)
-          ? { ...t, lastSync: 'Syncing…' }
-          : t,
+      prev.map((x) =>
+        selectedIds.has(x.id)
+          ? { ...x, lastSync: 'Syncing…' }
+          : x,
       ),
     );
     setSelectedIds(new Set());
+  }
+
+  if (tags.length === 0) {
+    return (
+      <div className="relative flex min-h-0 min-w-0 flex-1 flex-col items-center justify-center overflow-hidden rounded-xl border border-[#e2e2e4] bg-white shadow-[0px_4px_6px_0px_rgba(207,207,207,0.1)]">
+        <div className="flex flex-col items-center gap-4 p-12 text-center">
+          <div className="flex size-16 items-center justify-center rounded-2xl border border-[#e2e2e4] bg-surface-subtle">
+            <span className="text-3xl">🏷️</span>
+          </div>
+          <h2 className="text-xl font-medium text-[#18171c]">{t('tags:empty.title')}</h2>
+          <p className="max-w-sm text-sm text-black/50">{t('tags:empty.description')}</p>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -157,7 +229,7 @@ export function TagsTable() {
                 <span className="text-black">{t('tags:tagInventory')}</span>
                 <span className="text-sm text-black/30">{tags.length}</span>
               </div>
-              <span className="hidden h-[26px] w-px bg-black/10 sm:block" />
+              <span className="hidden h-[26px] w-px bg-black/10 sm:block" aria-hidden />
               <div className="flex w-full max-w-[270px] items-center gap-2 rounded-[10px] border border-[#ddd] bg-white py-1.5 ps-2 pe-3 sm:w-[270px]">
                 <IconSearch className="text-black/40" />
                 <span className="text-sm text-black/40">{t('common:table.searchTagId')}</span>
@@ -189,7 +261,6 @@ export function TagsTable() {
             ))}
           </div>
         </div>
-        {/* Desktop table */}
         <div className="hidden min-h-0 flex-1 overflow-auto p-3 lg:block">
           <div className="overflow-x-auto rounded-lg border border-content-border bg-white shadow-sm">
             <table className="w-full min-w-[920px] border-collapse text-start text-sm">
@@ -213,13 +284,14 @@ export function TagsTable() {
                   <th className="w-28 p-3" scope="col"><HeaderCell>{t('common:table.signal')}</HeaderCell></th>
                   <th className="w-28 p-3" scope="col"><HeaderCell>{t('common:table.syncStatus')}</HeaderCell></th>
                   <th className="w-28 p-3" scope="col"><HeaderCell>{t('common:table.lastSync')}</HeaderCell></th>
-                  <th className="w-40 p-3" scope="col"><HeaderCell>{t('common:table.action')}</HeaderCell></th>
+                  <th className="w-52 p-3" scope="col"><HeaderCell>{t('common:table.action')}</HeaderCell></th>
                 </tr>
               </thead>
               <tbody>
                 {filtered.map((tag) => {
                   const selected = selectedIds.has(tag.id);
                   const rowBg = selected ? 'bg-surface-muted' : 'bg-white hover:bg-surface-subtle/80';
+                  const linkedLabel = translateLinkedName(t, tag.linkedProductName);
                   return (
                     <tr key={tag.id} className={`border-b border-black/6 ${rowBg}`}>
                       <td className="p-3 align-middle">
@@ -242,10 +314,8 @@ export function TagsTable() {
                         </span>
                       </td>
                       <td className="p-3 align-middle">
-                        {tag.linkedProduct ? (
-                          <span className="text-sm text-[#18171c]">
-                            {t(productKeyByName[tag.linkedProduct] ?? tag.linkedProduct)}
-                          </span>
+                        {linkedLabel ? (
+                          <span className="text-sm text-[#18171c]">{linkedLabel}</span>
                         ) : (
                           <span className="text-xs italic text-churn-med">{t('common:table.unassigned')}</span>
                         )}
@@ -263,15 +333,9 @@ export function TagsTable() {
                         {tag.lastSync}
                       </td>
                       <td className="p-3 align-middle">
-                        <div className="flex items-center gap-1.5">
-                          {!tag.linkedProduct ? (
-                            <button
-                              type="button"
-                              className="inline-flex items-center gap-1 rounded-[10px] border border-accent-mint/30 bg-accent-mint/10 px-2.5 py-1.5 text-xs font-medium text-churn-low shadow-sm"
-                            >
-                              <IconLink className="shrink-0" />
-                              {t('common:actions.pair')}
-                            </button>
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          {!tag.linkedProductId ? (
+                            <PairTagForm tagInternalId={tag.id} productOptions={productOptions} />
                           ) : (
                             <button
                               type="button"
@@ -298,12 +362,12 @@ export function TagsTable() {
           </div>
         </div>
 
-        {/* Mobile card list */}
         <div className="min-h-0 flex-1 overflow-auto p-2 lg:hidden">
           <div className="flex flex-col gap-2">
             {filtered.map((tag) => {
               const batteryColor =
                 tag.battery > 50 ? 'bg-churn-low' : tag.battery > 25 ? 'bg-churn-med' : 'bg-churn-high';
+              const linkedLabel = translateLinkedName(t, tag.linkedProductName);
               return (
                 <article
                   key={tag.id}
@@ -316,8 +380,8 @@ export function TagsTable() {
                     <HwStatus status={tag.status} />
                   </div>
                   <div className="mt-2 text-sm text-[#18171c]">
-                    {tag.linkedProduct ? (
-                      t(productKeyByName[tag.linkedProduct] ?? tag.linkedProduct)
+                    {linkedLabel ? (
+                      linkedLabel
                     ) : (
                       <span className="text-xs italic text-churn-med">{t('common:table.unassigned')}</span>
                     )}
@@ -332,19 +396,13 @@ export function TagsTable() {
                     <SignalBars strength={tag.signal} />
                     <span className="text-[10px] text-black/40">{tag.lastSync}</span>
                   </div>
-                  <div className="mt-3 flex gap-2">
-                    {!tag.linkedProduct ? (
-                      <button
-                        type="button"
-                        className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-accent-mint/30 bg-accent-mint/10 py-2 text-xs font-medium text-churn-low active:bg-accent-mint/20"
-                      >
-                        <IconLink className="shrink-0" />
-                        {t('common:actions.pair')}
-                      </button>
+                  <div className="mt-3 flex flex-col gap-2">
+                    {!tag.linkedProductId ? (
+                      <PairTagForm tagInternalId={tag.id} productOptions={productOptions} />
                     ) : (
                       <button
                         type="button"
-                        className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-[#ddd] bg-white py-2 text-xs font-medium text-[#18171c] active:bg-surface-subtle"
+                        className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg border border-[#ddd] bg-white py-2 text-xs font-medium text-[#18171c] active:bg-surface-subtle"
                       >
                         <IconSwap className="shrink-0" />
                         {t('common:actions.replace')}
@@ -352,7 +410,7 @@ export function TagsTable() {
                     )}
                     <button
                       type="button"
-                      className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50 py-2 text-xs font-medium text-blue-600 active:bg-blue-100"
+                      className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50 py-2 text-xs font-medium text-blue-600 active:bg-blue-100"
                     >
                       <IconLocate className="shrink-0" />
                       {t('common:actions.locate')}

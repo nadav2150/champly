@@ -1,0 +1,29 @@
+{
+  "metaTitle": "Home — Tag Control",
+  "metaDescription": "Store tag control overview and quick actions.",
+  "welcome": "Welcome back",
+  "subtitle": "Remote control for your store's electronic price tags.",
+  "subtitleDetail": "Products for catalog & pricing, Tags for hardware & connectivity.",
+  "stats": {
+    "totalProducts": "Total Products",
+    "connectedTags": "Connected Tags",
+    "lowBattery": "Low Battery",
+    "offlineTags": "Offline Tags",
+    "acrossCategories": "Across all categories",
+    "onlineNow": "Online right now",
+    "needsAttention": "Needs attention",
+    "noSignal": "No signal"
+  },
+  "quickActions": {
+    "title": "Quick actions",
+    "subtitle": "Jump into the tools you use most.",
+    "stores": "Store locations",
+    "products": "Manage catalog & pricing",
+    "tags": "Monitor shelf tags & batteries",
+    "comingSoon": "Monitoring (coming soon)"
+  },
+  "today": {
+    "title": "Today",
+    "lowBatteryNotice": "{{count}} tags with low battery — review in Tags."
+  }
+}

@@ -1,4 +1,6 @@
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import type { DashboardOutletContext } from '../../types/dashboard-outlet-context';
 
 export type CategoryItem = {
   id: string;
@@ -10,14 +12,6 @@ export type CategoryItem = {
   pendingTags: number;
 };
 
-export const CATEGORIES: CategoryItem[] = [
-  { id: '1', name: 'products:categories.fruitsVegetables', productCount: 12, icon: '🥕', selected: true, connectedTags: 11, pendingTags: 1 },
-  { id: '2', name: 'products:categories.drinks', productCount: 8, icon: '🥤', connectedTags: 7, pendingTags: 1 },
-  { id: '3', name: 'products:categories.dairy', productCount: 6, icon: '🧀', connectedTags: 6, pendingTags: 0 },
-  { id: '4', name: 'products:categories.bakery', productCount: 4, icon: '🍞', connectedTags: 4, pendingTags: 0 },
-  { id: '5', name: 'products:categories.snacksSweets', productCount: 5, icon: '⭐', connectedTags: 4, pendingTags: 1 },
-];
-
 type ZoneItem = {
   id: string;
   name: string;
@@ -26,30 +20,6 @@ type ZoneItem = {
   lowBattery: number;
   selected?: boolean;
 };
-
-const ZONES: ZoneItem[] = [
-  { id: 'z1', name: 'stores:zones.aisle1Fresh', totalTags: 6, onlineTags: 5, lowBattery: 0, selected: true },
-  { id: 'z2', name: 'stores:zones.aisle2DairyDrinks', totalTags: 4, onlineTags: 4, lowBattery: 1 },
-  { id: 'z3', name: 'stores:zones.aisle3Bakery', totalTags: 3, onlineTags: 3, lowBattery: 0 },
-  { id: 'z4', name: 'stores:zones.aisle4Snacks', totalTags: 3, onlineTags: 2, lowBattery: 1 },
-  { id: 'z5', name: 'stores:zones.unassigned', totalTags: 2, onlineTags: 2, lowBattery: 0 },
-];
-
-export function getSelectedCategoryName(): string {
-  return CATEGORIES.find((c) => c.selected)?.name ?? 'products:categories.fruitsVegetables';
-}
-
-export function getSelectedCategoryCount(): number {
-  return CATEGORIES.find((c) => c.selected)?.productCount ?? 12;
-}
-
-export function getTotalProductCount(): number {
-  return CATEGORIES.reduce((sum, c) => sum + c.productCount, 0);
-}
-
-export function getTotalPendingTagQueue(): number {
-  return CATEGORIES.reduce((sum, c) => sum + c.pendingTags, 0);
-}
 
 function IconSearch({ className }: { className?: string }) {
   return (
@@ -156,14 +126,39 @@ function ZoneCard({ zone }: { zone: ZoneItem }) {
 
 type BatchSidebarProps = {
   variant?: 'products' | 'tags';
+  categories: DashboardOutletContext['categories'];
+  zones: DashboardOutletContext['zones'];
 };
 
-export function BatchSidebar({ variant = 'products' }: BatchSidebarProps) {
+export function BatchSidebar({
+  variant = 'products',
+  categories,
+  zones,
+}: BatchSidebarProps) {
   const { t } = useTranslation(['common', 'products', 'tags']);
   const isProducts = variant === 'products';
+
+  const [selectedCategoryId, setSelectedCategoryId] = useState(
+    () => categories[0]?.id ?? '',
+  );
+  const [selectedZoneId, setSelectedZoneId] = useState(() => zones[0]?.id ?? '');
+
+  const categoriesWithSelection: CategoryItem[] = categories.map((c) => ({
+    ...c,
+    selected: c.id === selectedCategoryId,
+  }));
+
+  const zonesWithSelection: ZoneItem[] = zones.map((z) => ({
+    id: z.id,
+    name: z.name,
+    totalTags: z.totalTags,
+    onlineTags: z.onlineTags,
+    lowBattery: z.lowBattery,
+    selected: z.id === selectedZoneId,
+  }));
+
   return (
     <>
-      {/* Desktop vertical sidebar */}
       <aside
         className="hidden w-full shrink-0 flex-col overflow-hidden rounded-xl border border-[#e2e2e4] bg-surface-muted lg:flex lg:w-[341px] lg:max-w-[341px]"
         aria-label={isProducts ? t('stores:productCategories') : t('stores:storeZones')}
@@ -186,24 +181,42 @@ export function BatchSidebar({ variant = 'products' }: BatchSidebarProps) {
         </div>
         <div className="flex flex-col gap-3 overflow-y-auto p-3">
           {isProducts
-            ? CATEGORIES.map((c) => <CategoryCard key={c.id} category={c} />)
-            : ZONES.map((z) => <ZoneCard key={z.id} zone={z} />)}
+            ? categoriesWithSelection.map((c) => (
+                <button
+                  key={c.id}
+                  type="button"
+                  onClick={() => setSelectedCategoryId(c.id)}
+                  className="w-full text-start"
+                >
+                  <CategoryCard category={c} />
+                </button>
+              ))
+            : zonesWithSelection.map((z) => (
+                <button
+                  key={z.id}
+                  type="button"
+                  onClick={() => setSelectedZoneId(z.id)}
+                  className="w-full text-start"
+                >
+                  <ZoneCard zone={z} />
+                </button>
+              ))}
         </div>
       </aside>
 
-      {/* Mobile horizontal chip strip */}
       <div
         className="flex gap-2 overflow-x-auto px-1 py-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:hidden"
         role="tablist"
         aria-label={isProducts ? t('stores:productCategories') : t('stores:storeZones')}
       >
         {isProducts
-          ? CATEGORIES.map((c) => (
+          ? categoriesWithSelection.map((c) => (
               <button
                 key={c.id}
                 type="button"
                 role="tab"
                 aria-selected={c.selected}
+                onClick={() => setSelectedCategoryId(c.id)}
                 className={`flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium shadow-sm ${
                   c.selected
                     ? 'border border-batch-selected-border bg-batch-selected-bg text-churn-low'
@@ -215,12 +228,13 @@ export function BatchSidebar({ variant = 'products' }: BatchSidebarProps) {
                 <span className="tabular-nums text-black/40">{c.productCount}</span>
               </button>
             ))
-          : ZONES.map((z) => (
+          : zonesWithSelection.map((z) => (
               <button
                 key={z.id}
                 type="button"
                 role="tab"
                 aria-selected={z.selected}
+                onClick={() => setSelectedZoneId(z.id)}
                 className={`flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium shadow-sm ${
                   z.selected
                     ? 'border border-batch-selected-border bg-batch-selected-bg text-churn-low'

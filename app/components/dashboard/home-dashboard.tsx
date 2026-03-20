@@ -1,7 +1,13 @@
-import { Link } from 'react-router';
+import { Link, useLocation } from 'react-router';
 import { useTranslation } from 'react-i18next';
-import { useLocation } from 'react-router';
 import { getLanguageFromPathname, toLocalizedPath } from '../../i18n/config';
+
+export type HomeDashboardStats = {
+  totalProducts: number;
+  connectedTags: number;
+  lowBattery: number;
+  offlineTags: number;
+};
 
 type StatCardProps = {
   label: string;
@@ -21,7 +27,11 @@ function StatCard({ label, value, hint }: StatCardProps) {
   );
 }
 
-export function HomeDashboard() {
+type HomeDashboardProps = {
+  stats: HomeDashboardStats;
+};
+
+export function HomeDashboard({ stats }: HomeDashboardProps) {
   const { t } = useTranslation('home');
   const { pathname } = useLocation();
   const language = getLanguageFromPathname(pathname);
@@ -38,10 +48,10 @@ export function HomeDashboard() {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard label={t('stats.totalProducts')} value="35" hint={t('stats.acrossCategories')} />
-        <StatCard label={t('stats.connectedTags')} value="18" hint={t('stats.onlineNow')} />
-        <StatCard label={t('stats.lowBattery')} value="2" hint={t('stats.needsAttention')} />
-        <StatCard label={t('stats.offlineTags')} value="2" hint={t('stats.noSignal')} />
+        <StatCard label={t('stats.totalProducts')} value={String(stats.totalProducts)} hint={t('stats.acrossCategories')} />
+        <StatCard label={t('stats.connectedTags')} value={String(stats.connectedTags)} hint={t('stats.onlineNow')} />
+        <StatCard label={t('stats.lowBattery')} value={String(stats.lowBattery)} hint={t('stats.needsAttention')} />
+        <StatCard label={t('stats.offlineTags')} value={String(stats.offlineTags)} hint={t('stats.noSignal')} />
       </div>
 
       <div className="grid flex-1 gap-6 lg:grid-cols-3 lg:items-stretch">
@@ -92,7 +102,7 @@ export function HomeDashboard() {
         <div className="rounded-xl border border-dashboard-border bg-dashboard-card p-6 shadow-[0px_0px_0px_1px_#0d171a]">
           <h2 className="text-lg font-medium text-white">{t('today.title')}</h2>
           <p className="mt-1 text-sm text-white/50">
-            {t('today.lowBatteryNotice', { count: 2 })}
+            {t('today.lowBatteryNotice', { count: stats.lowBattery })}
           </p>
           <div className="mt-6 flex flex-col gap-2">
             <Link

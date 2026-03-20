@@ -1,0 +1,18 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "champty",
+  "main": "./workers/app.ts",
+  "compatibility_date": "2025-10-08",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": {
+    "enabled": true
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "champty-db",
+      "database_id": "ca618a89-12b0-431b-83c1-6dcc46db16f6",
+      "migrations_dir": "drizzle/migrations"
+    }
+  ]
+}
