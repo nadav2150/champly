@@ -217,7 +217,10 @@ export function Navbar({ userName = '' }: NavbarProps) {
     <>
       {/* Mobile top bar -- avatar + logo, hidden on desktop */}
       <div className="flex items-center justify-between px-4 py-3 lg:hidden">
-        <img src="/logo_no_text.svg" alt="Champly" className="h-20 w-auto" />
+        <div className="flex items-center gap-2.5">
+          <img src="/logo_no_text.svg" alt="Champly" className="h-20 w-auto" />
+          <span className="translate-y-1 font-kindred text-xl leading-none tracking-widest text-[#f5f5dc]">CHAMPTY</span>
+        </div>
         <AvatarMenu
           userName={userName}
           initials={initials}
@@ -233,7 +236,10 @@ export function Navbar({ userName = '' }: NavbarProps) {
         aria-label={t('nav.main')}
       >
         <div className="flex min-w-0 flex-wrap items-center gap-x-8 gap-y-3 lg:gap-12">
-          <img src="/logo_no_text.svg" alt="Champly" className="h-20 w-auto" />
+          <div className="flex items-center gap-2.5">
+            <img src="/logo_no_text.svg" alt="Champly" className="h-20 w-auto" />
+            <span className="translate-y-1 font-kindred text-xl leading-none tracking-widest text-[#f5f5dc]">CHAMPTY</span>
+          </div>
           <nav className="flex items-center gap-1.5" aria-label="Primary">
             <Link
               to={toLocalizedPath('/', language)}

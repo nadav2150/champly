@@ -109,11 +109,10 @@ export default function RegisterPage() {
   return (
     <div className="flex min-h-dvh items-center justify-center bg-dashboard-bg px-4 font-sans text-white">
       <div className="w-full max-w-sm">
-        <img
-          src="/Champly.svg"
-          alt="Champly"
-          className="mx-auto mb-1 h-56 w-auto"
-        />
+        <div className="-mb-4 flex flex-col items-center gap-0">
+          <span className="relative top-[41px] font-kindred text-[28px] leading-none tracking-widest text-[#f5f5dc]">CHAMPTY</span>
+          <img src="/logo_no_text.svg" alt="Champty" className="h-[216px] w-auto" />
+        </div>
         <div className="rounded-2xl border border-dashboard-border bg-dashboard-card p-8 shadow-[0px_0px_0px_1px_#0d171a]">
           <div className="mb-8 text-center">
             <h1 className="text-xl font-semibold tracking-tight">
