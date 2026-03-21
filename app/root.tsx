@@ -12,7 +12,7 @@ import { I18nextProvider, useTranslation } from "react-i18next";
 
 import type { Route } from "./+types/root";
 import "./app.css";
-import i18next, { setI18nLanguage } from "./i18n/i18n.client";
+import i18next, { setI18nLanguage } from "./i18n/i18n";
 import {
   getDocumentDirection,
   getLanguageFromPathname,
