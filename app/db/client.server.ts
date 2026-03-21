@@ -12,3 +12,18 @@ export function getDb(context: AppLoadContext): AppDatabase {
   }
   return drizzle(db, { schema });
 }
+
+export async function withRetry<T>(
+  fn: () => Promise<T>,
+  retries = 1,
+): Promise<T> {
+  for (let i = 0; i <= retries; i++) {
+    try {
+      return await fn();
+    } catch (err) {
+      if (i === retries) throw err;
+      await new Promise((r) => setTimeout(r, 500));
+    }
+  }
+  throw new Error('Unreachable');
+}

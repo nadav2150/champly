@@ -1,6 +1,6 @@
 import { data, Outlet, useLoaderData } from 'react-router';
 import { Navbar } from '../components/dashboard/navbar';
-import { getDb } from '../db/client.server';
+import { getDb, withRetry } from '../db/client.server';
 import { listCategoriesWithCounts } from '../db/categories.server';
 import { listZonesWithStats } from '../db/zones.server';
 import { requireUser } from '../lib/require-user.server';
@@ -12,10 +12,18 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   const { user, headers } = await requireUser(request, env);
 
   const db = getDb(context);
-  const [categories, zones] = await Promise.all([
-    listCategoriesWithCounts(db, user.id),
-    listZonesWithStats(db, user.id),
-  ]);
+
+  let categories: Awaited<ReturnType<typeof listCategoriesWithCounts>> = [];
+  let zones: Awaited<ReturnType<typeof listZonesWithStats>> = [];
+
+  try {
+    [categories, zones] = await Promise.all([
+      withRetry(() => listCategoriesWithCounts(db, user.id)),
+      withRetry(() => listZonesWithStats(db, user.id)),
+    ]);
+  } catch (err) {
+    console.error('Failed to load dashboard data:', err);
+  }
 
   return data({ user, categories, zones }, { headers });
 }
