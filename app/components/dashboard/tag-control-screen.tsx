@@ -1,9 +1,10 @@
+import { useState } from 'react';
 import type { ProductTableRow } from '../../db/products.server';
 import type { TagTableRow } from '../../db/tags.server';
 import type { TemplateSelectRow } from '../../db/templates.server';
 import type { DashboardOutletContext } from '../../types/dashboard-outlet-context';
 import { BatchSidebar } from './batch-sidebar';
-import { DashboardHeader } from './dashboard-header';
+import { DashboardHeader, type ProductFilterTab } from './dashboard-header';
 import { TagsTable } from './product-table';
 import { ProductsTable } from './products-table';
 
@@ -32,12 +33,20 @@ export type TagControlScreenProps = ProductsProps | TagsProps;
 
 export function TagControlScreen(props: TagControlScreenProps) {
   const { variant, categories, zones } = props;
+  const [createOpen, setCreateOpen] = useState(false);
+  const [headerFilter, setHeaderFilter] = useState<ProductFilterTab>('all');
 
   return (
     <div className="flex min-h-0 w-full flex-1 flex-col overflow-auto px-3 pb-2 pt-3 sm:px-6 lg:overflow-hidden lg:px-8 lg:pb-3 lg:pt-4">
       <div className="shrink-0">
         {variant === 'products' ? (
-          <DashboardHeader variant="products" productStats={props.productStats} />
+          <DashboardHeader
+            variant="products"
+            productStats={props.productStats}
+            onAddProduct={() => setCreateOpen(true)}
+            activeFilter={headerFilter}
+            onFilterChange={setHeaderFilter}
+          />
         ) : (
           <DashboardHeader variant="tags" tagStats={props.tagStats} />
         )}
@@ -50,6 +59,9 @@ export function TagControlScreen(props: TagControlScreenProps) {
               initialProducts={props.products}
               templates={props.templates}
               categories={categories}
+              createOpen={createOpen}
+              onCreateOpenChange={setCreateOpen}
+              headerFilter={headerFilter}
             />
           ) : (
             <TagsTable

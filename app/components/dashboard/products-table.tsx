@@ -2,9 +2,11 @@ import type { ReactNode } from 'react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useFetcher } from 'react-router';
 import { useTranslation } from 'react-i18next';
+import { IoCreateOutline, IoTrashOutline } from 'react-icons/io5';
 import { minorUnitsToDecimalString } from '../../lib/money';
 import type { TemplateSelectRow } from '../../db/templates.server';
 import type { DashboardOutletContext } from '../../types/dashboard-outlet-context';
+import type { ProductFilterTab } from './dashboard-header';
 import { CreateProductModal } from './create-product-modal';
 import { DeleteProductDialog } from './delete-product-dialog';
 import { EditProductModal } from './edit-product-modal';
@@ -28,33 +30,11 @@ function IconSort({ className }: { className?: string }) {
   );
 }
 
-function IconPencil({ className }: { className?: string }) {
-  return (
-    <svg className={className} width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-      <path d="M8.5 2.5l5 5-8 8H2.5v-3L10.5 2.5z" stroke="currentColor" strokeWidth="1.1" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
 function IconLink({ className }: { className?: string }) {
   return (
     <svg className={className} width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
       <path d="M6.5 9.5a3 3 0 004.24 0l2-2a3 3 0 00-4.24-4.24L7.5 4.26" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round" />
       <path d="M9.5 6.5a3 3 0 00-4.24 0l-2 2a3 3 0 004.24 4.24l1-1" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function IconTrash({ className }: { className?: string }) {
-  return (
-    <svg className={className} width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-      <path
-        d="M3 4h10M6 4V2.5h4V4M6 7v5m4-5v5M5.5 4h5l-.5 8.5h-4L5.5 4z"
-        stroke="currentColor"
-        strokeWidth="1.2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
     </svg>
   );
 }
@@ -96,12 +76,18 @@ type ProductsTableProps = {
   initialProducts: Product[];
   templates: TemplateSelectRow[];
   categories: DashboardOutletContext['categories'];
+  createOpen?: boolean;
+  onCreateOpenChange?: (open: boolean) => void;
+  headerFilter?: ProductFilterTab;
 };
 
 export function ProductsTable({
   initialProducts,
   templates,
   categories,
+  createOpen: externalCreateOpen,
+  onCreateOpenChange,
+  headerFilter = 'all',
 }: ProductsTableProps) {
   const { t } = useTranslation(['common', 'products']);
   const fetcher = useFetcher();
@@ -110,7 +96,10 @@ export function ProductsTable({
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [editProduct, setEditProduct] = useState<Product | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
-  const [createOpen, setCreateOpen] = useState(false);
+  const [internalCreateOpen, setInternalCreateOpen] = useState(false);
+  const createOpen = externalCreateOpen ?? internalCreateOpen;
+  const setCreateOpen = onCreateOpenChange ?? setInternalCreateOpen;
+  const [searchQuery, setSearchQuery] = useState('');
   const [deleteTarget, setDeleteTarget] = useState<{
     id: string;
     name: string;
@@ -121,9 +110,29 @@ export function ProductsTable({
   }, [initialProducts]);
 
   const filtered = useMemo(() => {
-    if (statusFilter === 'all') return products;
-    return products.filter((p) => p.syncStatus === statusFilter);
-  }, [products, statusFilter]);
+    let result = products;
+    if (searchQuery.trim()) {
+      const q = searchQuery.trim().toLowerCase();
+      result = result.filter((p) => {
+        const translatedName = t(productKeyByName[p.name] ?? p.name).toLowerCase();
+        const translatedCategory = t(p.categoryName).toLowerCase();
+        return translatedName.includes(q) || p.name.toLowerCase().includes(q) || translatedCategory.includes(q);
+      });
+    }
+    if (statusFilter !== 'all') {
+      result = result.filter((p) => p.syncStatus === statusFilter);
+    }
+    if (headerFilter === 'byCategory') {
+      result = [...result].sort((a, b) =>
+        (a.categoryName ?? '').localeCompare(b.categoryName ?? ''),
+      );
+    } else if (headerFilter === 'recentlyUpdated') {
+      result = result.filter(
+        (p) => p.syncStatus === 'pending' || p.syncStatus === 'failed',
+      );
+    }
+    return result;
+  }, [products, searchQuery, statusFilter, headerFilter, t]);
 
   function toggleSelect(id: string) {
     setSelectedIds((prev) => {
@@ -284,8 +293,14 @@ export function ProductsTable({
                 </div>
                 <span className="hidden h-[26px] w-px bg-black/10 sm:block" aria-hidden />
                 <div className="flex w-full max-w-[270px] items-center gap-2 rounded-[10px] border border-[#ddd] bg-white py-1.5 ps-2 pe-3 sm:w-[270px]">
-                  <IconSearch className="text-black/40" />
-                  <span className="text-sm text-black/40">{t('common:table.searchProducts')}</span>
+                  <IconSearch className="shrink-0 text-black/40" />
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder={t('common:table.searchProducts')}
+                    className="w-full bg-transparent text-sm text-[#18171c] placeholder:text-black/40 focus:outline-none"
+                  />
                 </div>
               </div>
               <div className="flex flex-wrap items-center gap-2">
@@ -325,7 +340,7 @@ export function ProductsTable({
           </div>
           <div className="hidden min-h-0 flex-1 overflow-auto p-3 lg:block">
             <div className="overflow-x-auto rounded-lg border border-content-border bg-white shadow-sm">
-              <table className="w-full min-w-[760px] border-collapse text-start text-sm">
+              <table className="w-full min-w-[860px] border-collapse text-start text-sm">
                 <thead>
                   <tr className="border-b border-content-border bg-surface-subtle/50">
                     <th className="w-12 p-3" scope="col">
@@ -343,6 +358,7 @@ export function ProductsTable({
                     <th className="p-3" scope="col"><HeaderCell>{t('common:table.name')}</HeaderCell></th>
                     <th className="w-36 p-3" scope="col"><HeaderCell>{t('common:table.category')}</HeaderCell></th>
                     <th className="w-24 p-3" scope="col"><HeaderCell>{t('common:table.price')}</HeaderCell></th>
+                    <th className="w-24 p-3" scope="col"><HeaderCell>{t('common:table.unit')}</HeaderCell></th>
                     <th className="w-32 p-3" scope="col"><HeaderCell>{t('common:table.syncStatus')}</HeaderCell></th>
                     <th className="w-36 p-3" scope="col"><HeaderCell>{t('common:table.action')}</HeaderCell></th>
                   </tr>
@@ -380,6 +396,9 @@ export function ProductsTable({
                         </td>
                         <td className="p-3 align-middle text-xs text-black/60">{translatedCategory}</td>
                         <td className="p-3 align-middle tabular-nums text-[#18171c]">₪{minorUnitsToDecimalString(product.priceCents)}</td>
+                        <td className="p-3 align-middle text-xs text-black/60">
+                          {product.unit === 'per_kg' ? t('common:units.perKg') : t('common:units.perUnit')}
+                        </td>
                         <td className="p-3 align-middle">
                           <TagStatus status={product.syncStatus} />
                         </td>
@@ -390,13 +409,13 @@ export function ProductsTable({
                               onClick={() => { setEditProduct(product); setModalOpen(true); }}
                               className="inline-flex items-center gap-1.5 rounded-[10px] border border-[#ddd] bg-white px-3 py-1.5 text-xs font-medium text-[#18171c] shadow-sm"
                             >
-                              <IconPencil className="shrink-0" />
+                              <IoCreateOutline className="shrink-0" size={16} />
                               {t('common:actions.edit')}
                             </button>
                             {!product.hardwareTagId ? (
                               <button
                                 type="button"
-                                className="inline-flex items-center gap-1.5 rounded-[10px] border border-accent-mint/30 bg-accent-mint/10 px-3 py-1.5 text-xs font-medium text-churn-low shadow-sm"
+                                className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-[10px] border border-accent-mint/30 bg-accent-mint/10 px-3 py-1.5 text-xs font-medium text-churn-low shadow-sm"
                               >
                                 <IconLink className="shrink-0" />
                                 {t('common:actions.assignTag')}
@@ -408,7 +427,7 @@ export function ProductsTable({
                               className="inline-flex items-center gap-1.5 rounded-[10px] border border-red-200 bg-white px-3 py-1.5 text-xs font-medium text-red-700 shadow-sm"
                               aria-label={t('common:actions.deleteProduct')}
                             >
-                              <IconTrash className="shrink-0" />
+                              <IoTrashOutline className="shrink-0" size={16} />
                             </button>
                           </div>
                         </td>
@@ -450,10 +469,14 @@ export function ProductsTable({
                         <div className="mt-1 flex items-center gap-2">
                           <span className="text-xs text-black/50">{translatedCategory}</span>
                           <span className="text-black/20">·</span>
+                          <span className="text-xs text-black/50">
+                            {product.unit === 'per_kg' ? t('common:units.perKg') : t('common:units.perUnit')}
+                          </span>
+                          <span className="text-black/20">·</span>
                           <TagStatus status={product.syncStatus} />
                         </div>
                       </div>
-                      <IconPencil className="shrink-0 text-black/30" />
+                      <IoCreateOutline className="shrink-0 text-black/30" size={16} />
                     </button>
                     <button
                       type="button"
@@ -461,7 +484,7 @@ export function ProductsTable({
                       className="flex shrink-0 items-center justify-center rounded-md border border-red-100 px-2 text-red-700"
                       aria-label={t('common:actions.deleteProduct')}
                     >
-                      <IconTrash />
+                      <IoTrashOutline size={16} />
                     </button>
                   </div>
                 );

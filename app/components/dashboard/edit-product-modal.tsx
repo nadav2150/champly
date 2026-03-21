@@ -126,7 +126,7 @@ export function EditProductModal({
         aria-label={t('common:actions.cancel')}
         onClick={onClose}
       />
-      <div className="relative w-full max-w-none rounded-t-2xl border border-dashboard-border bg-dashboard-card p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] shadow-[0px_8px_32px_rgba(0,0,0,0.4)] lg:max-w-md lg:rounded-xl lg:p-6 lg:pb-6">
+      <div className="relative max-h-[90dvh] w-full max-w-none overflow-y-auto rounded-t-2xl border border-dashboard-border bg-dashboard-card p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] shadow-[0px_8px_32px_rgba(0,0,0,0.4)] lg:max-w-2xl lg:rounded-xl lg:p-6 lg:pb-6">
         <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-white/25 lg:hidden" aria-hidden />
         <div className="mb-5 flex items-start justify-between gap-4 lg:mb-6">
           <div>
@@ -149,121 +149,132 @@ export function EditProductModal({
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <div>
-            <label
-              htmlFor={`${formId}-name`}
-              className="mb-1 block text-xs font-medium text-white/60"
-            >
-              {t('products:productName')}
-            </label>
-            <input
-              id={`${formId}-name`}
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="w-full rounded-lg border border-white/20 bg-dashboard-bg px-3 py-2.5 text-sm text-white placeholder:text-white/30 focus:border-accent-mint focus:outline-none lg:py-2"
-            />
-          </div>
-          <div>
-            <label
-              htmlFor={`${formId}-price`}
-              className="mb-1 block text-xs font-medium text-white/60"
-            >
-              {t('products:priceNis')}
-            </label>
-            <input
-              id={`${formId}-price`}
-              type="text"
-              inputMode="decimal"
-              value={price}
-              onChange={(e) => setPrice(e.target.value)}
-              className="w-full rounded-lg border border-white/20 bg-dashboard-bg px-3 py-2.5 text-sm text-white placeholder:text-white/30 focus:border-accent-mint focus:outline-none lg:py-2"
-            />
-          </div>
-          <div>
-            <label
-              htmlFor={`${formId}-unit`}
-              className="mb-1 block text-xs font-medium text-white/60"
-            >
-              {t('products:unit')}
-            </label>
-            <select
-              id={`${formId}-unit`}
-              value={unit}
-              onChange={(e) =>
-                setUnit(e.target.value as UnitOption)
-              }
-              className="w-full rounded-lg border border-white/20 bg-dashboard-bg px-3 py-2.5 text-sm text-white focus:border-accent-mint focus:outline-none lg:py-2"
-            >
-              <option value="per_kg">{t('common:units.perKg')}</option>
-              <option value="per_unit">{t('common:units.perUnit')}</option>
-            </select>
-          </div>
-
-          <div>
-            <label
-              htmlFor={`${formId}-category`}
-              className="mb-1 block text-xs font-medium text-white/60"
-            >
-              {t('products:category')}
-            </label>
-            <select
-              id={`${formId}-category`}
-              value={categoryId}
-              onChange={(e) => setCategoryId(e.target.value)}
-              className="w-full rounded-lg border border-white/20 bg-dashboard-bg px-3 py-2.5 text-sm text-white focus:border-accent-mint focus:outline-none lg:py-2"
-            >
-              <option value="">{t('products:selectCategory')}</option>
-              {categories.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {t(c.name, { defaultValue: c.name })}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label
-              htmlFor={`${formId}-template`}
-              className="mb-1 block text-xs font-medium text-white/60"
-            >
-              {t('products:template')}
-            </label>
-            <select
-              id={`${formId}-template`}
-              value={templateId}
-              onChange={(e) => setTemplateId(e.target.value)}
-              className="w-full rounded-lg border border-white/20 bg-dashboard-bg px-3 py-2.5 text-sm text-white focus:border-accent-mint focus:outline-none lg:py-2"
-            >
-              <option value="">{t('products:templatePlaceholder')}</option>
-              {templates.map((tpl) => (
-                <option key={tpl.id} value={tpl.id}>
-                  {tpl.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="rounded-lg border border-white/15 bg-black/20 p-3 lg:p-4">
-            <p className="mb-2 text-xs font-medium text-white/50">{t('products:tagPreview')}</p>
-            <div className="flex justify-center overflow-x-auto">
-              {layout ? (
-                <LabelPreview
-                  layout={layout}
-                  data={previewData}
-                  scale={0.55}
-                  aria-label={t('products:tagPreview')}
+        <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+          <div className="flex flex-col gap-5 lg:flex-row lg:gap-6">
+            {/* Left column — form fields */}
+            <div className="flex min-w-0 flex-1 flex-col gap-4">
+              <div>
+                <label
+                  htmlFor={`${formId}-name`}
+                  className="mb-1.5 block text-xs font-medium text-white/60"
+                >
+                  {t('products:productName')}
+                </label>
+                <input
+                  id={`${formId}-name`}
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="w-full rounded-lg border border-white/20 bg-dashboard-bg px-3 py-2.5 text-sm text-white placeholder:text-white/30 focus:border-accent-mint focus:outline-none"
                 />
-              ) : (
-                <div className="flex min-h-[88px] w-full max-w-[200px] items-center justify-center rounded-md border-2 border-dashed border-white/25 px-3 text-center text-xs text-white/45">
-                  {t('products:noTemplatePreview')}
+              </div>
+
+              <div className="flex gap-3">
+                <div className="flex-1">
+                  <label
+                    htmlFor={`${formId}-price`}
+                    className="mb-1.5 block text-xs font-medium text-white/60"
+                  >
+                    {t('products:priceNis')}
+                  </label>
+                  <input
+                    id={`${formId}-price`}
+                    type="text"
+                    inputMode="decimal"
+                    value={price}
+                    onChange={(e) => setPrice(e.target.value)}
+                    className="w-full rounded-lg border border-white/20 bg-dashboard-bg px-3 py-2.5 text-sm text-white placeholder:text-white/30 focus:border-accent-mint focus:outline-none"
+                  />
                 </div>
-              )}
+                <div className="w-[120px] shrink-0">
+                  <label
+                    htmlFor={`${formId}-unit`}
+                    className="mb-1.5 block text-xs font-medium text-white/60"
+                  >
+                    {t('products:unit')}
+                  </label>
+                  <select
+                    id={`${formId}-unit`}
+                    value={unit}
+                    onChange={(e) => setUnit(e.target.value as UnitOption)}
+                    className="w-full rounded-lg border border-white/20 bg-dashboard-bg px-3 py-2.5 text-sm text-white focus:border-accent-mint focus:outline-none"
+                  >
+                    <option value="per_kg">{t('common:units.perKg')}</option>
+                    <option value="per_unit">{t('common:units.perUnit')}</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label
+                  htmlFor={`${formId}-category`}
+                  className="mb-1.5 block text-xs font-medium text-white/60"
+                >
+                  {t('products:category')}
+                </label>
+                <select
+                  id={`${formId}-category`}
+                  value={categoryId}
+                  onChange={(e) => setCategoryId(e.target.value)}
+                  className="w-full rounded-lg border border-white/20 bg-dashboard-bg px-3 py-2.5 text-sm text-white focus:border-accent-mint focus:outline-none"
+                >
+                  <option value="">{t('products:selectCategory')}</option>
+                  {categories.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {t(c.name, { defaultValue: c.name })}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Right column — template + preview */}
+            <div className="flex flex-col gap-4 lg:w-[260px] lg:shrink-0">
+              <div>
+                <label
+                  htmlFor={`${formId}-template`}
+                  className="mb-1.5 block text-xs font-medium text-white/60"
+                >
+                  {t('products:template')}
+                </label>
+                <select
+                  id={`${formId}-template`}
+                  value={templateId}
+                  onChange={(e) => setTemplateId(e.target.value)}
+                  className="w-full rounded-lg border border-white/20 bg-dashboard-bg px-3 py-2.5 text-sm text-white focus:border-accent-mint focus:outline-none"
+                >
+                  <option value="">{t('products:templatePlaceholder')}</option>
+                  {templates.map((tpl) => (
+                    <option key={tpl.id} value={tpl.id}>
+                      {tpl.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="flex flex-1 flex-col rounded-lg border border-white/15 bg-black/20 p-4">
+                <p className="mb-3 text-xs font-medium text-white/50">
+                  {t('products:tagPreview')}
+                </p>
+                <div className="flex flex-1 items-center justify-center overflow-x-auto">
+                  {layout ? (
+                    <LabelPreview
+                      layout={layout}
+                      data={previewData}
+                      scale={0.55}
+                      aria-label={t('products:tagPreview')}
+                    />
+                  ) : (
+                    <div className="flex min-h-[100px] w-full items-center justify-center rounded-md border-2 border-dashed border-white/25 px-3 text-center text-xs text-white/45">
+                      {t('products:noTemplatePreview')}
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
 
-          <div className="mt-1 flex flex-wrap gap-3 lg:mt-2">
+          <div className="flex flex-wrap gap-3 border-t border-white/10 pt-4">
             <button
               type="submit"
               className="relative flex-1 rounded-full border border-white bg-accent-mint py-3 text-sm font-medium text-accent-mint-text shadow-[0px_0px_0px_1px_#162021] lg:py-2.5"

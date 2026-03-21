@@ -69,7 +69,8 @@
     "signal": "קליטה",
     "lastSync": "סנכרון אחרון",
     "selectTag": "בחר תגית {{id}}",
-    "selectProduct": "בחר {{name}}"
+    "selectProduct": "בחר {{name}}",
+    "unit": "יחידה"
   },
   "errors": {
     "oops": "אופס!",

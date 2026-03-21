@@ -63,10 +63,15 @@ function StatDot({ color }: { color: 'green' | 'amber' | 'red' }) {
   return <span className={`size-1.5 shrink-0 rounded-full ${c}`} aria-hidden />;
 }
 
+export type ProductFilterTab = 'all' | 'byCategory' | 'recentlyUpdated';
+
 type DashboardHeaderProps =
   | {
       variant: 'products';
       productStats: { total: number; pending: number; failed: number };
+      onAddProduct?: () => void;
+      activeFilter?: ProductFilterTab;
+      onFilterChange?: (tab: ProductFilterTab) => void;
     }
   | {
       variant: 'tags';
@@ -84,6 +89,9 @@ export function DashboardHeader(props: DashboardHeaderProps) {
 
   if (isProducts) {
     const stats = props.productStats;
+    const activeFilter = props.activeFilter ?? 'all';
+    const onFilterChange = props.onFilterChange;
+    const onAddProduct = props.onAddProduct;
     return (
       <>
         <section
@@ -143,20 +151,34 @@ export function DashboardHeader(props: DashboardHeaderProps) {
             <div className="flex h-10 w-full items-center overflow-x-auto rounded-full border border-white/16 bg-dashboard-tabbar px-2.5 shadow-[0px_0px_0px_1px_#162021,0px_1px_0px_0px_#2e464b] [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               <div className="flex w-full items-center justify-between gap-2">
                 <div className="flex items-center gap-1.5">
-                  <span className="shrink-0 rounded-full border border-[rgba(233,232,237,0.2)] bg-white/20 px-4 py-1 text-xs font-medium text-white shadow-sm">
-                    {t('products:allProducts')}
-                  </span>
-                  {[t('products:byCategory'), t('products:recentlyUpdated')].map((label) => (
-                    <span key={label} className="shrink-0 cursor-default rounded-full px-4 py-1 text-xs text-white/70">
+                  {([
+                    { key: 'all' as const, label: t('products:allProducts') },
+                    { key: 'byCategory' as const, label: t('products:byCategory') },
+                    { key: 'recentlyUpdated' as const, label: t('products:recentlyUpdated') },
+                  ]).map(({ key, label }) => (
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={() => onFilterChange?.(key)}
+                      className={`shrink-0 rounded-full px-4 py-1 text-xs font-medium transition ${
+                        activeFilter === key
+                          ? 'border border-[rgba(233,232,237,0.2)] bg-white/20 text-white shadow-sm'
+                          : 'text-white/70 hover:text-white/90'
+                      }`}
+                    >
                       {label}
-                    </span>
+                    </button>
                   ))}
                 </div>
                 <div className="hidden items-center gap-2 lg:flex">
                   <button type="button" className="rounded-full border border-white/36 bg-[#475c5f] p-1.5 shadow-sm" aria-label={t('common:actions.moreOptions')}>
                     <IconDots className="text-white" />
                   </button>
-                  <button type="button" className="relative flex items-center gap-1.5 rounded-full border border-white bg-accent-mint py-1 ps-3 pe-2 text-xs font-medium text-accent-mint-text shadow-sm">
+                  <button
+                    type="button"
+                    onClick={onAddProduct}
+                    className="relative flex items-center gap-1.5 rounded-full border border-white bg-accent-mint py-1 ps-3 pe-2 text-xs font-medium text-accent-mint-text shadow-sm"
+                  >
                     {t('common:actions.addProduct')}
                     <IconPlus className="text-accent-mint-text" />
                     <span className="pointer-events-none absolute inset-0 rounded-full shadow-[inset_0px_2px_3px_0px_rgba(255,255,255,0.3)]" aria-hidden />
@@ -169,6 +191,7 @@ export function DashboardHeader(props: DashboardHeaderProps) {
         {/* Mobile FAB */}
         <button
           type="button"
+          onClick={onAddProduct}
           className="fixed bottom-20 inset-e-4 z-40 flex size-14 items-center justify-center rounded-full border border-white bg-accent-mint shadow-lg active:scale-95 lg:hidden"
           aria-label={t('common:actions.addProduct')}
         >

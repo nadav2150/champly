@@ -109,21 +109,13 @@ export default function RegisterPage() {
   return (
     <div className="flex min-h-dvh items-center justify-center bg-dashboard-bg px-4 font-sans text-white">
       <div className="w-full max-w-sm">
+        <img
+          src="/Champly.svg"
+          alt="Champly"
+          className="mx-auto mb-1 h-56 w-auto"
+        />
         <div className="rounded-2xl border border-dashboard-border bg-dashboard-card p-8 shadow-[0px_0px_0px_1px_#0d171a]">
           <div className="mb-8 text-center">
-            <div className="mx-auto mb-4 flex size-12 items-center justify-center rounded-full bg-accent-mint">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden>
-                <path
-                  d="M16 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"
-                  stroke="#1d2129"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-                <circle cx="10" cy="7" r="4" stroke="#1d2129" strokeWidth="1.5" />
-                <path d="M19 8v6M22 11h-6" stroke="#1d2129" strokeWidth="1.5" strokeLinecap="round" />
-              </svg>
-            </div>
             <h1 className="text-xl font-semibold tracking-tight">
               {t('registerTitle')}
             </h1>

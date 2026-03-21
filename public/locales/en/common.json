@@ -69,7 +69,8 @@
     "signal": "Signal",
     "lastSync": "Last Sync",
     "selectTag": "Select tag {{id}}",
-    "selectProduct": "Select {{name}}"
+    "selectProduct": "Select {{name}}",
+    "unit": "Unit"
   },
   "errors": {
     "oops": "Oops!",

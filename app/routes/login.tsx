@@ -63,28 +63,13 @@ export default function LoginPage() {
   return (
     <div className="flex min-h-dvh items-center justify-center bg-dashboard-bg px-4 font-sans text-white">
       <div className="w-full max-w-sm">
+        <img
+          src="/Champly.svg"
+          alt="Champly"
+          className="mx-auto mb-1 h-56 w-auto"
+        />
         <div className="rounded-2xl border border-dashboard-border bg-dashboard-card p-8 shadow-[0px_0px_0px_1px_#0d171a]">
           <div className="mb-8 text-center">
-            <div className="mx-auto mb-4 flex size-12 items-center justify-center rounded-full bg-accent-mint">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden>
-                <path
-                  d="M7 7a5 5 0 0 1 10 0v2H7V7Z"
-                  stroke="#1d2129"
-                  strokeWidth="1.5"
-                  strokeLinejoin="round"
-                />
-                <rect
-                  x="4"
-                  y="9"
-                  width="16"
-                  height="12"
-                  rx="2"
-                  stroke="#1d2129"
-                  strokeWidth="1.5"
-                />
-                <circle cx="12" cy="15" r="1.5" fill="#1d2129" />
-              </svg>
-            </div>
             <h1 className="text-xl font-semibold tracking-tight">
               {t('loginTitle')}
             </h1>

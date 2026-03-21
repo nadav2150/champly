@@ -21,13 +21,14 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 }
 
 export default function DashboardLayout() {
-  const { categories, zones } = useLoaderData<typeof loader>();
+  const { user, categories, zones } = useLoaderData<typeof loader>();
   const outletContext: DashboardOutletContext = { categories, zones };
+  const userName = user.user_metadata?.full_name ?? user.email ?? '';
 
   return (
     <div className="flex h-dvh w-full flex-col overflow-hidden bg-dashboard-bg font-sans text-white">
       <div className="w-full shrink-0 lg:border-b lg:border-white/10 lg:px-8 lg:pt-5 lg:pb-4">
-        <Navbar />
+        <Navbar userName={userName} />
       </div>
       <div className="flex min-h-0 w-full flex-1 flex-col overflow-hidden pb-16 lg:pb-0">
         <Outlet context={outletContext} />

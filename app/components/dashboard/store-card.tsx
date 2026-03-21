@@ -1,6 +1,7 @@
 import type { ComponentType } from 'react';
 import { Link, useLocation } from 'react-router';
 import { useTranslation } from 'react-i18next';
+import { IoCreateOutline, IoTrashOutline } from 'react-icons/io5';
 import { getLanguageFromPathname, toLocalizedPath } from '../../i18n/config';
 
 export type StoreCardData = {
@@ -242,49 +243,6 @@ function FooterMeta({
   );
 }
 
-function IconPencil({ className }: { className?: string }) {
-  return (
-    <svg
-      className={className}
-      width="14"
-      height="14"
-      viewBox="0 0 16 16"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      aria-hidden
-    >
-      <path
-        d="M10.5 2.5l3 3L5 14H2v-3L10.5 2.5z"
-        stroke="currentColor"
-        strokeWidth="1.2"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
-function IconTrash({ className }: { className?: string }) {
-  return (
-    <svg
-      className={className}
-      width="14"
-      height="14"
-      viewBox="0 0 16 16"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      aria-hidden
-    >
-      <path
-        d="M3 4h10M6 4V2.5h4V4M6 7v5m4-5v5M5.5 4h5l-.5 8.5h-4L5.5 4z"
-        stroke="currentColor"
-        strokeWidth="1.2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
 export function StoreCard({
   store,
   onEdit,
@@ -310,7 +268,7 @@ export function StoreCard({
               aria-label={t('common:actions.editStore')}
               title={t('common:actions.editStore')}
             >
-              <IconPencil className="text-white" />
+              <IoCreateOutline className="text-white" size={14} />
             </button>
           ) : null}
           {onDelete ? (
@@ -321,7 +279,7 @@ export function StoreCard({
               aria-label={t('common:actions.deleteStore')}
               title={t('common:actions.deleteStore')}
             >
-              <IconTrash className="text-red-100" />
+              <IoTrashOutline className="text-red-100" size={14} />
             </button>
           ) : null}
         </div>
