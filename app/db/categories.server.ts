@@ -1,4 +1,4 @@
-import { and, count, eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import type { AppDatabase } from './client.server';
 import { categories, products, tags } from './schema.server';
 
@@ -6,52 +6,26 @@ export async function listCategoriesWithCounts(
   db: AppDatabase,
   userId: string,
 ) {
-  const cats = await db
-    .select()
+  const rows = await db
+    .select({
+      id: categories.id,
+      name: categories.name,
+      icon: categories.icon,
+      productCount: sql<number>`(SELECT count(*) FROM ${products} WHERE ${products.categoryId} = ${categories.id})`,
+      pendingTags: sql<number>`(SELECT count(*) FROM ${products} WHERE ${products.categoryId} = ${categories.id} AND ${products.syncStatus} = 'pending')`,
+      connectedTags: sql<number>`(SELECT count(*) FROM ${tags} INNER JOIN ${products} ON ${tags.linkedProductId} = ${products.id} WHERE ${products.categoryId} = ${categories.id})`,
+    })
     .from(categories)
     .where(eq(categories.userId, userId));
-  const rows: Array<{
-    id: string;
-    name: string;
-    icon: string;
-    productCount: number;
-    connectedTags: number;
-    pendingTags: number;
-  }> = [];
 
-  for (const c of cats) {
-    const [pc] = await db
-      .select({ n: count() })
-      .from(products)
-      .where(eq(products.categoryId, c.id));
-    const [pending] = await db
-      .select({ n: count() })
-      .from(products)
-      .where(
-        and(eq(products.categoryId, c.id), eq(products.syncStatus, 'pending')),
-      );
-
-    const [linked] = await db
-      .select({ n: count() })
-      .from(tags)
-      .innerJoin(products, eq(tags.linkedProductId, products.id))
-      .where(eq(products.categoryId, c.id));
-
-    const productCount = pc?.n ?? 0;
-    const pendingTags = pending?.n ?? 0;
-    const connectedTags = linked?.n ?? 0;
-
-    rows.push({
-      id: c.id,
-      name: c.name,
-      icon: c.icon,
-      productCount,
-      connectedTags,
-      pendingTags,
-    });
-  }
-
-  return rows;
+  return rows.map((r) => ({
+    id: r.id,
+    name: r.name,
+    icon: r.icon,
+    productCount: Number(r.productCount ?? 0),
+    pendingTags: Number(r.pendingTags ?? 0),
+    connectedTags: Number(r.connectedTags ?? 0),
+  }));
 }
 
 function newId(prefix: string) {

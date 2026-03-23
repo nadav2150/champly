@@ -2,7 +2,7 @@ import type { Route } from './+types/products';
 import { data, useLoaderData, useOutletContext } from 'react-router';
 import { TagControlScreen } from '../components/dashboard/tag-control-screen';
 import { createCategory } from '../db/categories.server';
-import { getDb } from '../db/client.server';
+import { getDb, withRetry } from '../db/client.server';
 import {
   bulkSetProductsPending,
   createProduct,
@@ -20,11 +20,25 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   const env = context.cloudflare.env;
   const { user, headers } = await requireUser(request, env);
   const db = getDb(context);
-  const [products, templates, productStats] = await Promise.all([
-    listProductsForTable(db, user.id),
-    listTemplatesForSelect(db),
-    getProductHeaderStats(db, user.id),
-  ]);
+
+  let products: Awaited<ReturnType<typeof listProductsForTable>> = [];
+  let templates: Awaited<ReturnType<typeof listTemplatesForSelect>> = [];
+  let productStats: Awaited<ReturnType<typeof getProductHeaderStats>> = {
+    total: 0,
+    pending: 0,
+    failed: 0,
+  };
+
+  try {
+    [products, templates, productStats] = await Promise.all([
+      withRetry(() => listProductsForTable(db, user.id)),
+      withRetry(() => listTemplatesForSelect(db)),
+      withRetry(() => getProductHeaderStats(db, user.id)),
+    ]);
+  } catch (err) {
+    console.error('Failed to load products data:', err);
+  }
+
   return data({ products, templates, productStats }, { headers });
 }
 

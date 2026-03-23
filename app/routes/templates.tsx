@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { data, useLoaderData } from 'react-router';
 import { TemplateCard, previewDataForKind } from '../components/dashboard/template-card';
 import { TemplatePreviewModal } from '../components/dashboard/template-preview-modal';
-import { getDb } from '../db/client.server';
+import { getDb, withRetry } from '../db/client.server';
 import { listTemplatesWithVariants } from '../db/templates.server';
 import type { TemplateRow } from '../db/templates.server';
 import { isSupportedLanguage } from '../i18n/config';
@@ -15,7 +15,14 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   const env = context.cloudflare.env;
   const { headers } = await requireUser(request, env);
   const db = getDb(context);
-  const templates = await listTemplatesWithVariants(db);
+
+  let templates: Awaited<ReturnType<typeof listTemplatesWithVariants>> = [];
+  try {
+    templates = await withRetry(() => listTemplatesWithVariants(db));
+  } catch (err) {
+    console.error('Failed to load templates:', err);
+  }
+
   return data({ templates }, { headers });
 }
 

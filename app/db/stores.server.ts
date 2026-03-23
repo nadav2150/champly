@@ -1,4 +1,4 @@
-import { and, count, eq, inArray } from 'drizzle-orm';
+import { and, count, eq, inArray, sql } from 'drizzle-orm';
 import type { AppDatabase } from './client.server';
 import { allProductIdsOwnedByUser } from './products.server';
 import { products, stores, syncJobs, tags, zones } from './schema.server';
@@ -7,53 +7,28 @@ export async function listStoresWithAggregates(
   db: AppDatabase,
   userId: string,
 ) {
-  const storeList = await db
-    .select()
+  const rows = await db
+    .select({
+      id: stores.id,
+      name: stores.name,
+      address: stores.address,
+      lastSync: stores.lastSync,
+      connectedTags: sql<number>`(SELECT count(*) FROM ${tags} INNER JOIN ${zones} ON ${tags.zoneId} = ${zones.id} WHERE ${zones.storeId} = ${stores.id} AND ${tags.status} = 'online')`,
+      pendingUpdates: sql<number>`(SELECT count(*) FROM ${products} WHERE ${products.storeId} = ${stores.id} AND ${products.syncStatus} = 'pending')`,
+      failedUpdates: sql<number>`(SELECT count(*) FROM ${products} WHERE ${products.storeId} = ${stores.id} AND ${products.syncStatus} = 'failed')`,
+    })
     .from(stores)
     .where(eq(stores.userId, userId));
-  const out: Array<{
-    id: string;
-    name: string;
-    address: string;
-    lastSync: string | null;
-    connectedTags: number;
-    pendingUpdates: number;
-    failedUpdates: number;
-  }> = [];
 
-  for (const s of storeList) {
-    const [connectedRow] = await db
-      .select({ n: count() })
-      .from(tags)
-      .innerJoin(zones, eq(tags.zoneId, zones.id))
-      .where(and(eq(zones.storeId, s.id), eq(tags.status, 'online')));
-
-    const [pendingRow] = await db
-      .select({ n: count() })
-      .from(products)
-      .where(
-        and(eq(products.storeId, s.id), eq(products.syncStatus, 'pending')),
-      );
-
-    const [failedRow] = await db
-      .select({ n: count() })
-      .from(products)
-      .where(
-        and(eq(products.storeId, s.id), eq(products.syncStatus, 'failed')),
-      );
-
-    out.push({
-      id: s.id,
-      name: s.name,
-      address: s.address,
-      lastSync: s.lastSync,
-      connectedTags: connectedRow?.n ?? 0,
-      pendingUpdates: pendingRow?.n ?? 0,
-      failedUpdates: failedRow?.n ?? 0,
-    });
-  }
-
-  return out;
+  return rows.map((r) => ({
+    id: r.id,
+    name: r.name,
+    address: r.address,
+    lastSync: r.lastSync,
+    connectedTags: Number(r.connectedTags ?? 0),
+    pendingUpdates: Number(r.pendingUpdates ?? 0),
+    failedUpdates: Number(r.failedUpdates ?? 0),
+  }));
 }
 
 export type StoreZoneInput = { id?: string; name: string };

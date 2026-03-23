@@ -12,7 +12,13 @@ import type { AppDatabase } from './client.server';
 import { listOwnedProductIds, productOwnedByUserOr } from './products.server';
 import { categories, products, stores, tags, zones } from './schema.server';
 
-async function listZoneIdsForUser(db: AppDatabase, userId: string) {
+/** Pre-fetched IDs for tag visibility queries (avoids duplicate D1 round-trips). */
+export type TagVisibilityIds = {
+  zoneIds: string[];
+  productIds: string[];
+};
+
+export async function listZoneIdsForUser(db: AppDatabase, userId: string) {
   const rows = await db
     .select({ id: zones.id })
     .from(zones)
@@ -119,9 +125,15 @@ export async function getProductHeaderStats(db: AppDatabase, userId: string) {
   };
 }
 
-export async function getTagHeaderStats(db: AppDatabase, userId: string) {
-  const zoneIds = await listZoneIdsForUser(db, userId);
-  const productIds = await listOwnedProductIds(db, userId);
+export async function getTagHeaderStats(
+  db: AppDatabase,
+  userId: string,
+  visibilityIds?: TagVisibilityIds,
+) {
+  const zoneIds =
+    visibilityIds?.zoneIds ?? (await listZoneIdsForUser(db, userId));
+  const productIds =
+    visibilityIds?.productIds ?? (await listOwnedProductIds(db, userId));
   const tagVis = tagVisibilityOr(zoneIds, productIds);
 
   const zeros = { online: 0, lowBattery: 0, offline: 0, total: 0 };

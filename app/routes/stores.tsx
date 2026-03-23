@@ -12,7 +12,7 @@ import {
   StoreCard,
   type StoreCardData,
 } from '../components/dashboard/store-card';
-import { getDb } from '../db/client.server';
+import { getDb, withRetry } from '../db/client.server';
 import {
   allProductIdsOwnedByUser,
   listProductsWithStoreForAssignment,
@@ -77,35 +77,46 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   const env = context.cloudflare.env;
   const { user, headers } = await requireUser(request, env);
   const db = getDb(context);
-  const [stores, catalogProducts] = await Promise.all([
-    listStoresWithAggregates(db, user.id),
-    listProductsWithStoreForAssignment(db, user.id),
-  ]);
 
-  const details = await Promise.all(
-    stores.map((s) => getStoreById(db, user.id, s.id)),
-  );
+  let storesList: Awaited<ReturnType<typeof listStoresWithAggregates>> = [];
+  let catalogProducts: Awaited<
+    ReturnType<typeof listProductsWithStoreForAssignment>
+  > = [];
+  let editStoreById: Record<string, EditStoreDetail> = {};
+  let storeNameById: Record<string, string> = {};
 
-  const editStoreById: Record<string, EditStoreDetail> = {};
-  for (let i = 0; i < stores.length; i++) {
-    const d = details[i];
-    if (d) {
-      editStoreById[stores[i].id] = {
-        id: d.id,
-        name: d.name,
-        address: d.address,
-        zones: d.zones,
-        productIds: d.productIds,
-      };
+  try {
+    [storesList, catalogProducts] = await Promise.all([
+      withRetry(() => listStoresWithAggregates(db, user.id)),
+      withRetry(() => listProductsWithStoreForAssignment(db, user.id)),
+    ]);
+
+    const details = await Promise.all(
+      storesList.map((s) => withRetry(() => getStoreById(db, user.id, s.id))),
+    );
+
+    for (let i = 0; i < storesList.length; i++) {
+      const d = details[i];
+      if (d) {
+        editStoreById[storesList[i].id] = {
+          id: d.id,
+          name: d.name,
+          address: d.address,
+          zones: d.zones,
+          productIds: d.productIds,
+        };
+      }
     }
+
+    storeNameById = Object.fromEntries(
+      storesList.map((s) => [s.id, s.name] as const),
+    );
+  } catch (err) {
+    console.error('Failed to load stores data:', err);
   }
 
-  const storeNameById = Object.fromEntries(
-    stores.map((s) => [s.id, s.name] as const),
-  );
-
   return data(
-    { stores, catalogProducts, storeNameById, editStoreById },
+    { stores: storesList, catalogProducts, storeNameById, editStoreById },
     { headers },
   );
 }

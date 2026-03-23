@@ -1,6 +1,8 @@
 import { and, eq, inArray, isNotNull, isNull, or } from 'drizzle-orm';
 import type { AppDatabase } from './client.server';
 import { listOwnedProductIds, productOwnedByUser } from './products.server';
+import type { TagVisibilityIds } from './stats.server';
+import { listZoneIdsForUser } from './stats.server';
 import { products, stores, tags, zones } from './schema.server';
 
 export type TagTableRow = {
@@ -14,15 +16,6 @@ export type TagTableRow = {
   lastSync: string | null;
   zoneId: string | null;
 };
-
-async function listZoneIdsForUser(db: AppDatabase, userId: string) {
-  const rows = await db
-    .select({ id: zones.id })
-    .from(zones)
-    .innerJoin(stores, eq(zones.storeId, stores.id))
-    .where(eq(stores.userId, userId));
-  return rows.map((r) => r.id);
-}
 
 export async function tagOwnedByUser(
   db: AppDatabase,
@@ -53,16 +46,24 @@ export async function tagOwnedByUser(
   return false;
 }
 
-export async function listTagsForTable(db: AppDatabase, userId: string) {
-  const zoneIds = await listZoneIdsForUser(db, userId);
-  const productIds = await listOwnedProductIds(db, userId);
+export async function listTagsForTable(
+  db: AppDatabase,
+  userId: string,
+  visibilityIds?: TagVisibilityIds,
+) {
+  const zoneIds =
+    visibilityIds?.zoneIds ?? (await listZoneIdsForUser(db, userId));
+  const productIds =
+    visibilityIds?.productIds ?? (await listOwnedProductIds(db, userId));
 
-  const visibility: ReturnType<typeof and>[] = [];
+  const visibilityClauses: ReturnType<typeof and>[] = [];
   if (zoneIds.length > 0) {
-    visibility.push(and(isNotNull(tags.zoneId), inArray(tags.zoneId, zoneIds)));
+    visibilityClauses.push(
+      and(isNotNull(tags.zoneId), inArray(tags.zoneId, zoneIds)),
+    );
   }
   if (productIds.length > 0) {
-    visibility.push(
+    visibilityClauses.push(
       and(
         isNull(tags.zoneId),
         isNotNull(tags.linkedProductId),
@@ -71,7 +72,7 @@ export async function listTagsForTable(db: AppDatabase, userId: string) {
     );
   }
 
-  if (visibility.length === 0) {
+  if (visibilityClauses.length === 0) {
     return [];
   }
 
@@ -82,7 +83,7 @@ export async function listTagsForTable(db: AppDatabase, userId: string) {
     })
     .from(tags)
     .leftJoin(products, eq(tags.linkedProductId, products.id))
-    .where(or(...visibility));
+    .where(or(...visibilityClauses));
 
   const out: TagTableRow[] = rows.map(({ tag, productName }) => ({
     id: tag.id,

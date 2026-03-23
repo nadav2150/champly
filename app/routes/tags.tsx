@@ -1,23 +1,47 @@
 import type { Route } from './+types/tags';
 import { data, useLoaderData, useOutletContext } from 'react-router';
 import { TagControlScreen } from '../components/dashboard/tag-control-screen';
-import { getDb } from '../db/client.server';
-import { listProductPairOptions } from '../db/products.server';
+import { getDb, withRetry } from '../db/client.server';
+import { listOwnedProductIds, listProductPairOptions } from '../db/products.server';
+import { getTagHeaderStats, listZoneIdsForUser } from '../db/stats.server';
 import { linkTagToProduct, listTagsForTable } from '../db/tags.server';
-import { getTagHeaderStats } from '../db/stats.server';
 import { isSupportedLanguage } from '../i18n/config';
 import { requireUser } from '../lib/require-user.server';
 import type { DashboardOutletContext } from '../types/dashboard-outlet-context';
+
+const emptyTagStats = {
+  online: 0,
+  lowBattery: 0,
+  offline: 0,
+  total: 0,
+} as const;
 
 export async function loader({ request, context }: Route.LoaderArgs) {
   const env = context.cloudflare.env;
   const { user, headers } = await requireUser(request, env);
   const db = getDb(context);
-  const [tags, tagStats, productOptions] = await Promise.all([
-    listTagsForTable(db, user.id),
-    getTagHeaderStats(db, user.id),
-    listProductPairOptions(db, user.id),
-  ]);
+
+  let tags: Awaited<ReturnType<typeof listTagsForTable>> = [];
+  let tagStats: Awaited<ReturnType<typeof getTagHeaderStats>> = {
+    ...emptyTagStats,
+  };
+  let productOptions: Awaited<ReturnType<typeof listProductPairOptions>> = [];
+
+  try {
+    const [zoneIds, productIds] = await Promise.all([
+      withRetry(() => listZoneIdsForUser(db, user.id)),
+      withRetry(() => listOwnedProductIds(db, user.id)),
+    ]);
+    const visibility = { zoneIds, productIds };
+    [tags, tagStats, productOptions] = await Promise.all([
+      withRetry(() => listTagsForTable(db, user.id, visibility)),
+      withRetry(() => getTagHeaderStats(db, user.id, visibility)),
+      withRetry(() => listProductPairOptions(db, user.id)),
+    ]);
+  } catch (err) {
+    console.error('Failed to load tags data:', err);
+  }
+
   return data({ tags, tagStats, productOptions }, { headers });
 }
 

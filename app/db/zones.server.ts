@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { eq, inArray } from 'drizzle-orm';
 import type { AppDatabase } from './client.server';
 import { stores, tags, zones } from './schema.server';
 
@@ -9,30 +9,33 @@ export async function listZonesWithStats(db: AppDatabase, userId: string) {
     .innerJoin(stores, eq(zones.storeId, stores.id))
     .where(eq(stores.userId, userId));
 
-  const result: Array<{
-    id: string;
-    name: string;
-    storeId: string | null;
-    totalTags: number;
-    onlineTags: number;
-    lowBattery: number;
-  }> = [];
+  if (zs.length === 0) {
+    return [];
+  }
 
-  for (const row of zs) {
-    const z = row.zones;
-    const zoneTags = await db.select().from(tags).where(eq(tags.zoneId, z.id));
-    const totalTags = zoneTags.length;
-    const onlineTags = zoneTags.filter((t) => t.status === 'online').length;
-    const lowBattery = zoneTags.filter((t) => t.battery <= 25).length;
-    result.push({
+  const zoneIds = zs.map((row) => row.zones.id);
+  const allZoneTags = await db
+    .select()
+    .from(tags)
+    .where(inArray(tags.zoneId, zoneIds));
+
+  const tagsByZoneId = new Map<string, typeof allZoneTags>();
+  for (const t of allZoneTags) {
+    if (!t.zoneId) continue;
+    const list = tagsByZoneId.get(t.zoneId) ?? [];
+    list.push(t);
+    tagsByZoneId.set(t.zoneId, list);
+  }
+
+  return zs.map(({ zones: z }) => {
+    const zoneTags = tagsByZoneId.get(z.id) ?? [];
+    return {
       id: z.id,
       name: z.name,
       storeId: z.storeId,
-      totalTags,
-      onlineTags,
-      lowBattery,
-    });
-  }
-
-  return result;
+      totalTags: zoneTags.length,
+      onlineTags: zoneTags.filter((t) => t.status === 'online').length,
+      lowBattery: zoneTags.filter((t) => t.battery <= 25).length,
+    };
+  });
 }
