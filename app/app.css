@@ -38,6 +38,17 @@
   --color-surface-subtle: #f7f7f7;
   --color-batch-selected-bg: #edfff1;
   --color-batch-selected-border: #0a9132;
+
+  /* Landing page palette (adapted to existing system colors) */
+  --color-landing-hero-from: #001d22;
+  --color-landing-hero-mid: #0b3a40;
+  --color-landing-hero-to: #0f4a4f;
+  --color-landing-faq-from: #0a3a40;
+  --color-landing-faq-to: #001d22;
+  --color-landing-cta: #0f4a4f;
+  --color-landing-surface: #f4f8f8;
+  --color-landing-border: #cfe6de;
+  --color-landing-muted-text: #d0ece4;
 }
 
 html[dir='rtl'] body {
@@ -46,7 +57,7 @@ html[dir='rtl'] body {
 
 html,
 body {
-  @apply min-h-dvh bg-dashboard-bg text-white antialiased;
+  @apply min-h-dvh antialiased;
 
   @media (prefers-color-scheme: dark) {
     color-scheme: dark;

@@ -1,0 +1,105 @@
+{
+  "nav": {
+    "brandName": "Champty",
+    "brandByline": "by instars.com",
+    "login": "Log in",
+    "signup": "Sign up"
+  },
+  "hero": {
+    "titleLine1": "Online surveys with",
+    "titleLine2": "crypto rewards",
+    "subtitle": "Create online surveys with lightning fast crypto payments, private results, daily rewards, blockchain verifiable results, and more.",
+    "cta": "Sign up - it's free",
+    "poweredBy": "Powered by:"
+  },
+  "features": {
+    "titlePrefix": "Start",
+    "titleHighlight": "Champty",
+    "titleSuffix": "with Next Generation Surveys for Free",
+    "items": {
+      "blockchainPowered": "Blockchain Powered",
+      "instantCryptoPayments": "Instant Crypto Payments",
+      "freeUnlimitedAccess": "Free Unlimited Access",
+      "dailyRewards": "Daily Rewards",
+      "builtInKyc": "Built-In-KYC",
+      "privateData": "Private Data"
+    },
+    "surveyMock": {
+      "question": "What do you like most about the app?",
+      "options": [
+        "Features",
+        "Easy to Use",
+        "Design",
+        "Content",
+        "Benefits"
+      ],
+      "submit": "OK",
+      "completedTitle": "Survey Completed",
+      "completedText": "Thank you for completing this survey. Please use the claim code to get your reward!",
+      "claimCodeLabel": "Claim Code",
+      "walletCta": "Get Wallet"
+    }
+  },
+  "comparison": {
+    "titlePrefix": "",
+    "titleHighlight": "Champty",
+    "titleSuffix": "vs Legacy Online Surveys",
+    "headerFeature": "Built-in features",
+    "headerModern": "Champty",
+    "headerLegacy": "Legacy Surveys",
+    "modernDescription": "Next generation online surveys with lightning fast crypto payments, private results, daily rewards, blockchain verifiable results, and more.",
+    "legacyDescription": "Traditional online survey software with monthly recurring fees, outdated payment options, and lack of transparency.",
+    "rows": {
+      "blockchainPowered": "Blockchain Powered",
+      "instantPayments": "Instant Payments for Participants",
+      "freeUnlimitedAccess": "Free Unlimited Access",
+      "dailyRewards": "Daily Rewards",
+      "privateData": "Private Data",
+      "kycReady": "KYC Ready"
+    }
+  },
+  "howItWorks": {
+    "titlePrefix": "How",
+    "titleSuffix": "It Works",
+    "step1Title": "1. Create Survey",
+    "step1Text": "Build your survey in minutes with our simple editor.",
+    "step2Title": "2. Share Link",
+    "step2Text": "Share one secure link and start collecting responses instantly.",
+    "step3Title": "3. Get Results",
+    "step3Text": "Track verifiable results and reward participants in real time."
+  },
+  "faq": {
+    "title": "Frequently asked questions",
+    "items": [
+      {
+        "question": "What is Champty?",
+        "answer": "Champty is an online survey platform with crypto-powered rewards, private data handling, and transparent verifiable outcomes."
+      },
+      {
+        "question": "How do rewards work?",
+        "answer": "You configure reward rules per survey. Participants receive rewards automatically when they complete eligible responses."
+      },
+      {
+        "question": "Can I use Champty for free?",
+        "answer": "Yes. You can start for free, create surveys, and invite participants without upfront costs."
+      },
+      {
+        "question": "Does Champty support private data?",
+        "answer": "Yes. Privacy is built in with secure storage and controlled data access."
+      }
+    ]
+  },
+  "cta": {
+    "titlePrefix": "Join",
+    "titleSuffix": "the Champty beta for free",
+    "subtitle": "Sign up for free exclusive access to Champty survey software.",
+    "emailPlaceholder": "Email Address",
+    "button": "Join Beta"
+  },
+  "footer": {
+    "brandName": "Champty",
+    "brandByline": "by instars.com",
+    "poweredBy": "Powered by:",
+    "copyright": "Copyright {{year}}"
+  }
+}

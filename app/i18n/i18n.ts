@@ -9,6 +9,7 @@ import storesEn from './locales/en/stores.json';
 import tagsEn from './locales/en/tags.json';
 import templatesEn from './locales/en/templates.json';
 import authEn from './locales/en/auth.json';
+import landingEn from './locales/en/landing.json';
 import commonHe from './locales/he/common.json';
 import homeHe from './locales/he/home.json';
 import productsHe from './locales/he/products.json';
@@ -16,6 +17,7 @@ import storesHe from './locales/he/stores.json';
 import tagsHe from './locales/he/tags.json';
 import templatesHe from './locales/he/templates.json';
 import authHe from './locales/he/auth.json';
+import landingHe from './locales/he/landing.json';
 
 export const resources = {
   en: {
@@ -26,6 +28,7 @@ export const resources = {
     tags: tagsEn,
     templates: templatesEn,
     auth: authEn,
+    landing: landingEn,
   },
   he: {
     common: commonHe,
@@ -35,6 +38,7 @@ export const resources = {
     tags: tagsHe,
     templates: templatesHe,
     auth: authHe,
+    landing: landingHe,
   },
 } as const;
 
