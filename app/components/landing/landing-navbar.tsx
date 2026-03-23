@@ -16,7 +16,7 @@ export function LandingNavbar() {
   return (
     <header className='border-b border-white/10'>
       <div className='mx-auto flex w-full max-w-6xl items-center justify-between px-5 py-4 sm:px-6 lg:px-8'>
-        <Link to={toLocalizedPath('/landing', currentLanguage)} className='inline-flex items-center gap-2'>
+        <Link to={toLocalizedPath('/', currentLanguage)} className='inline-flex items-center gap-2'>
           <span aria-hidden className='text-lg text-accent-mint'>✦</span>
           <span className='leading-tight'>
             <span className='block text-lg font-bold'>{t('landing:nav.brandName')}</span>

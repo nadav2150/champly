@@ -207,11 +207,11 @@ export function Navbar({ userName = '' }: NavbarProps) {
     ? `/${pathSegments.slice(1).join('/')}`
     : pathname;
   const normalizedPath = basePath === '/' ? '/' : basePath.replace(/\/$/, '') || '/';
-  const isHome = normalizedPath === '/';
-  const isStores = normalizedPath === '/stores';
-  const isProducts = normalizedPath === '/products';
-  const isTags = normalizedPath === '/tags';
-  const isTemplates = normalizedPath === '/templates';
+  const isHome = normalizedPath === '/dashboard' || normalizedPath === '/';
+  const isStores = normalizedPath === '/dashboard/stores';
+  const isProducts = normalizedPath === '/dashboard/products';
+  const isTags = normalizedPath === '/dashboard/tags';
+  const isTemplates = normalizedPath === '/dashboard/templates';
 
   return (
     <>
@@ -242,7 +242,7 @@ export function Navbar({ userName = '' }: NavbarProps) {
           </div>
           <nav className="flex items-center gap-1.5" aria-label="Primary">
             <Link
-              to={toLocalizedPath('/', language)}
+              to={toLocalizedPath('/dashboard', language)}
               className={isHome ? navPillActive : navPillInactive}
               aria-current={isHome ? 'page' : undefined}
             >
@@ -253,7 +253,7 @@ export function Navbar({ userName = '' }: NavbarProps) {
               {t('nav.home')}
             </Link>
             <Link
-              to={toLocalizedPath('/stores', language)}
+              to={toLocalizedPath('/dashboard/stores', language)}
               className={isStores ? navPillActive : navPillInactive}
               aria-current={isStores ? 'page' : undefined}
             >
@@ -264,7 +264,7 @@ export function Navbar({ userName = '' }: NavbarProps) {
               {t('nav.stores')}
             </Link>
             <Link
-              to={toLocalizedPath('/products', language)}
+              to={toLocalizedPath('/dashboard/products', language)}
               className={isProducts ? navPillActive : navPillInactive}
               aria-current={isProducts ? 'page' : undefined}
             >
@@ -274,7 +274,7 @@ export function Navbar({ userName = '' }: NavbarProps) {
               {t('nav.products')}
             </Link>
             <Link
-              to={toLocalizedPath('/tags', language)}
+              to={toLocalizedPath('/dashboard/tags', language)}
               className={isTags ? navPillActive : navPillInactive}
               aria-current={isTags ? 'page' : undefined}
             >
@@ -285,7 +285,7 @@ export function Navbar({ userName = '' }: NavbarProps) {
               {t('nav.tags')}
             </Link>
             <Link
-              to={toLocalizedPath('/templates', language)}
+              to={toLocalizedPath('/dashboard/templates', language)}
               className={isTemplates ? navPillActive : navPillInactive}
               aria-current={isTemplates ? 'page' : undefined}
             >
@@ -347,7 +347,7 @@ export function Navbar({ userName = '' }: NavbarProps) {
         aria-label={t('nav.main')}
       >
         <Link
-          to={toLocalizedPath('/', language)}
+          to={toLocalizedPath('/dashboard', language)}
           className={isHome ? mobileTabActive : mobileTabInactive}
           aria-current={isHome ? 'page' : undefined}
         >
@@ -355,7 +355,7 @@ export function Navbar({ userName = '' }: NavbarProps) {
           {t('nav.home')}
         </Link>
         <Link
-          to={toLocalizedPath('/stores', language)}
+          to={toLocalizedPath('/dashboard/stores', language)}
           className={isStores ? mobileTabActive : mobileTabInactive}
           aria-current={isStores ? 'page' : undefined}
         >
@@ -363,7 +363,7 @@ export function Navbar({ userName = '' }: NavbarProps) {
           {t('nav.stores')}
         </Link>
         <Link
-          to={toLocalizedPath('/products', language)}
+          to={toLocalizedPath('/dashboard/products', language)}
           className={isProducts ? mobileTabActive : mobileTabInactive}
           aria-current={isProducts ? 'page' : undefined}
         >
@@ -371,7 +371,7 @@ export function Navbar({ userName = '' }: NavbarProps) {
           {t('nav.products')}
         </Link>
         <Link
-          to={toLocalizedPath('/tags', language)}
+          to={toLocalizedPath('/dashboard/tags', language)}
           className={isTags ? mobileTabActive : mobileTabInactive}
           aria-current={isTags ? 'page' : undefined}
         >
@@ -379,7 +379,7 @@ export function Navbar({ userName = '' }: NavbarProps) {
           {t('nav.tags')}
         </Link>
         <Link
-          to={toLocalizedPath('/templates', language)}
+          to={toLocalizedPath('/dashboard/templates', language)}
           className={isTemplates ? mobileTabActive : mobileTabInactive}
           aria-current={isTemplates ? 'page' : undefined}
         >

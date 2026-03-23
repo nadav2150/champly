@@ -17,7 +17,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   );
   const { data: { user } } = await supabase.auth.getUser();
   if (user) {
-    throw redirect('/');
+    throw redirect('/dashboard');
   }
   return null;
 }
@@ -47,7 +47,7 @@ export async function action({ request, context }: Route.ActionArgs) {
     );
   }
 
-  throw redirect('/', { headers });
+  throw redirect('/dashboard', { headers });
 }
 
 export function meta() {

@@ -11,10 +11,10 @@ export default [
   route('logout', 'routes/logout.tsx'),
 
   route(':lang?', 'routes/landing-layout.tsx', [
-    route('landing', 'routes/landing.tsx'),
+    index('routes/landing.tsx'),
   ]),
 
-  route(':lang?', 'routes/dashboard-layout.tsx', [
+  route(':lang?/dashboard', 'routes/dashboard-layout.tsx', [
     index('routes/home.tsx'),
     route('stores', 'routes/stores.tsx'),
     route('products', 'routes/products.tsx'),

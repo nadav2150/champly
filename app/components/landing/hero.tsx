@@ -51,7 +51,7 @@ export function Hero() {
         </div>
 
         <div className='mt-4 text-xs text-white/50'>
-          <Link to={toLocalizedPath('/landing', language)}>{t('nav.brandName')}</Link>
+          <Link to={toLocalizedPath('/', language)}>{t('nav.brandName')}</Link>
         </div>
       </div>
     </section>

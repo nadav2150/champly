@@ -65,7 +65,7 @@ export function HomeDashboard({ stats }: HomeDashboardProps) {
           <ul className="mt-6 flex flex-col gap-3">
             <li>
               <Link
-                to={toLocalizedPath('/stores', language)}
+                to={toLocalizedPath('/dashboard/stores', language)}
                 className="flex items-center justify-between rounded-lg border border-content-border bg-surface-subtle px-4 py-3 text-sm font-medium text-content-primary transition hover:border-accent-mint/40 hover:bg-accent-mint/10"
               >
                 {t('quickActions.stores')}
@@ -74,7 +74,7 @@ export function HomeDashboard({ stats }: HomeDashboardProps) {
             </li>
             <li>
               <Link
-                to={toLocalizedPath('/products', language)}
+                to={toLocalizedPath('/dashboard/products', language)}
                 className="flex items-center justify-between rounded-lg border border-content-border bg-surface-subtle px-4 py-3 text-sm font-medium text-content-primary transition hover:border-accent-mint/40 hover:bg-accent-mint/10"
               >
                 {t('quickActions.products')}
@@ -83,7 +83,7 @@ export function HomeDashboard({ stats }: HomeDashboardProps) {
             </li>
             <li>
               <Link
-                to={toLocalizedPath('/tags', language)}
+                to={toLocalizedPath('/dashboard/tags', language)}
                 className="flex items-center justify-between rounded-lg border border-content-border bg-surface-subtle px-4 py-3 text-sm font-medium text-content-primary transition hover:border-accent-mint/40 hover:bg-accent-mint/10"
               >
                 {t('quickActions.tags')}
@@ -106,13 +106,13 @@ export function HomeDashboard({ stats }: HomeDashboardProps) {
           </p>
           <div className="mt-6 flex flex-col gap-2">
             <Link
-              to={toLocalizedPath('/tags', language)}
+              to={toLocalizedPath('/dashboard/tags', language)}
               className="inline-flex rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/15"
             >
               {t('common:actions.goToTags')}
             </Link>
             <Link
-              to={toLocalizedPath('/products', language)}
+              to={toLocalizedPath('/dashboard/products', language)}
               className="inline-flex rounded-full border border-white/10 px-4 py-2 text-sm font-medium text-white/70 transition hover:bg-white/10"
             >
               {t('common:actions.goToProducts')}

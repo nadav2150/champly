@@ -11,7 +11,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   );
   const { data: { user } } = await supabase.auth.getUser();
   if (user) {
-    throw redirect('/');
+    throw redirect('/dashboard');
   }
   return null;
 }

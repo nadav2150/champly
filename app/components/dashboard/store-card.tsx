@@ -343,14 +343,14 @@ export function StoreCard({
 
         <div className="mt-3 flex flex-wrap justify-end gap-1.5">
           <Link
-            to={toLocalizedPath('/products', language)}
+            to={toLocalizedPath('/dashboard/products', language)}
             className="inline-flex items-center gap-0.5 rounded-full border border-content-border bg-white px-2.5 py-1 text-xs font-semibold text-content-primary shadow-sm transition hover:border-accent-mint/40 hover:bg-surface-subtle"
           >
             {t('products')}
             <IconChevron className="size-3 text-content-primary/35" />
           </Link>
           <Link
-            to={toLocalizedPath('/tags', language)}
+            to={toLocalizedPath('/dashboard/tags', language)}
             className="inline-flex items-center gap-0.5 rounded-full border border-white bg-accent-mint px-2.5 py-1 text-xs font-semibold text-accent-mint-text shadow-[0px_0px_0px_1px_#162021] transition hover:brightness-95"
           >
             {t('tags')}

@@ -14,7 +14,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     const { error } = await supabase.auth.exchangeCodeForSession(code);
 
     if (!error) {
-      throw redirect('/', { headers });
+      throw redirect('/dashboard', { headers });
     }
   }
 
