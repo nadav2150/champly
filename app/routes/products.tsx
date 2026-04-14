@@ -5,6 +5,7 @@ import { createCategory } from '../db/categories.server';
 import { getDb, withRetry } from '../db/client.server';
 import {
   bulkSetProductsPending,
+  bulkUpdateProducts,
   createProduct,
   deleteProduct,
   listProductsForTable,
@@ -226,6 +227,42 @@ export async function action({ request, context }: Route.ActionArgs) {
     }
     await bulkSetProductsPending(db, user.id, ids);
     return data({ ok: true as const }, { headers });
+  }
+
+  if (intent === 'bulk-edit-products') {
+    const raw = String(formData.get('edits') ?? '[]');
+    let edits: Array<{ id: string; name?: string; priceCents?: number }> = [];
+    try {
+      edits = JSON.parse(raw);
+    } catch {
+      edits = [];
+    }
+    if (edits.length === 0) {
+      return data({ ok: false as const, error: 'validation' }, { headers });
+    }
+    const updated = await bulkUpdateProducts(db, user.id, edits);
+    return data({ ok: true as const, updated }, { headers });
+  }
+
+  if (intent === 'push-tag-image') {
+    const productId = String(formData.get('productId') ?? '').trim();
+    const imageBase64 = String(formData.get('imageBase64') ?? '');
+    if (!productId || !imageBase64) {
+      return data({ ok: false as const, error: 'validation' }, { headers });
+    }
+    const { getTagMacByProductId } = await import('../db/tags.server');
+    const tagMac = await getTagMacByProductId(db, productId);
+    if (!tagMac) {
+      return data({ ok: true as const, skipped: true }, { headers });
+    }
+    try {
+      const { sendImage } = await import('../lib/mqtt-bridge.server');
+      const bridgeResult = await sendImage(env, tagMac, imageBase64);
+      return data({ ok: true as const, bridge: bridgeResult }, { headers });
+    } catch (err) {
+      console.error(`[push-tag-image] Failed for product ${productId}:`, err);
+      return data({ ok: true as const, bridgeError: String(err) }, { headers });
+    }
   }
 
   return data({ ok: false as const }, { headers });

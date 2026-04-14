@@ -7,6 +7,7 @@ import { minorUnitsToDecimalString } from '../../lib/money';
 import type { TemplateSelectRow } from '../../db/templates.server';
 import type { DashboardOutletContext } from '../../types/dashboard-outlet-context';
 import type { ProductFilterTab } from './dashboard-header';
+import { BulkEditSheet } from './bulk-edit-sheet';
 import { CreateProductModal } from './create-product-modal';
 import { DeleteProductDialog } from './delete-product-dialog';
 import { EditProductModal } from './edit-product-modal';
@@ -135,6 +136,8 @@ export function ProductsTable({
     id: string;
     name: string;
   } | null>(null);
+  const [bulkEditOpen, setBulkEditOpen] = useState(false);
+  const [bulkEditKey, setBulkEditKey] = useState(0);
 
   useEffect(() => {
     setProducts(initialProducts);
@@ -276,6 +279,28 @@ export function ProductsTable({
     setSelectedIds(new Set());
   }
 
+  const bulkEditProducts = useMemo(() => {
+    if (selectedIds.size > 0) {
+      return filtered.filter((p) => selectedIds.has(p.id));
+    }
+    return filtered;
+  }, [filtered, selectedIds]);
+
+  const handleBulkEditSaved = useCallback(
+    (edits: Array<{ id: string; name: string; priceCents: number }>) => {
+      const editMap = new Map(edits.map((e) => [e.id, e]));
+      setProducts((prev) =>
+        prev.map((p) => {
+          const edit = editMap.get(p.id);
+          if (!edit) return p;
+          return { ...p, name: edit.name, priceCents: edit.priceCents, syncStatus: 'pending' as const };
+        }),
+      );
+      setSelectedIds(new Set());
+    },
+    [],
+  );
+
   const modalProduct = editProduct
     ? {
         id: editProduct.id,
@@ -320,6 +345,14 @@ export function ProductsTable({
         productName={deleteTarget?.name ?? ''}
         onClose={() => setDeleteTarget(null)}
       />
+      <BulkEditSheet
+        key={bulkEditKey}
+        open={bulkEditOpen}
+        products={bulkEditProducts}
+        templates={templates}
+        onClose={() => setBulkEditOpen(false)}
+        onSaved={handleBulkEditSaved}
+      />
     </>
   );
 
@@ -357,11 +390,21 @@ export function ProductsTable({
                 <span className="text-black">{t('products:catalogTitle')}</span>
                 <span className="text-sm text-black/30">{products.length}</span>
               </div>
-              <div className="hidden items-center gap-2 sm:flex">
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => { setBulkEditKey((k) => k + 1); setBulkEditOpen(true); }}
+                  className="rounded-full border border-amber-200 bg-amber-50 px-3.5 py-2 text-xs font-medium text-amber-700 shadow-sm transition hover:bg-amber-100 sm:text-sm"
+                >
+                  {t('products:bulkEdit')}
+                  {selectedIds.size > 0 && (
+                    <span className="ms-1 tabular-nums">({selectedIds.size})</span>
+                  )}
+                </button>
                 <button
                   type="button"
                   onClick={() => setCreateOpen(true)}
-                  className="rounded-full border border-dashboard-border bg-dashboard-card px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:brightness-110"
+                  className="hidden rounded-full border border-dashboard-border bg-dashboard-card px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:brightness-110 sm:block"
                 >
                   {t('common:actions.createProduct')}
                 </button>
@@ -369,7 +412,7 @@ export function ProductsTable({
                   type="button"
                   onClick={handleBulkPriceUpdate}
                   disabled={selectedIds.size === 0 || fetcher.state !== 'idle'}
-                  className="rounded-full border border-dashboard-border bg-dashboard-card px-4 py-2 text-sm font-medium text-white shadow-sm disabled:cursor-not-allowed disabled:opacity-40"
+                  className="hidden rounded-full border border-dashboard-border bg-dashboard-card px-4 py-2 text-sm font-medium text-white shadow-sm disabled:cursor-not-allowed disabled:opacity-40 sm:block"
                 >
                   {t('common:actions.bulkPriceUpdate')}
                 </button>

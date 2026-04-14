@@ -39,6 +39,11 @@
   "categoryName": "שם הקטגוריה",
   "categoryIcon": "אייקון (אימוג׳י)",
   "validationNamePrice": "הזן שם ומחיר תקינים.",
+  "bulkEdit": "עריכה מהירה",
+  "bulkEditTitle": "עריכה מהירה",
+  "bulkEditSave": "שמור הכל",
+  "bulkEditCount": "{{count}} מוצרים",
+  "bulkEditDone": "סיום",
   "empty": {
     "title": "אין מוצרים עדיין",
     "description": "הוסף את המוצר הראשון שלך כדי להתחיל לנהל את הקטלוג ולסנכרן מחירים לתגיות מדף."

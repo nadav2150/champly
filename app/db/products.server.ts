@@ -280,3 +280,23 @@ export async function bulkSetProductsPending(
     .set({ syncStatus: 'pending' })
     .where(inArray(products.id, owned));
 }
+
+export async function bulkUpdateProducts(
+  db: AppDatabase,
+  userId: string,
+  edits: Array<{ id: string; name?: string; priceCents?: number }>,
+) {
+  if (edits.length === 0) return 0;
+  const ids = edits.map((e) => e.id);
+  const owned = new Set(await filterProductIdsOwnedByUser(db, userId, ids));
+  let updated = 0;
+  for (const edit of edits) {
+    if (!owned.has(edit.id)) continue;
+    const set: Record<string, unknown> = { syncStatus: 'pending' };
+    if (edit.name !== undefined) set.name = edit.name;
+    if (edit.priceCents !== undefined) set.priceCents = edit.priceCents;
+    await db.update(products).set(set).where(eq(products.id, edit.id));
+    updated++;
+  }
+  return updated;
+}

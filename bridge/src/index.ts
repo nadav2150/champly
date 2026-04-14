@@ -8,6 +8,8 @@ import { getCommandByReqId, getTagKeyByMac } from './d1-client.js';
 import { actionRegistry } from './command-registry.js';
 import type { SendCommandRequest } from './types.js';
 
+const pendingImageTags = new Set<string>();
+
 function parseBody(req: IncomingMessage): Promise<string> {
   return new Promise((resolve, reject) => {
     const chunks: Buffer[] = [];
@@ -114,6 +116,13 @@ async function handleRequest(
       }
 
       const tagMac = mac.toLowerCase();
+
+      if (pendingImageTags.has(tagMac)) {
+        console.log(`[image] Rejecting duplicate image push for ${tagMac} — already pending`);
+        json(res, 429, { error: `Image push already pending for tag ${tagMac}`, reqId: 0, status: 'failed' });
+        return;
+      }
+
       const key = await getTagKeyByMac(tagMac);
       if (!key) {
         json(res, 400, { error: `No BLE key found for tag ${tagMac}` });
@@ -151,13 +160,15 @@ async function handleRequest(
         },
       };
 
-      // Register in the shared pending map so initResponseListener catches the reply
+      pendingImageTags.add(tagMac);
+
       const resultPromise = registerPending(reqId, tagMac, 'ble', 90_000);
 
       await publishAction(imageCommand);
       console.log(`[image] Action 2 published for ${tagMac}, waiting for response...`);
 
       const result = await resultPromise;
+      pendingImageTags.delete(tagMac);
 
       console.log(`[image] Result for ${tagMac}: ${result.status}${result.error ? ` (${result.error})` : ''}`);
       json(res, result.status === 'success' ? 200 : 502, result);

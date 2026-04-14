@@ -39,6 +39,11 @@
   "categoryName": "Category name",
   "categoryIcon": "Icon (emoji)",
   "validationNamePrice": "Enter a valid name and price.",
+  "bulkEdit": "Quick edit",
+  "bulkEditTitle": "Quick edit",
+  "bulkEditSave": "Save all",
+  "bulkEditCount": "{{count}} products",
+  "bulkEditDone": "Done",
   "empty": {
     "title": "No products yet",
     "description": "Add your first product to start managing your catalog and syncing prices to shelf labels."
