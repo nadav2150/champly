@@ -96,9 +96,18 @@ export function EditProductModal({
     }
   }, [product, open]);
 
+  const effectiveTagModel = useMemo(() => {
+    if (tagAction === 'remove') return null;
+    if (tagAction === 'change' && selectedTagId) {
+      const tag = unlinkedTags.find((t) => t.id === selectedTagId);
+      return tag?.tagModel ?? product?.tagModel ?? null;
+    }
+    return product?.tagModel ?? null;
+  }, [tagAction, selectedTagId, unlinkedTags, product?.tagModel]);
+
   const tagScreen = useMemo(
-    () => resolveScreen(product?.tagModel ?? null),
-    [product?.tagModel],
+    () => resolveScreen(effectiveTagModel),
+    [effectiveTagModel],
   );
 
   const filteredTemplates = useMemo(() => {
@@ -145,6 +154,16 @@ export function EditProductModal({
       currency: '₪',
     };
   }, [categories, categoryId, name, price, product?.name, t, unit]);
+
+  const displayTagId = useMemo(() => {
+    if (!product) return '—';
+    if (tagAction === 'remove') return '—';
+    if (tagAction === 'change' && selectedTagId) {
+      const tag = unlinkedTags.find((t) => t.id === selectedTagId);
+      return tag ? (tag.mac ?? tag.tagId) : product.hardwareTagId || '—';
+    }
+    return product.hardwareTagId || '—';
+  }, [tagAction, selectedTagId, unlinkedTags, product]);
 
   if (!open || !product) {
     return null;
@@ -215,7 +234,7 @@ export function EditProductModal({
               {t('products:editProduct')}
             </h2>
             <p className="mt-1 text-sm text-white/50">
-              {t('common:table.tagId')} {activeProduct.hardwareTagId || '—'}
+              {t('common:table.tagId')} {displayTagId}
             </p>
           </div>
           <button

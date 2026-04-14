@@ -223,6 +223,19 @@ export function ProductsTable({
       fetcher.submit(fd, { method: 'post' });
 
       const cat = categories.find((c) => c.id === payload.categoryId);
+      let newHardwareTagId: string | null | undefined;
+      let newTagModel: string | null | undefined;
+      if (payload.unassignTag) {
+        newHardwareTagId = null;
+        newTagModel = null;
+      } else if (payload.assignTagId) {
+        const assignedTag = unlinkedTags.find((t) => t.id === payload.assignTagId);
+        if (assignedTag) {
+          newHardwareTagId = assignedTag.mac ?? assignedTag.tagId;
+          newTagModel = assignedTag.tagModel;
+        }
+      }
+
       setProducts((prev) =>
         prev.map((p) =>
           p.id === payload.id
@@ -236,12 +249,14 @@ export function ProductsTable({
                 categoryName: cat?.name ?? p.categoryName,
                 categoryIcon: cat?.icon ?? p.categoryIcon,
                 syncStatus: 'pending',
+                ...(newHardwareTagId !== undefined && { hardwareTagId: newHardwareTagId }),
+                ...(newTagModel !== undefined && { tagModel: newTagModel }),
               }
             : p,
         ),
       );
     },
-    [categories, fetcher],
+    [categories, fetcher, unlinkedTags],
   );
 
   function handleBulkPriceUpdate() {
@@ -336,26 +351,13 @@ export function ProductsTable({
     <>
       <div className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-xl border border-[#e2e2e4] bg-white shadow-[0px_4px_6px_0px_rgba(207,207,207,0.1)]">
         <div className="flex min-h-0 flex-1 flex-col bg-surface-muted">
-          <div className="shrink-0 flex flex-col gap-3 border-b border-black/4 px-4 py-3 sm:px-6">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div className="flex flex-wrap items-center gap-4">
-                <div className="flex items-center gap-3 text-base font-medium">
-                  <span className="text-black">{t('products:catalogTitle')}</span>
-                  <span className="text-sm text-black/30">{products.length}</span>
-                </div>
-                <span className="hidden h-[26px] w-px bg-black/10 sm:block" aria-hidden />
-                <div className="flex w-full max-w-[270px] items-center gap-2 rounded-[10px] border border-[#ddd] bg-white py-1.5 ps-2 pe-3 sm:w-[270px]">
-                  <IconSearch className="shrink-0 text-black/40" />
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder={t('common:table.searchProducts')}
-                    className="w-full bg-transparent text-sm text-[#18171c] placeholder:text-black/40 focus:outline-none"
-                  />
-                </div>
+          <div className="shrink-0 flex flex-col gap-3 border-b border-black/4 px-3 py-3 sm:px-6">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 text-base font-medium">
+                <span className="text-black">{t('products:catalogTitle')}</span>
+                <span className="text-sm text-black/30">{products.length}</span>
               </div>
-              <div className="flex flex-wrap items-center gap-2">
+              <div className="hidden items-center gap-2 sm:flex">
                 <button
                   type="button"
                   onClick={() => setCreateOpen(true)}
@@ -373,13 +375,23 @@ export function ProductsTable({
                 </button>
               </div>
             </div>
+            <div className="flex w-full items-center gap-2 rounded-xl border border-[#ddd] bg-white py-2 ps-3 pe-3 sm:max-w-[270px]">
+              <IconSearch className="shrink-0 text-black/40" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder={t('common:table.searchProducts')}
+                className="w-full bg-transparent text-sm text-[#18171c] placeholder:text-black/40 focus:outline-none"
+              />
+            </div>
             <div className="flex gap-2 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:flex-wrap lg:overflow-visible">
               {FILTER_PILLS.map(({ key, labelKey }) => (
                 <button
                   key={key}
                   type="button"
                   onClick={() => setStatusFilter(key)}
-                  className={`shrink-0 rounded-full px-4 py-1.5 text-sm font-medium transition ${
+                  className={`shrink-0 rounded-full px-3.5 py-1.5 text-sm font-medium transition ${
                     statusFilter === key
                       ? 'bg-dashboard-card text-white shadow-sm'
                       : 'bg-white text-black/70 ring-1 ring-black/10 hover:bg-surface-subtle'
@@ -498,16 +510,16 @@ export function ProductsTable({
             </div>
           </div>
 
-          <div className="min-h-0 flex-1 overflow-auto p-2 lg:hidden">
-            <div className="flex flex-col gap-2">
+          <div className="min-h-0 flex-1 overflow-auto p-3 lg:hidden">
+            <div className="flex flex-col gap-3">
               {filtered.map((product) => {
                 const emoji = product.categoryIcon;
                 const translatedName = t(productKeyByName[product.name] ?? product.name);
                 const translatedCategory = t(product.categoryName);
                 return (
-                  <div
+                  <article
                     key={product.id}
-                    className="flex w-full items-stretch gap-2 rounded-lg border border-content-border bg-white p-2 shadow-sm"
+                    className="overflow-hidden rounded-xl border border-content-border bg-white shadow-sm"
                   >
                     <button
                       type="button"
@@ -515,50 +527,49 @@ export function ProductsTable({
                         setEditProduct(product);
                         setModalOpen(true);
                       }}
-                      className="flex min-w-0 flex-1 items-center gap-3 rounded-md p-1 text-start active:bg-surface-subtle"
+                      className="flex w-full items-center gap-3 px-4 py-3.5 text-start active:bg-surface-subtle/60"
                     >
-                      <div className="flex size-10 shrink-0 items-center justify-center rounded-lg border border-[#d8d8d8] bg-white shadow-sm">
-                        <span className="text-xl" aria-hidden>{emoji}</span>
+                      <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-surface-subtle">
+                        <span className="text-2xl" aria-hidden>{emoji}</span>
                       </div>
                       <div className="min-w-0 flex-1">
-                        <div className="flex items-center justify-between gap-2">
-                          <span className="truncate text-sm font-medium text-[#18171c]">{translatedName}</span>
-                          <span className="shrink-0 tabular-nums text-sm font-semibold text-[#18171c]">₪{minorUnitsToDecimalString(product.priceCents)}</span>
+                        <div className="flex items-center justify-between gap-3">
+                          <span className="truncate text-[15px] font-semibold text-[#18171c]">{translatedName}</span>
+                          <span className="shrink-0 tabular-nums text-[15px] font-bold text-[#18171c]">₪{minorUnitsToDecimalString(product.priceCents)}</span>
                         </div>
-                        <div className="mt-1 flex items-center gap-2">
-                          <span className="text-xs text-black/50">{translatedCategory}</span>
-                          <span className="text-black/20">·</span>
-                          <span className="text-xs text-black/50">
-                            {product.unit === 'per_kg' ? t('common:units.perKg') : t('common:units.perUnit')}
-                          </span>
-                          <span className="text-black/20">·</span>
-                          <TagStatus status={product.syncStatus} />
+                        <div className="mt-0.5 flex items-center gap-1.5 text-xs text-black/45">
+                          <span>{translatedCategory}</span>
+                          <span>·</span>
+                          <span>{product.unit === 'per_kg' ? t('common:units.perKg') : t('common:units.perUnit')}</span>
                         </div>
+                      </div>
+                    </button>
+
+                    <div className="flex items-center justify-between border-t border-black/4 px-4 py-2">
+                      <div className="flex items-center gap-2">
+                        <TagStatus status={product.syncStatus} />
                         {product.hardwareTagId && (
-                          <div className="mt-1 flex items-center gap-1">
-                            <span className="font-mono text-[10px] text-purple-700">{product.hardwareTagId}</span>
-                            {product.tagModel && (
-                              <span className="text-[10px] text-black/40">({product.tagModel})</span>
-                            )}
-                          </div>
+                          <span className="rounded-md bg-purple-50 px-1.5 py-0.5 font-mono text-[10px] text-purple-600">
+                            {product.hardwareTagId}
+                            {product.tagModel ? ` · ${product.tagModel}` : ''}
+                          </span>
                         )}
                       </div>
-                      <IoCreateOutline className="shrink-0 text-black/30" size={16} />
-                    </button>
-                    <div className="flex shrink-0 flex-col items-center justify-center gap-1">
-                      {product.hardwareTagId && (
-                        <LocateProductTagButton mac={product.hardwareTagId} />
-                      )}
-                      <button
-                        type="button"
-                        onClick={() => openDelete(product)}
-                        className="flex shrink-0 items-center justify-center rounded-md border border-red-100 px-2 py-1 text-red-700"
-                        aria-label={t('common:actions.deleteProduct')}
-                      >
-                        <IoTrashOutline size={16} />
-                      </button>
+                      <div className="flex items-center gap-1.5">
+                        {product.hardwareTagId && (
+                          <LocateProductTagButton mac={product.hardwareTagId} />
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => openDelete(product)}
+                          className="flex items-center justify-center rounded-lg border border-red-100 p-1.5 text-red-500 active:bg-red-50"
+                          aria-label={t('common:actions.deleteProduct')}
+                        >
+                          <IoTrashOutline size={18} />
+                        </button>
+                      </div>
                     </div>
-                  </div>
+                  </article>
                 );
               })}
             </div>
