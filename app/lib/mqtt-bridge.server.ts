@@ -183,6 +183,18 @@ export function sendRefreshRegion(
   return postCommand(env, { mac, actionName: 'refresh', params });
 }
 
+export async function sendImage(
+  env: Env,
+  mac: string,
+  imageBase64: string,
+): Promise<BridgeCommandResult> {
+  const res = await bridgeFetch(env, '/image', {
+    method: 'POST',
+    body: JSON.stringify({ mac, data: imageBase64, region_a: 0 }),
+  });
+  return (await res.json()) as BridgeCommandResult;
+}
+
 /** Generic command for backward compat or raw action numbers */
 export function sendTagCommand(
   env: Env,

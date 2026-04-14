@@ -30,12 +30,33 @@ function IconSort({ className }: { className?: string }) {
   );
 }
 
-function IconLink({ className }: { className?: string }) {
+function IconLocate({ className }: { className?: string }) {
   return (
     <svg className={className} width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-      <path d="M6.5 9.5a3 3 0 004.24 0l2-2a3 3 0 00-4.24-4.24L7.5 4.26" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M9.5 6.5a3 3 0 00-4.24 0l-2 2a3 3 0 004.24 4.24l1-1" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx="8" cy="8" r="3" stroke="currentColor" strokeWidth="1.1" />
+      <path d="M8 1v3M8 12v3M1 8h3M12 8h3" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" />
     </svg>
+  );
+}
+
+function LocateProductTagButton({ mac }: { mac: string }) {
+  const { t } = useTranslation(['common']);
+  const fetcher = useFetcher();
+  const busy = fetcher.state !== 'idle';
+
+  return (
+    <fetcher.Form method="post">
+      <input type="hidden" name="intent" value="send-locate" />
+      <input type="hidden" name="mac" value={mac} />
+      <button
+        type="submit"
+        disabled={busy}
+        className="inline-flex items-center gap-1 rounded-[10px] border border-blue-200 bg-blue-50 px-2.5 py-1.5 text-xs font-medium text-blue-600 shadow-sm disabled:opacity-40"
+      >
+        <IconLocate className="shrink-0" />
+        {t('common:actions.locate')}
+      </button>
+    </fetcher.Form>
   );
 }
 
@@ -72,6 +93,14 @@ const productKeyByName: Record<string, string> = {
   'Greek Yogurt': 'products:items.greekYogurt',
 };
 
+type UnlinkedTag = {
+  id: string;
+  tagId: string;
+  mac: string | null;
+  tagModel: string | null;
+  status: 'online' | 'offline';
+};
+
 type ProductsTableProps = {
   initialProducts: Product[];
   templates: TemplateSelectRow[];
@@ -79,6 +108,7 @@ type ProductsTableProps = {
   createOpen?: boolean;
   onCreateOpenChange?: (open: boolean) => void;
   headerFilter?: ProductFilterTab;
+  unlinkedTags: UnlinkedTag[];
 };
 
 export function ProductsTable({
@@ -88,6 +118,7 @@ export function ProductsTable({
   createOpen: externalCreateOpen,
   onCreateOpenChange,
   headerFilter = 'all',
+  unlinkedTags,
 }: ProductsTableProps) {
   const { t } = useTranslation(['common', 'products']);
   const fetcher = useFetcher();
@@ -159,7 +190,23 @@ export function ProductsTable({
       unit: 'per_unit' | 'per_kg';
       templateId: string | null;
       categoryId: string | null;
+      imageBase64: string | null;
+      assignTagId: string | null;
+      unassignTag: boolean;
     }) => {
+      if (payload.unassignTag) {
+        const ufd = new FormData();
+        ufd.set('intent', 'unassign-tag');
+        ufd.set('productId', payload.id);
+        fetcher.submit(ufd, { method: 'post' });
+      } else if (payload.assignTagId) {
+        const afd = new FormData();
+        afd.set('intent', 'assign-tag');
+        afd.set('productId', payload.id);
+        afd.set('tagInternalId', payload.assignTagId);
+        fetcher.submit(afd, { method: 'post' });
+      }
+
       const fd = new FormData();
       fd.set('intent', 'update-product');
       fd.set('id', payload.id);
@@ -170,6 +217,9 @@ export function ProductsTable({
         fd.set('templateId', payload.templateId);
       }
       fd.set('categoryId', payload.categoryId ?? '');
+      if (payload.imageBase64) {
+        fd.set('imageBase64', payload.imageBase64);
+      }
       fetcher.submit(fd, { method: 'post' });
 
       const cat = categories.find((c) => c.id === payload.categoryId);
@@ -220,6 +270,7 @@ export function ProductsTable({
         unit: editProduct.unit,
         templateId: editProduct.templateId,
         categoryId: editProduct.categoryId,
+        tagModel: editProduct.tagModel,
       }
     : null;
 
@@ -241,6 +292,7 @@ export function ProductsTable({
         product={modalProduct}
         templates={templates}
         categories={categories}
+        unlinkedTags={unlinkedTags}
         onClose={() => {
           setModalOpen(false);
           setEditProduct(null);
@@ -359,6 +411,7 @@ export function ProductsTable({
                     <th className="w-36 p-3" scope="col"><HeaderCell>{t('common:table.category')}</HeaderCell></th>
                     <th className="w-24 p-3" scope="col"><HeaderCell>{t('common:table.price')}</HeaderCell></th>
                     <th className="w-24 p-3" scope="col"><HeaderCell>{t('common:table.unit')}</HeaderCell></th>
+                    <th className="w-44 p-3" scope="col"><HeaderCell>{t('common:table.tag')}</HeaderCell></th>
                     <th className="w-32 p-3" scope="col"><HeaderCell>{t('common:table.syncStatus')}</HeaderCell></th>
                     <th className="w-36 p-3" scope="col"><HeaderCell>{t('common:table.action')}</HeaderCell></th>
                   </tr>
@@ -400,6 +453,18 @@ export function ProductsTable({
                           {product.unit === 'per_kg' ? t('common:units.perKg') : t('common:units.perUnit')}
                         </td>
                         <td className="p-3 align-middle">
+                          {product.hardwareTagId ? (
+                            <div className="flex flex-col gap-0.5">
+                              <span className="font-mono text-[11px] text-[#18171c]">{product.hardwareTagId}</span>
+                              {product.tagModel && (
+                                <span className="text-[10px] text-black/40">({product.tagModel})</span>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-xs text-black/30">—</span>
+                          )}
+                        </td>
+                        <td className="p-3 align-middle">
                           <TagStatus status={product.syncStatus} />
                         </td>
                         <td className="p-3 align-middle">
@@ -412,15 +477,9 @@ export function ProductsTable({
                               <IoCreateOutline className="shrink-0" size={16} />
                               {t('common:actions.edit')}
                             </button>
-                            {!product.hardwareTagId ? (
-                              <button
-                                type="button"
-                                className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-[10px] border border-accent-mint/30 bg-accent-mint/10 px-3 py-1.5 text-xs font-medium text-churn-low shadow-sm"
-                              >
-                                <IconLink className="shrink-0" />
-                                {t('common:actions.assignTag')}
-                              </button>
-                            ) : null}
+                            {product.hardwareTagId && (
+                              <LocateProductTagButton mac={product.hardwareTagId} />
+                            )}
                             <button
                               type="button"
                               onClick={() => openDelete(product)}
@@ -475,17 +534,30 @@ export function ProductsTable({
                           <span className="text-black/20">·</span>
                           <TagStatus status={product.syncStatus} />
                         </div>
+                        {product.hardwareTagId && (
+                          <div className="mt-1 flex items-center gap-1">
+                            <span className="font-mono text-[10px] text-purple-700">{product.hardwareTagId}</span>
+                            {product.tagModel && (
+                              <span className="text-[10px] text-black/40">({product.tagModel})</span>
+                            )}
+                          </div>
+                        )}
                       </div>
                       <IoCreateOutline className="shrink-0 text-black/30" size={16} />
                     </button>
-                    <button
-                      type="button"
-                      onClick={() => openDelete(product)}
-                      className="flex shrink-0 items-center justify-center rounded-md border border-red-100 px-2 text-red-700"
-                      aria-label={t('common:actions.deleteProduct')}
-                    >
-                      <IoTrashOutline size={16} />
-                    </button>
+                    <div className="flex shrink-0 flex-col items-center justify-center gap-1">
+                      {product.hardwareTagId && (
+                        <LocateProductTagButton mac={product.hardwareTagId} />
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => openDelete(product)}
+                        className="flex shrink-0 items-center justify-center rounded-md border border-red-100 px-2 py-1 text-red-700"
+                        aria-label={t('common:actions.deleteProduct')}
+                      >
+                        <IoTrashOutline size={16} />
+                      </button>
+                    </div>
                   </div>
                 );
               })}

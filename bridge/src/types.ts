@@ -228,6 +228,7 @@ export interface TagState {
 export type ActionName =
   | 'version'
   | 'query'
+  | 'image'
   | 'ledRadio'
   | 'ledBle'
   | 'buzzer'

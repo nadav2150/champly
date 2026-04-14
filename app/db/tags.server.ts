@@ -209,6 +209,54 @@ export async function setTagModel(
     .where(eq(tags.id, tagInternalId));
 }
 
+export async function listUnlinkedTags(db: AppDatabase) {
+  const rows = await db
+    .select({
+      id: tags.id,
+      tagId: tags.tagId,
+      mac: tags.mac,
+      tagModel: tags.tagModel,
+      status: tags.status,
+    })
+    .from(tags)
+    .where(isNull(tags.linkedProductId));
+
+  return rows;
+}
+
+export async function assignTagToProduct(
+  db: AppDatabase,
+  tagInternalId: string,
+  productId: string,
+): Promise<void> {
+  await db
+    .update(tags)
+    .set({ linkedProductId: productId })
+    .where(eq(tags.id, tagInternalId));
+}
+
+export async function unassignTagFromProduct(
+  db: AppDatabase,
+  productId: string,
+): Promise<void> {
+  await db
+    .update(tags)
+    .set({ linkedProductId: null })
+    .where(eq(tags.linkedProductId, productId));
+}
+
+export async function getTagMacByProductId(
+  db: AppDatabase,
+  productId: string,
+): Promise<string | null> {
+  const [row] = await db
+    .select({ mac: tags.mac })
+    .from(tags)
+    .where(eq(tags.linkedProductId, productId))
+    .limit(1);
+  return row?.mac ?? null;
+}
+
 export async function getGatewayStatus(db: AppDatabase) {
   const rows = await db
     .select({

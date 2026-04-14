@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import type { TemplateRow } from '../../db/templates.server';
+import type { TemplateRow, TemplateVariantInfo } from '../../db/templates.server';
 import { LabelPreview } from './label-preview';
 import { parseLayoutJson, SAMPLE_PRODUCT_DATA } from '../../lib/template-layout';
 
@@ -57,31 +57,40 @@ export function previewDataForKind(kind: string): Record<string, string> {
 
 type TemplateCardProps = {
   template: TemplateRow;
+  activeVariant?: TemplateVariantInfo | null;
   onPreview?: (template: TemplateRow) => void;
 };
 
-export function TemplateCard({ template, onPreview }: TemplateCardProps) {
+export function TemplateCard({ template, activeVariant, onPreview }: TemplateCardProps) {
   const { t } = useTranslation('templates');
 
-  const layout =
-    template.firstVariant?.layoutJson != null
-      ? parseLayoutJson(template.firstVariant.layoutJson)
-      : null;
+  const variant = activeVariant ?? template.firstVariant;
+  const layout = variant?.layoutJson != null
+    ? parseLayoutJson(variant.layoutJson)
+    : null;
 
   const previewData = previewDataForKind(template.kind);
 
   return (
-    <article className="group relative flex flex-col overflow-hidden rounded-lg border border-white/[0.08] bg-white/[0.03] transition hover:border-white/15 hover:bg-white/[0.05]">
-      <div className="relative overflow-hidden border-b border-white/[0.06]">
+    <article className="group relative flex flex-col overflow-hidden rounded-lg border border-white/8 bg-white/3 transition hover:border-white/15 hover:bg-white/5">
+      <div className="relative flex h-40 items-center justify-center overflow-hidden border-b border-white/6 bg-white/1">
         {layout ? (
-          <LabelPreview
-            layout={layout}
-            data={previewData}
-            fillWidth
-            aria-label={t('gallery.samplePreview')}
-          />
+          <div className="flex h-full w-full items-center justify-center p-2">
+            <LabelPreview
+              layout={layout}
+              data={previewData}
+              className="max-h-full max-w-full"
+              fillWidth={false}
+              scale={Math.min(
+                1,
+                240 / layout.width,
+                140 / layout.height,
+              )}
+              aria-label={t('gallery.samplePreview')}
+            />
+          </div>
         ) : (
-          <div className="flex aspect-[296/128] w-full items-center justify-center bg-white/[0.02] text-[11px] text-white/25">
+          <div className="text-[11px] text-white/25">
             {t('gallery.noLayout')}
           </div>
         )}
@@ -109,18 +118,12 @@ export function TemplateCard({ template, onPreview }: TemplateCardProps) {
             </h2>
             <KindBadge kind={template.kind} />
           </div>
-          <div className="mt-0.5 flex items-center gap-2 text-[10px] text-white/35">
-            {template.firstVariant ? (
-              <span>{template.firstVariant.tagModel} · {template.firstVariant.width}×{template.firstVariant.height}</span>
+          <div className="mt-0.5 flex items-center gap-1.5 text-[10px] text-white/35">
+            {variant ? (
+              <span>{variant.tagModel} · {variant.width}×{variant.height}</span>
             ) : null}
             <span>·</span>
             <span>{template.variantCount} {t('variants').toLowerCase()}</span>
-            {template.linkedProductCount > 0 ? (
-              <>
-                <span>·</span>
-                <span>{template.linkedProductCount} {t('linkedProducts').toLowerCase()}</span>
-              </>
-            ) : null}
           </div>
         </div>
       </div>

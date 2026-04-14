@@ -29,6 +29,15 @@ function buildBuzzerDetails(_mac: string, params?: Record<string, unknown>): Rec
   return { ...BUZZER_DEFAULTS, ...params };
 }
 
+function buildImageDetails(_mac: string, params?: Record<string, unknown>): Record<string, unknown> {
+  // Action 2 image — payload-level fields (img_id, images) sit outside details
+  // but our command sender places buildDetails output inside details.{mac}.
+  // The Jengine spec puts img_id and images at payload level, so we return
+  // an empty object for the per-device details — the image-specific fields
+  // are injected at payload level by the /image endpoint.
+  return {};
+}
+
 function buildRefreshDetails(_mac: string, params?: Record<string, unknown>): Record<string, unknown> {
   const p = params ?? {};
   const out: Record<string, unknown> = { region_a: p.region_a ?? 0 };
@@ -56,6 +65,13 @@ export const actionRegistry: Record<ActionName, ActionDef> = {
     requiresKey: false,
     defaultSuppressStage2: true,
     buildDetails: passthrough,
+  },
+  image: {
+    action: JengineAction.Image,
+    method: 'set_req',
+    transport: 'radio',
+    requiresKey: true,
+    buildDetails: buildImageDetails,
   },
   ledRadio: {
     action: JengineAction.LedRadio,

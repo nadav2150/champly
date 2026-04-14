@@ -10,11 +10,20 @@ import { ProductsTable } from './products-table';
 
 type SidebarData = Pick<DashboardOutletContext, 'categories' | 'zones'>;
 
+type UnlinkedTag = {
+  id: string;
+  tagId: string;
+  mac: string | null;
+  tagModel: string | null;
+  status: 'online' | 'offline';
+};
+
 type ProductsProps = SidebarData & {
   variant: 'products';
   products: ProductTableRow[];
   templates: TemplateSelectRow[];
   productStats: { total: number; pending: number; failed: number };
+  unlinkedTags?: UnlinkedTag[];
 };
 
 type GatewayInfo = {
@@ -80,6 +89,7 @@ export function TagControlScreen(props: TagControlScreenProps) {
               createOpen={createOpen}
               onCreateOpenChange={setCreateOpen}
               headerFilter={headerFilter}
+              unlinkedTags={props.unlinkedTags ?? []}
             />
           ) : (
             <TagsTable

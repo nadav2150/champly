@@ -28,6 +28,8 @@
     "bulkPriceUpdate": "עדכון מחירים מרובה",
     "edit": "עריכה",
     "assignTag": "שיוך תגית",
+    "unassignTag": "הסר תגית",
+    "noTagsAvailable": "אין תגיות פנויות",
     "pair": "שיוך",
     "replace": "החלפה",
     "locate": "איתור",
@@ -70,7 +72,8 @@
     "lastSync": "סנכרון אחרון",
     "selectTag": "בחר תגית {{id}}",
     "selectProduct": "בחר {{name}}",
-    "unit": "יחידה"
+    "unit": "יחידה",
+    "tag": "תגית"
   },
   "errors": {
     "oops": "אופס!",

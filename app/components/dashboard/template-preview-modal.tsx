@@ -84,9 +84,8 @@ export function TemplatePreviewModal({
             <LabelPreview
               layout={layout}
               data={previewData}
-              scale={1.8}
+              fillWidth
               aria-label={t('gallery.samplePreview')}
-              className="w-full"
             />
           ) : (
             <div className="flex aspect-[296/128] w-full items-center justify-center bg-white/[0.02] text-xs text-white/25">

@@ -90,6 +90,7 @@ function drawTextLines(
   align: TextAlign,
   maxWidth: number,
   maxLines: number,
+  boxWidth?: number,
 ): void {
   setFont(ctx, fontSize, fontWeight);
   ctx.fillStyle = resolveColor(color);
@@ -102,14 +103,15 @@ function drawTextLines(
 
   const lineHeight = fontSize * 1.25;
   let drawY = y;
+  const effectiveBox = boxWidth ?? maxWidth;
 
   for (const line of lines) {
     let drawX = x;
     const metrics = ctx.measureText(line);
     if (align === 'center') {
-      drawX = x - metrics.width / 2;
+      drawX = x + (effectiveBox - metrics.width) / 2;
     } else if (align === 'right') {
-      drawX = x - metrics.width;
+      drawX = x + effectiveBox - metrics.width;
     }
     ctx.fillText(line, drawX, drawY);
     drawY += lineHeight;
@@ -132,6 +134,7 @@ function drawTextElement(
     el.align ?? 'left',
     maxWidth,
     el.maxLines ?? 1,
+    el.w,
   );
 }
 
@@ -149,6 +152,7 @@ function drawLabelElement(
     el.align ?? 'left',
     maxWidth,
     el.maxLines ?? 1,
+    el.w,
   );
 }
 

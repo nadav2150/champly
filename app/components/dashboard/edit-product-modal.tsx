@@ -1,8 +1,11 @@
 import { useEffect, useId, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { DashboardOutletContext } from '../../types/dashboard-outlet-context';
+import { renderLabel } from '../../lib/label-renderer';
+import { encodeForTag } from '../../lib/minew-image-encoder';
 import { minorUnitsToDecimalString, parseDecimalToMinorUnits } from '../../lib/money';
 import { parseLayoutJson } from '../../lib/template-layout';
+import { resolveScreen } from '../../lib/tag-screen-map';
 import { LabelPreview } from './label-preview';
 
 type UnitOption = 'per_unit' | 'per_kg';
@@ -15,17 +18,39 @@ export type EditModalProduct = {
   unit: UnitOption;
   templateId: string | null;
   categoryId: string | null;
+  tagModel: string | null;
 };
 
-type TemplateOption = { id: string; name: string; layoutJson: string | null };
+type TemplateVariantOption = {
+  tagModel: string;
+  width: number;
+  height: number;
+  layoutJson: string;
+};
+
+type TemplateOption = {
+  id: string;
+  name: string;
+  layoutJson: string | null;
+  variants?: TemplateVariantOption[];
+};
 
 type CategoryRow = DashboardOutletContext['categories'][number];
+
+export type UnlinkedTagOption = {
+  id: string;
+  tagId: string;
+  mac: string | null;
+  tagModel: string | null;
+  status: 'online' | 'offline';
+};
 
 type EditProductModalProps = {
   open: boolean;
   product: EditModalProduct | null;
   templates: TemplateOption[];
   categories: CategoryRow[];
+  unlinkedTags: UnlinkedTagOption[];
   onClose: () => void;
   onSave: (payload: {
     id: string;
@@ -34,6 +59,9 @@ type EditProductModalProps = {
     unit: UnitOption;
     templateId: string | null;
     categoryId: string | null;
+    imageBase64: string | null;
+    assignTagId: string | null;
+    unassignTag: boolean;
   }) => void;
 };
 
@@ -42,6 +70,7 @@ export function EditProductModal({
   product,
   templates,
   categories,
+  unlinkedTags,
   onClose,
   onSave,
 }: EditProductModalProps) {
@@ -52,6 +81,8 @@ export function EditProductModal({
   const [unit, setUnit] = useState<UnitOption>('per_kg');
   const [templateId, setTemplateId] = useState<string>('');
   const [categoryId, setCategoryId] = useState<string>('');
+  const [tagAction, setTagAction] = useState<'keep' | 'change' | 'remove'>('keep');
+  const [selectedTagId, setSelectedTagId] = useState<string>('');
 
   useEffect(() => {
     if (product && open) {
@@ -60,19 +91,42 @@ export function EditProductModal({
       setUnit(product.unit);
       setTemplateId(product.templateId ?? '');
       setCategoryId(product.categoryId ?? '');
+      setTagAction('keep');
+      setSelectedTagId('');
     }
   }, [product, open]);
 
-  const selectedTemplate = useMemo(
-    () => templates.find((tpl) => tpl.id === templateId),
-    [templates, templateId],
+  const tagScreen = useMemo(
+    () => resolveScreen(product?.tagModel ?? null),
+    [product?.tagModel],
   );
 
+  const filteredTemplates = useMemo(() => {
+    if (!tagScreen) return templates;
+    return templates.filter((tpl) => {
+      if (!tpl.variants || tpl.variants.length === 0) return true;
+      return tpl.variants.some(
+        (v) => v.width === tagScreen.w && v.height === tagScreen.h,
+      );
+    });
+  }, [templates, tagScreen]);
+
+  const matchingLayoutJson = useMemo(() => {
+    const tpl = filteredTemplates.find((t) => t.id === templateId);
+    if (!tpl) return null;
+    if (tagScreen && tpl.variants) {
+      const match = tpl.variants.find(
+        (v) => v.width === tagScreen.w && v.height === tagScreen.h,
+      );
+      if (match) return match.layoutJson;
+    }
+    return tpl.layoutJson;
+  }, [filteredTemplates, templateId, tagScreen]);
+
   const layout = useMemo(() => {
-    const raw = selectedTemplate?.layoutJson;
-    if (!raw) return null;
-    return parseLayoutJson(raw);
-  }, [selectedTemplate?.layoutJson]);
+    if (!matchingLayoutJson) return null;
+    return parseLayoutJson(matchingLayoutJson);
+  }, [matchingLayoutJson]);
 
   const previewData = useMemo(() => {
     const cat = categories.find((c) => c.id === categoryId);
@@ -100,6 +154,27 @@ export function EditProductModal({
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+
+    let imageBase64: string | null = null;
+    if (layout && tagScreen) {
+      try {
+        // Render at template size first, then draw stretched to tag resolution
+        const tplCanvas = document.createElement('canvas');
+        renderLabel(tplCanvas, layout, previewData);
+
+        const tagCanvas = document.createElement('canvas');
+        tagCanvas.width = tagScreen.w;
+        tagCanvas.height = tagScreen.h;
+        const ctx = tagCanvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(tplCanvas, 0, 0, tagScreen.w, tagScreen.h);
+        }
+        imageBase64 = encodeForTag(tagCanvas, tagScreen.colors, tagScreen.scan);
+      } catch (err) {
+        console.error('Failed to encode image for tag:', err);
+      }
+    }
+
     onSave({
       id: activeProduct.id,
       name: name.trim() || activeProduct.name,
@@ -109,6 +184,9 @@ export function EditProductModal({
       unit,
       templateId: templateId.length > 0 ? templateId : null,
       categoryId: categoryId.length > 0 ? categoryId : null,
+      imageBase64,
+      assignTagId: tagAction === 'change' && selectedTagId ? selectedTagId : null,
+      unassignTag: tagAction === 'remove',
     });
     onClose();
   }
@@ -226,6 +304,88 @@ export function EditProductModal({
                   ))}
                 </select>
               </div>
+
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-white/60">
+                  {t('products:linkedTag')}
+                </label>
+                {activeProduct.hardwareTagId && activeProduct.hardwareTagId !== '—' ? (
+                  <div className="flex flex-col gap-2">
+                    <div className="flex items-center gap-2 rounded-lg border border-white/20 bg-dashboard-bg px-3 py-2.5">
+                      <span className="font-mono text-sm text-white">{activeProduct.hardwareTagId}</span>
+                      {activeProduct.tagModel && (
+                        <span className="text-xs text-white/40">({activeProduct.tagModel})</span>
+                      )}
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setTagAction(tagAction === 'change' ? 'keep' : 'change')}
+                        className={`rounded-md px-2.5 py-1 text-xs font-medium ${
+                          tagAction === 'change'
+                            ? 'border border-accent-mint/50 bg-accent-mint/20 text-accent-mint'
+                            : 'border border-white/20 text-white/60 hover:bg-white/10'
+                        }`}
+                      >
+                        {t('products:switchTag')}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setTagAction(tagAction === 'remove' ? 'keep' : 'remove')}
+                        className={`rounded-md px-2.5 py-1 text-xs font-medium ${
+                          tagAction === 'remove'
+                            ? 'border border-red-400/50 bg-red-500/20 text-red-400'
+                            : 'border border-white/20 text-white/60 hover:bg-white/10'
+                        }`}
+                      >
+                        {t('common:actions.unassignTag')}
+                      </button>
+                    </div>
+                    {tagAction === 'change' && (
+                      <select
+                        value={selectedTagId}
+                        onChange={(e) => setSelectedTagId(e.target.value)}
+                        className="w-full rounded-lg border border-accent-mint/30 bg-dashboard-bg px-3 py-2.5 text-sm text-white focus:border-accent-mint focus:outline-none"
+                      >
+                        <option value="">{t('products:selectTag')}</option>
+                        {unlinkedTags.map((tag) => (
+                          <option key={tag.id} value={tag.id}>
+                            {tag.mac ?? tag.tagId}
+                            {tag.tagModel ? ` (${tag.tagModel})` : ''}
+                            {tag.status === 'online' ? ' ●' : ''}
+                          </option>
+                        ))}
+                      </select>
+                    )}
+                    {tagAction === 'remove' && (
+                      <p className="text-xs text-red-400/80">
+                        {t('products:removeTagWarning')}
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  <div className="flex flex-col gap-2">
+                    <select
+                      value={selectedTagId}
+                      onChange={(e) => {
+                        setSelectedTagId(e.target.value);
+                        if (e.target.value) setTagAction('change');
+                        else setTagAction('keep');
+                      }}
+                      className="w-full rounded-lg border border-white/20 bg-dashboard-bg px-3 py-2.5 text-sm text-white focus:border-accent-mint focus:outline-none"
+                    >
+                      <option value="">{t('products:selectTag')}</option>
+                      {unlinkedTags.map((tag) => (
+                        <option key={tag.id} value={tag.id}>
+                          {tag.mac ?? tag.tagId}
+                          {tag.tagModel ? ` (${tag.tagModel})` : ''}
+                          {tag.status === 'online' ? ' ●' : ''}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Right column — template + preview */}
@@ -244,12 +404,22 @@ export function EditProductModal({
                   className="w-full rounded-lg border border-white/20 bg-dashboard-bg px-3 py-2.5 text-sm text-white focus:border-accent-mint focus:outline-none"
                 >
                   <option value="">{t('products:templatePlaceholder')}</option>
-                  {templates.map((tpl) => (
+                  {filteredTemplates.map((tpl) => (
                     <option key={tpl.id} value={tpl.id}>
                       {tpl.name}
                     </option>
                   ))}
                 </select>
+                {tagScreen && (
+                  <p className="mt-1 text-[10px] text-white/40">
+                    {t('products:filteredForTag', {
+                      size: tagScreen.size,
+                      w: tagScreen.w,
+                      h: tagScreen.h,
+                      defaultValue: `Showing templates for {{size}} ({{w}}×{{h}})`,
+                    })}
+                  </p>
+                )}
               </div>
 
               <div className="flex flex-1 flex-col rounded-lg border border-white/15 bg-black/20 p-4">

@@ -1,0 +1,79 @@
+---
+description: Minew ESL tag image encoding and Jengine protocol rules
+globs: app/lib/minew-image-encoder.ts,bridge/src/**/*.ts,app/lib/mqtt-bridge.server.ts,app/lib/tag-screen-map.ts
+alwaysApply: false
+---
+
+# Minew ESL — Image Encoding & Jengine Protocol
+
+## Pixel Scan Order — Per-Model, Not Per-Color-Count
+
+Scan order is stored in `TagScreenInfo.scan` in `tag-screen-map.ts`. The encoder reads this field and uses the correct algorithm. **Do not hardcode scan order based on color count.**
+
+| Scan value | Algorithm | Tags that use it |
+|------------|-----------|------------------|
+| `col-rtl`  | x outer (right→left), y inner | Small landscape: DS027Q, DS029Q, STAG29, MTAG29, DS021Q, DS035Q, DS043Q, etc. (w/h ratio ≥ 2) |
+| `row`      | y outer (top→bottom), x inner | Larger / near-square: STAG42, DS042Q, DS073, STAG58, MTAG42, etc. (w/h ratio < 2) |
+
+When adding a new tag model to `TAG_SCREEN_MAP`, set `scan` based on the panel's display controller, not just its color count. If unsure, test empirically.
+
+## Encoding Formats
+
+| Colors | Bits/pixel | Packing |
+|--------|-----------|---------|
+| 2 (BW)   | 1 bpp | 8 pixels/byte, scan order from `TagScreenInfo.scan` |
+| 3 (BWR)  | 2 bpp | 4 pixels/byte, scan order from `TagScreenInfo.scan` |
+| 4 (BWRY) | 2 bpp | 4 pixels/byte, scan order from `TagScreenInfo.scan` |
+
+Color codes (2 bpp): Black=0x00, White=0x01, Yellow=0x02, Red=0x03.
+
+## Jengine Action 2 (Image) Payload Structure
+
+`img_id`, `opcode`, `images`, `single` go at **payload level**, NOT inside `details.{mac}`.
+The per-device `details.{mac}` object is **empty** `{}`.
+
+```json
+{
+  "action": 2,
+  "version": 1,
+  "method": "set_req",
+  "req_id": 12345,
+  "payload": {
+    "key": "<16-digit BLE password>",
+    "opcode": 12345,
+    "single": true,
+    "img_id": 12345,
+    "images": [
+      {
+        "data": "<base64-encoded image bytes>",
+        "screen": ["A"],
+        "compress": "NONE",
+        "region": 0,
+        "refresh": true
+      }
+    ],
+    "details": {
+      "<lowercase-mac>": {}
+    }
+  }
+}
+```
+
+### Critical field types
+
+- `compress` — **string** `"NONE"` or `"RLE"`, NOT a number
+- `screen` — **array** of strings `["A"]`, NOT a string or number
+- `region` — number 0–7, specifies image storage slot
+- `refresh` — boolean, `true` to immediately display after receiving
+- `img_id` — number 1–UINT32_MAX, must change for each new image
+- `opcode` — number 1–UINT32_MAX, must differ from previous command
+- MAC addresses in `details` keys must be **lowercase, no separators**
+
+## Two-Stage Response
+
+- **Stage 1** (`payload.code`): Format/parameter validation. `code: 1` = accepted. `code >= 100` = error.
+- **Stage 2** (`payload.details.{mac}.code`): BLE execution result. `code: 2, error: 0` = success. `error: 26` = image size mismatch.
+
+## Action 33 (Refresh)
+
+Only needed if `images.refresh` was `false` in Action 2. Uses 2.4GHz radio (standard/MIX version devices only). Fields `region_a`/`region_b` go at payload level.

@@ -10,6 +10,7 @@ import {
   listProductsForTable,
   updateProductFields,
 } from '../db/products.server';
+import { assignTagToProduct, listUnlinkedTags, unassignTagFromProduct } from '../db/tags.server';
 import { listTemplatesForSelect } from '../db/templates.server';
 import { getProductHeaderStats } from '../db/stats.server';
 import { isSupportedLanguage } from '../i18n/config';
@@ -23,6 +24,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 
   let products: Awaited<ReturnType<typeof listProductsForTable>> = [];
   let templates: Awaited<ReturnType<typeof listTemplatesForSelect>> = [];
+  let unlinkedTags: Awaited<ReturnType<typeof listUnlinkedTags>> = [];
   let productStats: Awaited<ReturnType<typeof getProductHeaderStats>> = {
     total: 0,
     pending: 0,
@@ -30,16 +32,17 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   };
 
   try {
-    [products, templates, productStats] = await Promise.all([
+    [products, templates, unlinkedTags, productStats] = await Promise.all([
       withRetry(() => listProductsForTable(db, user.id)),
       withRetry(() => listTemplatesForSelect(db)),
+      withRetry(() => listUnlinkedTags(db)),
       withRetry(() => getProductHeaderStats(db, user.id)),
     ]);
   } catch (err) {
     console.error('Failed to load products data:', err);
   }
 
-  return data({ products, templates, productStats }, { headers });
+  return data({ products, templates, unlinkedTags, productStats }, { headers });
 }
 
 export async function action({ request, context }: Route.ActionArgs) {
@@ -72,6 +75,32 @@ export async function action({ request, context }: Route.ActionArgs) {
     if (!updated) {
       return data({ ok: false as const, error: 'forbidden' }, { headers });
     }
+
+    const imageBase64 = String(formData.get('imageBase64') ?? '');
+    console.log(`[update-product] imageBase64 length: ${imageBase64.length}`);
+    if (imageBase64.length > 0) {
+      const productId = String(formData.get('id') ?? '');
+      const { getTagMacByProductId } = await import('../db/tags.server');
+      const tagMac = await getTagMacByProductId(db, productId);
+      console.log(`[update-product] productId=${productId}, tagMac=${tagMac}`);
+      if (tagMac) {
+        try {
+          const { sendImage } = await import('../lib/mqtt-bridge.server');
+          console.log(`[update-product] Sending image to bridge for tag ${tagMac}...`);
+          const bridgeResult = await sendImage(env, tagMac, imageBase64);
+          console.log(`[update-product] Bridge result:`, JSON.stringify(bridgeResult));
+          return data({ ok: true as const, bridge: bridgeResult }, { headers });
+        } catch (err) {
+          console.error('[update-product] Failed to push image to tag:', err);
+          return data({ ok: true as const, bridgeError: String(err) }, { headers });
+        }
+      } else {
+        console.log('[update-product] No tag MAC found for product, skipping image push');
+      }
+    } else {
+      console.log('[update-product] No imageBase64 in form data, skipping image push');
+    }
+
     return data({ ok: true as const }, { headers });
   }
 
@@ -138,6 +167,55 @@ export async function action({ request, context }: Route.ActionArgs) {
     return data({ ok: true as const }, { headers });
   }
 
+  if (intent === 'assign-tag') {
+    const tagInternalId = String(formData.get('tagInternalId') ?? '');
+    const productId = String(formData.get('productId') ?? '');
+    if (!tagInternalId || !productId) {
+      return data({ ok: false as const, error: 'Tag and product required' }, { headers });
+    }
+    try {
+      await assignTagToProduct(db, tagInternalId, productId);
+      return data({ ok: true as const }, { headers });
+    } catch (err) {
+      return data(
+        { ok: false as const, error: err instanceof Error ? err.message : 'Assign failed' },
+        { headers },
+      );
+    }
+  }
+
+  if (intent === 'unassign-tag') {
+    const productId = String(formData.get('productId') ?? '');
+    if (!productId) {
+      return data({ ok: false as const, error: 'Product required' }, { headers });
+    }
+    try {
+      await unassignTagFromProduct(db, productId);
+      return data({ ok: true as const }, { headers });
+    } catch (err) {
+      return data(
+        { ok: false as const, error: err instanceof Error ? err.message : 'Unassign failed' },
+        { headers },
+      );
+    }
+  }
+
+  if (intent === 'send-locate') {
+    const mac = String(formData.get('mac') ?? '').trim();
+    if (!mac) {
+      return data({ ok: false as const, error: 'MAC required' }, { headers });
+    }
+    try {
+      const { sendLedViaBle } = await import('../lib/mqtt-bridge.server');
+      const result = await sendLedViaBle(env, mac, {
+        color: 4, cycles: 20, light_on: 300, light_off: 300, brightness: 50,
+      });
+      return data({ ok: true as const, locate: result }, { headers });
+    } catch (err) {
+      return data({ ok: false as const, error: String(err) }, { headers });
+    }
+  }
+
   if (intent === 'bulk-price-update') {
     const raw = String(formData.get('ids') ?? '[]');
     let ids: string[] = [];
@@ -167,7 +245,7 @@ export function meta({ params }: Route.MetaArgs) {
 }
 
 export default function ProductsPage() {
-  const { products, templates, productStats } = useLoaderData<typeof loader>();
+  const { products, templates, unlinkedTags, productStats } = useLoaderData<typeof loader>();
   const { categories, zones } = useOutletContext<DashboardOutletContext>();
 
   return (
@@ -178,6 +256,7 @@ export default function ProductsPage() {
       products={products}
       templates={templates}
       productStats={productStats}
+      unlinkedTags={unlinkedTags}
     />
   );
 }

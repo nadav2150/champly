@@ -19,11 +19,11 @@ import type {
 let nextReqId = 1000;
 let nextOpcode = 1;
 
-function allocReqId(): number {
+export function allocReqId(): number {
   return nextReqId++;
 }
 
-function allocOpcode(): number {
+export function allocOpcode(): number {
   const op = nextOpcode++;
   if (nextOpcode > 4_294_967_294) nextOpcode = 1;
   return op;
@@ -42,6 +42,22 @@ interface PendingCommand {
 }
 
 const pendingCommands = new Map<number, PendingCommand>();
+
+export function registerPending(
+  reqId: number,
+  mac: string,
+  transport: TransportType,
+  timeoutMs: number,
+): Promise<CommandResult> {
+  return new Promise<CommandResult>((resolve) => {
+    const timeout = setTimeout(() => {
+      pendingCommands.delete(reqId);
+      resolve({ reqId, status: 'failed', error: `Command timeout (${timeoutMs / 1000}s)` });
+    }, timeoutMs);
+
+    pendingCommands.set(reqId, { resolve, timeout, transport, mac, reqId });
+  });
+}
 
 // ---------------------------------------------------------------------------
 // Response listener — handles the two-stage Jengine response model

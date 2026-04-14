@@ -13,6 +13,7 @@ export type Product = {
   syncStatus: TagSyncStatus;
   templateId: string | null;
   hardwareTagId: string | null;
+  tagModel: string | null;
 };
 
 /** Hardware tag row used on the tags screen (from D1). */

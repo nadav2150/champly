@@ -28,6 +28,8 @@
     "bulkPriceUpdate": "Bulk price update",
     "edit": "Edit",
     "assignTag": "Assign Tag",
+    "unassignTag": "Remove tag",
+    "noTagsAvailable": "No tags available",
     "pair": "Pair",
     "replace": "Replace",
     "locate": "Locate",
@@ -70,7 +72,8 @@
     "lastSync": "Last Sync",
     "selectTag": "Select tag {{id}}",
     "selectProduct": "Select {{name}}",
-    "unit": "Unit"
+    "unit": "Unit",
+    "tag": "Tag"
   },
   "errors": {
     "oops": "Oops!",

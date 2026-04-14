@@ -14,6 +14,7 @@ export type ProductTableRow = {
   syncStatus: 'updated' | 'pending' | 'failed';
   templateId: string | null;
   hardwareTagId: string | null;
+  tagModel: string | null;
 };
 
 export function productOwnedByUserOr(userId: string) {
@@ -89,27 +90,31 @@ export async function listProductsForTable(db: AppDatabase, userId: string) {
 
   const ownedIds = new Set(rows.map((r) => r.product.id));
   const allTags = await db.select().from(tags);
-  const tagByProduct = new Map<string, string>();
+  const tagByProduct = new Map<string, { tagId: string; tagModel: string | null }>();
   for (const t of allTags) {
     if (t.linkedProductId && ownedIds.has(t.linkedProductId)) {
-      tagByProduct.set(t.linkedProductId, t.tagId);
+      tagByProduct.set(t.linkedProductId, { tagId: t.tagId, tagModel: t.tagModel });
     }
   }
 
   const out: ProductTableRow[] = rows.map(
-    ({ product, categoryName, categoryIcon }) => ({
-      id: product.id,
-      name: product.name,
-      priceCents: product.priceCents,
-      currency: product.currency,
-      categoryId: product.categoryId,
-      categoryName: categoryName ?? '',
-      categoryIcon: categoryIcon ?? '📦',
-      unit: product.unit,
-      syncStatus: product.syncStatus,
-      templateId: product.templateId,
-      hardwareTagId: tagByProduct.get(product.id) ?? null,
-    }),
+    ({ product, categoryName, categoryIcon }) => {
+      const linked = tagByProduct.get(product.id);
+      return {
+        id: product.id,
+        name: product.name,
+        priceCents: product.priceCents,
+        currency: product.currency,
+        categoryId: product.categoryId,
+        categoryName: categoryName ?? '',
+        categoryIcon: categoryIcon ?? '📦',
+        unit: product.unit,
+        syncStatus: product.syncStatus,
+        templateId: product.templateId,
+        hardwareTagId: linked?.tagId ?? null,
+        tagModel: linked?.tagModel ?? null,
+      };
+    },
   );
   return out;
 }

@@ -1,10 +1,10 @@
 import 'dotenv/config';
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
 import { config } from './config.js';
-import { connectMqtt, isMqttConnected, disconnectMqtt } from './mqtt-client.js';
+import { connectMqtt, isMqttConnected, disconnectMqtt, publishAction } from './mqtt-client.js';
 import { handleStatusMessage, getRecentTags } from './status-handler.js';
-import { initResponseListener, sendCommand } from './command-sender.js';
-import { getCommandByReqId } from './d1-client.js';
+import { initResponseListener, sendCommand, allocReqId, allocOpcode, registerPending } from './command-sender.js';
+import { getCommandByReqId, getTagKeyByMac } from './d1-client.js';
 import { actionRegistry } from './command-registry.js';
 import type { SendCommandRequest } from './types.js';
 
@@ -94,6 +94,77 @@ async function handleRequest(
       json(res, 200, row);
     } catch (err) {
       json(res, 500, { error: err instanceof Error ? err.message : 'Internal error' });
+    }
+    return;
+  }
+
+  // POST /image — send image to tag with Action 2
+  if (path === '/image' && method === 'POST') {
+    try {
+      const body = await parseBody(req);
+      const { mac, data, region_a = 0 } = JSON.parse(body) as {
+        mac: string;
+        data: string;
+        region_a?: number;
+      };
+
+      if (!mac || !data) {
+        json(res, 400, { error: 'Missing mac or data' });
+        return;
+      }
+
+      const tagMac = mac.toLowerCase();
+      const key = await getTagKeyByMac(tagMac);
+      if (!key) {
+        json(res, 400, { error: `No BLE key found for tag ${tagMac}` });
+        return;
+      }
+
+      const reqId = allocReqId();
+      const opcode = allocOpcode();
+      const imgId = reqId;
+
+      console.log(`[image] Pushing image to ${tagMac} (reqId=${reqId}, region=${region_a}, data=${data.length} chars)...`);
+
+      const imageCommand = {
+        action: 2,
+        version: 1,
+        method: 'set_req',
+        req_id: reqId,
+        payload: {
+          key,
+          opcode,
+          single: true,
+          img_id: imgId,
+          images: [
+            {
+              data,
+              screen: ['A'],
+              compress: 'NONE',
+              region: region_a,
+              refresh: true,
+            },
+          ],
+          details: {
+            [tagMac]: {},
+          },
+        },
+      };
+
+      // Register in the shared pending map so initResponseListener catches the reply
+      const resultPromise = registerPending(reqId, tagMac, 'ble', 90_000);
+
+      await publishAction(imageCommand);
+      console.log(`[image] Action 2 published for ${tagMac}, waiting for response...`);
+
+      const result = await resultPromise;
+
+      console.log(`[image] Result for ${tagMac}: ${result.status}${result.error ? ` (${result.error})` : ''}`);
+      json(res, result.status === 'success' ? 200 : 502, result);
+    } catch (err) {
+      json(res, 500, {
+        error: err instanceof Error ? err.message : 'Internal error',
+      });
     }
     return;
   }

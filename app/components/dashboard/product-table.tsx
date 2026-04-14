@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useFetcher } from 'react-router';
 import { useTranslation } from 'react-i18next';
+import { TAG_SCREEN_MAP, resolveScreen } from '../../lib/tag-screen-map';
 import type { Tag } from './tag-product';
 import { HwStatus } from './tag-status';
 
@@ -174,76 +175,6 @@ type BridgeHealth = {
   gateway: string;
   uptime: number;
 } | null;
-
-const TAG_SCREEN_MAP: Record<string, { size: string; w: number; h: number; colors: number }> = {
-  // DS Series
-  DS021Q:   { size: '2.13"',  w: 250,  h: 122,  colors: 4 },
-  DS026F:   { size: '2.66"',  w: 296,  h: 152,  colors: 2 },
-  DS027Q:   { size: '2.67"',  w: 384,  h: 200,  colors: 4 },
-  DS029Q:   { size: '2.9"',   w: 296,  h: 128,  colors: 4 },
-  DS035Q:   { size: '3.5"',   w: 384,  h: 184,  colors: 4 },
-  DS035B:   { size: '3.5"',   w: 384,  h: 184,  colors: 2 },
-  DS042Q:   { size: '4.2"',   w: 400,  h: 300,  colors: 4 },
-  DS042F:   { size: '4.2"',   w: 400,  h: 300,  colors: 2 },
-  DS042B:   { size: '4.2"',   w: 400,  h: 300,  colors: 2 },
-  DS043Q:   { size: '4.3"',   w: 522,  h: 152,  colors: 4 },
-  DS073:    { size: '7.3"',   w: 800,  h: 480,  colors: 3 },
-  DS075:    { size: '7.5"',   w: 800,  h: 480,  colors: 3 },
-  DS116:    { size: '11.6"',  w: 960,  h: 640,  colors: 3 },
-  // STag Series
-  STAG21F:  { size: '2.13"',  w: 250,  h: 122,  colors: 2 },
-  STAG21:   { size: '2.13"',  w: 250,  h: 122,  colors: 3 },
-  STAG21Q:  { size: '2.13"',  w: 250,  h: 122,  colors: 4 },
-  STAG26:   { size: '2.66"',  w: 296,  h: 152,  colors: 3 },
-  STAG26Q:  { size: '2.66"',  w: 296,  h: 152,  colors: 4 },
-  STAG29:   { size: '2.9"',   w: 296,  h: 128,  colors: 3 },
-  STAG29Q:  { size: '2.9"',   w: 296,  h: 128,  colors: 4 },
-  STAG29B:  { size: '2.9"',   w: 296,  h: 128,  colors: 2 },
-  STAG29A:  { size: '2.9"',   w: 296,  h: 128,  colors: 3 },
-  STAG29AQ: { size: '2.9"',   w: 296,  h: 128,  colors: 4 },
-  STAG29AB: { size: '2.9"',   w: 296,  h: 128,  colors: 2 },
-  STAG42:   { size: '4.2"',   w: 400,  h: 300,  colors: 3 },
-  STAG42Q:  { size: '4.2"',   w: 400,  h: 300,  colors: 4 },
-  STAG58:   { size: '5.83"',  w: 648,  h: 480,  colors: 3 },
-  STAG58Q:  { size: '5.83"',  w: 648,  h: 480,  colors: 4 },
-  STAG75:   { size: '7.5"',   w: 800,  h: 480,  colors: 3 },
-  STAG116:  { size: '11.6"',  w: 960,  h: 640,  colors: 3 },
-  // MTag Series
-  MTAG15:   { size: '1.54"',  w: 152,  h: 152,  colors: 3 },
-  MTAG15Q:  { size: '1.54"',  w: 200,  h: 200,  colors: 4 },
-  MTAG21:   { size: '2.13"',  w: 250,  h: 122,  colors: 3 },
-  MTAG21Q:  { size: '2.13"',  w: 250,  h: 122,  colors: 4 },
-  MTAG29:   { size: '2.9"',   w: 296,  h: 128,  colors: 3 },
-  MTAG29Q:  { size: '2.9"',   w: 296,  h: 128,  colors: 4 },
-  MTAG29B:  { size: '2.9"',   w: 296,  h: 128,  colors: 2 },
-  MTAG42:   { size: '4.2"',   w: 400,  h: 300,  colors: 3 },
-  MTAG42Q:  { size: '4.2"',   w: 400,  h: 300,  colors: 4 },
-  MTAG58:   { size: '5.83"',  w: 648,  h: 480,  colors: 3 },
-  MTAG58Q:  { size: '5.83"',  w: 648,  h: 480,  colors: 4 },
-  MTAG75:   { size: '7.5"',   w: 800,  h: 480,  colors: 3 },
-  MTAG75Q:  { size: '7.5"',   w: 800,  h: 480,  colors: 4 },
-  // RS Series (6-color)
-  RS075:    { size: '7.3"',   w: 800,  h: 480,  colors: 6 },
-  RS133:    { size: '13.3"',  w: 1600, h: 1200, colors: 6 },
-  RS253:    { size: '25.3"',  w: 3200, h: 1800, colors: 6 },
-  RS315:    { size: '31.5"',  w: 2560, h: 1440, colors: 6 },
-  // Conference
-  RS075V:   { size: '7.3"',   w: 800,  h: 480,  colors: 6 },
-  WS075:    { size: '7.5"',   w: 800,  h: 480,  colors: 3 },
-  // MZ / WT
-  MZ5021:   { size: '2.13"',  w: 250,  h: 122,  colors: 4 },
-  WT029A:   { size: '2.9"',   w: 296,  h: 128,  colors: 2 },
-};
-
-function resolveScreen(model: string | null) {
-  if (!model) return undefined;
-  const upper = model.toUpperCase();
-  if (TAG_SCREEN_MAP[upper]) return TAG_SCREEN_MAP[upper];
-  for (const [code, info] of Object.entries(TAG_SCREEN_MAP)) {
-    if (upper.includes(code)) return info;
-  }
-  return undefined;
-}
 
 function colorLabel(c: number) {
   if (c === 6) return '6c';

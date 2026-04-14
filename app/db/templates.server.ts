@@ -1,6 +1,13 @@
-import { asc, eq, sql } from 'drizzle-orm';
+import { asc, sql } from 'drizzle-orm';
 import type { AppDatabase } from './client.server';
 import { products, templates, templateVariants } from './schema.server';
+
+export type TemplateVariantInfo = {
+  layoutJson: string;
+  width: number;
+  height: number;
+  tagModel: string;
+};
 
 export type TemplateRow = {
   id: string;
@@ -10,104 +17,131 @@ export type TemplateRow = {
   createdAt: string;
   variantCount: number;
   linkedProductCount: number;
-  firstVariant: {
-    layoutJson: string;
-    width: number;
-    height: number;
-    tagModel: string;
-  } | null;
+  firstVariant: TemplateVariantInfo | null;
+  variants: TemplateVariantInfo[];
+};
+
+export type TemplateSelectVariant = {
+  tagModel: string;
+  width: number;
+  height: number;
+  layoutJson: string;
 };
 
 export type TemplateSelectRow = {
   id: string;
   name: string;
   layoutJson: string | null;
+  variants: TemplateSelectVariant[];
 };
 
 export async function listTemplatesForSelect(
   db: AppDatabase,
 ): Promise<TemplateSelectRow[]> {
-  const allTemplates = await db
-    .select({ id: templates.id, name: templates.name })
-    .from(templates);
+  const [allTemplates, allVariants] = await Promise.all([
+    db.select({ id: templates.id, name: templates.name }).from(templates),
+    db
+      .select({
+        templateId: templateVariants.templateId,
+        tagModel: templateVariants.tagModel,
+        width: templateVariants.width,
+        height: templateVariants.height,
+        layoutJson: templateVariants.layoutJson,
+        id: templateVariants.id,
+      })
+      .from(templateVariants)
+      .orderBy(asc(templateVariants.id)),
+  ]);
 
   if (allTemplates.length === 0) return [];
 
-  const allVariants = await db
-    .select({
-      templateId: templateVariants.templateId,
-      layoutJson: templateVariants.layoutJson,
-      id: templateVariants.id,
-    })
-    .from(templateVariants)
-    .orderBy(asc(templateVariants.id));
-
-  const firstByTemplate = new Map<string, string | null>();
+  const variantsByTemplate = new Map<string, TemplateSelectVariant[]>();
   for (const v of allVariants) {
-    if (!firstByTemplate.has(v.templateId)) {
-      firstByTemplate.set(v.templateId, v.layoutJson);
-    }
+    const list = variantsByTemplate.get(v.templateId) ?? [];
+    list.push({
+      tagModel: v.tagModel,
+      width: v.width,
+      height: v.height,
+      layoutJson: v.layoutJson,
+    });
+    variantsByTemplate.set(v.templateId, list);
   }
 
-  return allTemplates.map((t) => ({
-    id: t.id,
-    name: t.name,
-    layoutJson: firstByTemplate.get(t.id) ?? null,
-  }));
+  return allTemplates.map((t) => {
+    const variants = variantsByTemplate.get(t.id) ?? [];
+    return {
+      id: t.id,
+      name: t.name,
+      layoutJson: variants[0]?.layoutJson ?? null,
+      variants,
+    };
+  });
 }
 
 export async function listTemplatesWithVariants(
   db: AppDatabase,
 ): Promise<TemplateRow[]> {
-  const all = await db
-    .select({
-      id: templates.id,
-      name: templates.name,
-      description: templates.description,
-      kind: templates.kind,
-      createdAt: templates.createdAt,
-      variantCount: sql<number>`(SELECT count(*) FROM ${templateVariants} WHERE ${templateVariants.templateId} = ${templates.id})`,
-      linkedProductCount: sql<number>`(SELECT count(*) FROM ${products} WHERE ${products.templateId} = ${templates.id})`,
-    })
-    .from(templates);
+  const [all, allVariants, productCounts] = await Promise.all([
+    db
+      .select({
+        id: templates.id,
+        name: templates.name,
+        description: templates.description,
+        kind: templates.kind,
+        createdAt: templates.createdAt,
+      })
+      .from(templates),
+    db
+      .select({
+        templateId: templateVariants.templateId,
+        layoutJson: templateVariants.layoutJson,
+        width: templateVariants.width,
+        height: templateVariants.height,
+        tagModel: templateVariants.tagModel,
+        id: templateVariants.id,
+      })
+      .from(templateVariants)
+      .orderBy(asc(templateVariants.id)),
+    db
+      .select({
+        templateId: products.templateId,
+        count: sql<number>`count(*)`,
+      })
+      .from(products)
+      .groupBy(products.templateId),
+  ]);
 
   if (all.length === 0) return [];
 
-  const allVariants = await db
-    .select({
-      templateId: templateVariants.templateId,
-      layoutJson: templateVariants.layoutJson,
-      width: templateVariants.width,
-      height: templateVariants.height,
-      tagModel: templateVariants.tagModel,
-      id: templateVariants.id,
-    })
-    .from(templateVariants)
-    .orderBy(asc(templateVariants.id));
-
-  const firstByTemplate = new Map<
-    string,
-    { layoutJson: string; width: number; height: number; tagModel: string }
-  >();
+  const variantsByTemplate = new Map<string, TemplateVariantInfo[]>();
   for (const v of allVariants) {
-    if (!firstByTemplate.has(v.templateId)) {
-      firstByTemplate.set(v.templateId, {
-        layoutJson: v.layoutJson,
-        width: v.width,
-        height: v.height,
-        tagModel: v.tagModel,
-      });
-    }
+    const list = variantsByTemplate.get(v.templateId) ?? [];
+    list.push({
+      layoutJson: v.layoutJson,
+      width: v.width,
+      height: v.height,
+      tagModel: v.tagModel,
+    });
+    variantsByTemplate.set(v.templateId, list);
   }
 
-  return all.map((t) => ({
-    id: t.id,
-    name: t.name,
-    description: t.description,
-    kind: t.kind,
-    createdAt: t.createdAt,
-    variantCount: Number(t.variantCount ?? 0),
-    linkedProductCount: Number(t.linkedProductCount ?? 0),
-    firstVariant: firstByTemplate.get(t.id) ?? null,
-  }));
+  const productCountMap = new Map<string, number>();
+  for (const p of productCounts) {
+    if (p.templateId) productCountMap.set(p.templateId, Number(p.count));
+  }
+
+  return all.map((t) => {
+    const variants = variantsByTemplate.get(t.id) ?? [];
+    return {
+      id: t.id,
+      name: t.name,
+      description: t.description,
+      kind: t.kind,
+      createdAt: t.createdAt,
+      variantCount: variants.length,
+      linkedProductCount: productCountMap.get(t.id) ?? 0,
+      firstVariant: variants[0] ?? null,
+      variants,
+    };
+  });
 }
