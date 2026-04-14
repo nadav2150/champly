@@ -1,34 +1,38 @@
-import { Form } from 'react-router';
 import { useTranslation } from 'react-i18next';
+
+import { useReveal } from '../../lib/use-reveal';
 
 export function Cta() {
   const { t } = useTranslation('landing');
+  const ref = useReveal();
 
   return (
-    <section className='relative overflow-hidden bg-landing-cta py-14 text-white sm:py-16'>
-      <div className='pointer-events-none absolute -top-16 end-20 h-44 w-44 rounded-full bg-white/10' />
-      <div className='pointer-events-none absolute -bottom-20 end-1/4 h-56 w-56 rotate-45 bg-white/5' />
-      <div className='mx-auto max-w-6xl px-5 sm:px-6 lg:px-8'>
-        <h2 className='text-4xl font-bold sm:text-5xl'>
-          <span className='me-2 rounded-full border border-[#f66bcc] px-4 py-1 text-white'>{t('cta.titlePrefix')}</span>
-          <span>{t('cta.titleSuffix')}</span>
-        </h2>
-        <p className='mt-4 text-lg text-white/85'>{t('cta.subtitle')}</p>
+    <section id='cta' className='relative overflow-hidden bg-landing-cta py-20 text-white sm:py-28' ref={ref}>
+      <div className='pointer-events-none absolute -top-20 end-10 h-56 w-56 rounded-full bg-accent-mint/10 blur-3xl' />
+      <div className='pointer-events-none absolute -bottom-24 start-1/4 h-64 w-64 rounded-full bg-white/5 blur-3xl' />
 
-        <Form className='mt-6 flex flex-col gap-3 sm:flex-row sm:items-center'>
-          <input
-            type='email'
-            name='email'
-            placeholder={t('cta.emailPlaceholder')}
-            className='w-full max-w-xl rounded-md border border-white/25 bg-[#1b2f66] px-4 py-3 text-base placeholder:text-white/55 focus:border-accent-mint focus:outline-none'
-          />
-          <button
-            type='submit'
-            className='rounded-md bg-[#39e8b4] px-6 py-3 text-base font-semibold text-[#17324d] hover:brightness-95'
+      <div className='relative mx-auto max-w-4xl px-5 text-center sm:px-6 lg:px-8'>
+        <h2 className='reveal text-3xl font-bold sm:text-4xl lg:text-5xl'>
+          {t('cta.title')}
+        </h2>
+        <p className='reveal reveal-delay-1 mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-white/80'>
+          {t('cta.subtitle')}
+        </p>
+
+        <div className='reveal reveal-delay-2 mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row'>
+          <a
+            href='mailto:hello@champty.com?subject=Demo%20Request'
+            className='inline-flex rounded-lg bg-accent-mint px-8 py-3.5 text-base font-bold text-accent-mint-text shadow-lg shadow-accent-mint/20 transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-accent-mint/30 hover:brightness-95 sm:text-lg'
           >
-            {t('cta.button')}
-          </button>
-        </Form>
+            {t('cta.requestDemo')}
+          </a>
+          <a
+            href='mailto:hello@champty.com?subject=Contact%20Us'
+            className='inline-flex rounded-lg border border-white/25 px-8 py-3.5 text-base font-semibold text-white transition-all hover:-translate-y-0.5 hover:border-white/40 hover:bg-white/10 sm:text-lg'
+          >
+            {t('cta.contactUs')}
+          </a>
+        </div>
       </div>
     </section>
   );

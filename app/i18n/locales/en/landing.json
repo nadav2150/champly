@@ -1,105 +1,185 @@
 {
   "nav": {
     "brandName": "Champty",
-    "brandByline": "by instars.com",
-    "login": "Log in",
-    "signup": "Sign up"
+    "requestDemo": "Request Demo",
+    "contactUs": "Contact Us",
+    "login": "Log in"
   },
   "hero": {
-    "titleLine1": "Online surveys with",
-    "titleLine2": "crypto rewards",
-    "subtitle": "Create online surveys with lightning fast crypto payments, private results, daily rewards, blockchain verifiable results, and more.",
-    "cta": "Sign up - it's free",
-    "poweredBy": "Powered by:"
+    "tagline": "Real-time pricing. Real-world impact.",
+    "subtitle": "Update, automate, and sync your in-store displays in real time, directly from your POS and business systems.",
+    "requestDemo": "Request Demo",
+    "contactUs": "Contact Us",
+    "bottomLine": "The price changes in the system. The shelf updates itself."
   },
-  "features": {
-    "titlePrefix": "Start",
-    "titleHighlight": "Champty",
-    "titleSuffix": "with Next Generation Surveys for Free",
-    "items": {
-      "blockchainPowered": "Blockchain Powered",
-      "instantCryptoPayments": "Instant Crypto Payments",
-      "freeUnlimitedAccess": "Free Unlimited Access",
-      "dailyRewards": "Daily Rewards",
-      "builtInKyc": "Built-In-KYC",
-      "privateData": "Private Data"
-    },
-    "surveyMock": {
-      "question": "What do you like most about the app?",
-      "options": [
-        "Features",
-        "Easy to Use",
-        "Design",
-        "Content",
-        "Benefits"
-      ],
-      "submit": "OK",
-      "completedTitle": "Survey Completed",
-      "completedText": "Thank you for completing this survey. Please use the claim code to get your reward!",
-      "claimCodeLabel": "Claim Code",
-      "walletCta": "Get Wallet"
-    }
-  },
-  "comparison": {
-    "titlePrefix": "",
-    "titleHighlight": "Champty",
-    "titleSuffix": "vs Legacy Online Surveys",
-    "headerFeature": "Built-in features",
-    "headerModern": "Champty",
-    "headerLegacy": "Legacy Surveys",
-    "modernDescription": "Next generation online surveys with lightning fast crypto payments, private results, daily rewards, blockchain verifiable results, and more.",
-    "legacyDescription": "Traditional online survey software with monthly recurring fees, outdated payment options, and lack of transparency.",
-    "rows": {
-      "blockchainPowered": "Blockchain Powered",
-      "instantPayments": "Instant Payments for Participants",
-      "freeUnlimitedAccess": "Free Unlimited Access",
-      "dailyRewards": "Daily Rewards",
-      "privateData": "Private Data",
-      "kycReady": "KYC Ready"
-    }
+  "valueProposition": {
+    "text": "Champty connects your POS, inventory, and promotions systems to the physical displays on your shelves and manages everything in real time. No manual work, no errors, and no paper."
   },
   "howItWorks": {
-    "titlePrefix": "How",
-    "titleSuffix": "It Works",
-    "step1Title": "1. Create Survey",
-    "step1Text": "Build your survey in minutes with our simple editor.",
-    "step2Title": "2. Share Link",
-    "step2Text": "Share one secure link and start collecting responses instantly.",
-    "step3Title": "3. Get Results",
-    "step3Text": "Track verifiable results and reward participants in real time."
+    "title": "How It Works",
+    "step1Title": "A change is made in your system",
+    "step1Text": "A price, promotion, text, or status is updated through the POS, inventory, or dashboard.",
+    "step2Title": "Champty decides what to display",
+    "step2Text": "The system applies templates, rules, automations, and schedules to adapt the display for each screen.",
+    "step3Title": "The display updates in seconds",
+    "step3Text": "The information is automatically sent to tags and screens in the field via wireless connection."
+  },
+  "whyItMatters": {
+    "title": "Why It Matters",
+    "savesTime": "Saves Time",
+    "savesTimeText": "No more printing, cutting, and manually replacing labels.",
+    "reducesErrors": "Reduces Errors",
+    "reducesErrorsText": "The price on the shelf stays synced with the price in the system.",
+    "looksProfessional": "Looks Professional",
+    "looksProfessionalText": "The entire store displays accurate, uniform, and up-to-date information.",
+    "savesMoney": "Saves Money",
+    "savesMoneyText": "Less manual labor, fewer errors, less waste.",
+    "increasesRevenue": "Increases Revenue",
+    "increasesRevenueText": "Real-time pricing, fast promotions, and smart optimization improve performance."
+  },
+  "capabilities": {
+    "title": "Not just displaying info.",
+    "titleHighlight": "Managing it.",
+    "subtitle": "Champty doesn't just control displays. It manages the logic behind them.",
+    "items": {
+      "realTimePricing": "Real-time price updates",
+      "smartDisplays": "Smart rule-based displays",
+      "timeAutomations": "Time-based automations",
+      "scheduledCampaigns": "Scheduled campaigns",
+      "abTesting": "A/B testing across branches",
+      "autoFit": "Auto-fit for every screen"
+    }
+  },
+  "integration": {
+    "title": "Connected to your system",
+    "headline": "Your system updates the price. Champty updates the shelf.",
+    "subtitle": "Champty connects to your POS, inventory, and business systems so every change flows automatically to the displays.",
+    "items": {
+      "posSync": "Price sync from POS",
+      "inventorySync": "Auto-update based on inventory changes",
+      "noDoubleEntry": "No need to update twice",
+      "noDuplicates": "No duplicates and no manual work",
+      "worksWithExisting": "Works with your existing systems"
+    }
+  },
+  "features": {
+    "title": "Core Capabilities",
+    "centralControl": "Central Control",
+    "centralControlText": "Manage all stores, zones, shelves, and screens from one place.",
+    "realTimeUpdates": "Real-Time Updates",
+    "realTimeUpdatesText": "Price, text, and promotion changes publish in seconds.",
+    "smartTemplates": "Smart Template System",
+    "smartTemplatesText": "Flexible templates that auto-adapt to different sizes, resolutions, and screen types.",
+    "timeAutomations": "Time-Based Automations",
+    "timeAutomationsText": "Tuesday and Thursday: promo price. Evening: different price. Weekend: different campaign.",
+    "abTesting": "A/B Testing Across Branches",
+    "abTestingText": "Test different prices and displays across locations to find what works best.",
+    "hardwareMonitoring": "Hardware Monitoring",
+    "hardwareMonitoringText": "Track battery, connection, online status, and tag health.",
+    "remoteCommands": "Remote Commands",
+    "remoteCommandsText": "Activate LED, buzzer, refresh display, and more from the system.",
+    "multiHardware": "Multi-Hardware Support",
+    "multiHardwareText": "Flexible software that works with existing tags, not locked to one manufacturer."
+  },
+  "comparison": {
+    "title": "Why Champty",
+    "traditional": "Traditional Systems",
+    "traditionalItems": {
+      "closedBundle": "Come as a closed hardware + software bundle",
+      "vendorLock": "Locked to one manufacturer",
+      "limitedFlexibility": "Limited flexibility",
+      "noAutomation": "Not built for real automation"
+    },
+    "champty": "Champty",
+    "champtyItems": {
+      "systemNotManufacturer": "A system, not a tag manufacturer",
+      "existingHardware": "Works with existing hardware",
+      "flexible": "Flexible, open, and scalable",
+      "builtForIntegration": "Built for integration with your business systems",
+      "allInOne": "Control, automation, and optimization in one place"
+    },
+    "bottomLine": "Not just tags. Decisions behind every display."
+  },
+  "useCases": {
+    "title": "Built for more than retail",
+    "subtitle": "Champty was built for environments where physical information needs to be managed in real time.",
+    "retail": "Retail",
+    "warehouses": "Warehouses",
+    "logistics": "Logistics",
+    "offices": "Offices",
+    "healthcare": "Healthcare",
+    "operations": "Operations"
+  },
+  "sustainability": {
+    "title": "More modern. More accurate. More green.",
+    "subtitle": "Switching to digital displays significantly reduces paper usage, printing, and resource waste.",
+    "items": {
+      "lessLabels": "Fewer paper labels",
+      "lessPrinting": "Fewer prints",
+      "lessManualWork": "Less manual work",
+      "moreOrder": "More order, accuracy, and sustainability"
+    }
+  },
+  "whyNow": {
+    "title": "Why Now",
+    "items": {
+      "realTimeControl": "Businesses are looking for real-time control",
+      "eslAdoption": "ESL and digital display adoption is growing rapidly",
+      "automationShift": "More organizations are shifting to automation",
+      "paperless": "The shift to paperless is becoming the standard",
+      "operationalAccuracy": "The need for operational accuracy keeps growing"
+    }
+  },
+  "targetAudience": {
+    "title": "Who Is It For",
+    "subtitle": "Champty is built for businesses that want to:",
+    "items": {
+      "stopManual": "Stop updating prices manually",
+      "syncPosShelf": "Sync POS and shelf",
+      "fasterPromos": "Launch promotions faster",
+      "multiBranch": "Manage multiple branches from one system",
+      "lookProfessional": "Look more professional",
+      "smartInfra": "Build smart display infrastructure"
+    }
   },
   "faq": {
-    "title": "Frequently asked questions",
+    "title": "Frequently Asked Questions",
     "items": [
       {
         "question": "What is Champty?",
-        "answer": "Champty is an online survey platform with crypto-powered rewards, private data handling, and transparent verifiable outcomes."
+        "answer": "Champty is a SaaS platform for managing electronic shelf labels (ESL). It connects your POS and business systems to the physical displays in your store and manages everything in real time."
       },
       {
-        "question": "How do rewards work?",
-        "answer": "You configure reward rules per survey. Participants receive rewards automatically when they complete eligible responses."
+        "question": "Does Champty sell hardware?",
+        "answer": "No. Champty is a software platform that works with existing ESL tags. We're not locked to one manufacturer. Our system is hardware-agnostic."
       },
       {
-        "question": "Can I use Champty for free?",
-        "answer": "Yes. You can start for free, create surveys, and invite participants without upfront costs."
+        "question": "How does real-time sync work?",
+        "answer": "When a price or promotion changes in your system, Champty automatically renders the new label, encodes it for the hardware, and sends it wirelessly to the tag on the shelf. All within seconds."
       },
       {
-        "question": "Does Champty support private data?",
-        "answer": "Yes. Privacy is built in with secure storage and controlled data access."
+        "question": "Can I manage multiple stores?",
+        "answer": "Yes. Champty lets you manage all your stores, zones, and displays from a single centralized dashboard."
+      },
+      {
+        "question": "What systems does Champty integrate with?",
+        "answer": "Champty connects to POS systems, inventory management, and other business tools. Our integration layer ensures every change flows automatically to the displays."
+      },
+      {
+        "question": "Is there a free trial?",
+        "answer": "Yes. Contact us to schedule a demo and get started with a pilot program tailored to your business."
       }
     ]
   },
   "cta": {
-    "titlePrefix": "Join",
-    "titleSuffix": "the Champty beta for free",
-    "subtitle": "Sign up for free exclusive access to Champty survey software.",
-    "emailPlaceholder": "Email Address",
-    "button": "Join Beta"
+    "title": "Let your prices work in real time.",
+    "subtitle": "Champty helps you save time, reduce errors, improve appearance, and turn every physical display into a smart, connected part of your business.",
+    "requestDemo": "Request Demo",
+    "contactUs": "Contact Us"
   },
   "footer": {
     "brandName": "Champty",
-    "brandByline": "by instars.com",
-    "poweredBy": "Powered by:",
-    "copyright": "Copyright {{year}}"
+    "brandByline": "Real-time pricing. Real-world impact.",
+    "copyright": "All rights reserved {{year}}"
   }
 }

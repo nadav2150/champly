@@ -5,22 +5,23 @@ export function LandingFooter() {
   const year = new Date().getFullYear();
 
   return (
-    <footer className='bg-[#1a2460] py-8 text-white'>
-      <div className='mx-auto flex max-w-6xl flex-col items-center justify-between gap-5 px-5 sm:flex-row sm:px-6 lg:px-8'>
-        <div className='inline-flex items-center gap-2'>
-          <span aria-hidden className='text-lg text-accent-mint'>✦</span>
+    <footer className='bg-[#001218] py-10 text-white'>
+      <div className='mx-auto flex max-w-6xl flex-col items-center justify-between gap-6 px-5 sm:flex-row sm:px-6 lg:px-8'>
+        <div className='inline-flex items-center gap-3'>
+          <img src='/logo_no_text.svg' alt='Champty' className='h-8 w-auto opacity-80' />
           <span className='leading-tight'>
-            <span className='block text-lg font-bold'>{t('footer.brandName')}</span>
-            <span className='block text-xs text-white/70'>{t('footer.brandByline')}</span>
+            <span className='block font-kindred text-base font-bold tracking-wider text-[#f5f5dc]'>
+              {t('footer.brandName')}
+            </span>
+            <span className='block text-xs text-white/50'>
+              {t('footer.brandByline')}
+            </span>
           </span>
         </div>
 
-        <p className='text-sm text-white/80'>{t('footer.copyright', { year })}</p>
-
-        <div className='inline-flex items-center gap-2 text-sm text-white/80'>
-          <span>{t('footer.poweredBy')}</span>
-          <span className='font-semibold text-accent-mint'>Partisia Blockchain</span>
-        </div>
+        <p className='text-sm text-white/50'>
+          {t('footer.copyright', { year })}
+        </p>
       </div>
     </footer>
   );
