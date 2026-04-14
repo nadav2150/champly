@@ -10,6 +10,7 @@ import {
   listAllTags,
   listTagsForTable,
   registerTag,
+  setTagModel,
   updateTagKey,
 } from '../db/tags.server';
 import { isSupportedLanguage } from '../i18n/config';
@@ -199,6 +200,27 @@ export async function action({ request, context }: Route.ActionArgs) {
       },
       { headers },
     );
+  }
+
+  // ---- Set tag model ----
+  if (intent === 'set-model') {
+    const tagInternalId = String(formData.get('tagInternalId') ?? '');
+    const tagModel = String(formData.get('tagModel') ?? '');
+    if (!tagInternalId || !tagModel) {
+      return data({ ok: false as const, error: 'Tag ID and model required' }, { headers });
+    }
+    try {
+      await setTagModel(db, tagInternalId, tagModel);
+      return data({ ok: true as const }, { headers });
+    } catch (err) {
+      return data(
+        {
+          ok: false as const,
+          error: err instanceof Error ? err.message : 'Update failed',
+        },
+        { headers },
+      );
+    }
   }
 
   // ---- Register tag ----

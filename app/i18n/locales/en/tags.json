@@ -52,5 +52,7 @@
   },
   "commandMenu": "Commands",
   "firmwareVersion": "Firmware",
-  "tagModel": "Model"
+  "tagModel": "Model",
+  "selectModel": "Select model…",
+  "changeModel": "Click to change model"
 }

@@ -52,5 +52,7 @@
   },
   "commandMenu": "פקודות",
   "firmwareVersion": "גרסת קושחה",
-  "tagModel": "דגם"
+  "tagModel": "דגם",
+  "selectModel": "בחר דגם…",
+  "changeModel": "לחץ לשינוי דגם"
 }

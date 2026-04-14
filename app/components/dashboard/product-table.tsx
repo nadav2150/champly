@@ -175,6 +175,166 @@ type BridgeHealth = {
   uptime: number;
 } | null;
 
+const TAG_SCREEN_MAP: Record<string, { size: string; w: number; h: number; colors: number }> = {
+  // DS Series
+  DS021Q:   { size: '2.13"',  w: 250,  h: 122,  colors: 4 },
+  DS026F:   { size: '2.66"',  w: 296,  h: 152,  colors: 2 },
+  DS027Q:   { size: '2.67"',  w: 384,  h: 200,  colors: 4 },
+  DS029Q:   { size: '2.9"',   w: 296,  h: 128,  colors: 4 },
+  DS035Q:   { size: '3.5"',   w: 384,  h: 184,  colors: 4 },
+  DS035B:   { size: '3.5"',   w: 384,  h: 184,  colors: 2 },
+  DS042Q:   { size: '4.2"',   w: 400,  h: 300,  colors: 4 },
+  DS042F:   { size: '4.2"',   w: 400,  h: 300,  colors: 2 },
+  DS042B:   { size: '4.2"',   w: 400,  h: 300,  colors: 2 },
+  DS043Q:   { size: '4.3"',   w: 522,  h: 152,  colors: 4 },
+  DS073:    { size: '7.3"',   w: 800,  h: 480,  colors: 3 },
+  DS075:    { size: '7.5"',   w: 800,  h: 480,  colors: 3 },
+  DS116:    { size: '11.6"',  w: 960,  h: 640,  colors: 3 },
+  // STag Series
+  STAG21F:  { size: '2.13"',  w: 250,  h: 122,  colors: 2 },
+  STAG21:   { size: '2.13"',  w: 250,  h: 122,  colors: 3 },
+  STAG21Q:  { size: '2.13"',  w: 250,  h: 122,  colors: 4 },
+  STAG26:   { size: '2.66"',  w: 296,  h: 152,  colors: 3 },
+  STAG26Q:  { size: '2.66"',  w: 296,  h: 152,  colors: 4 },
+  STAG29:   { size: '2.9"',   w: 296,  h: 128,  colors: 3 },
+  STAG29Q:  { size: '2.9"',   w: 296,  h: 128,  colors: 4 },
+  STAG29B:  { size: '2.9"',   w: 296,  h: 128,  colors: 2 },
+  STAG29A:  { size: '2.9"',   w: 296,  h: 128,  colors: 3 },
+  STAG29AQ: { size: '2.9"',   w: 296,  h: 128,  colors: 4 },
+  STAG29AB: { size: '2.9"',   w: 296,  h: 128,  colors: 2 },
+  STAG42:   { size: '4.2"',   w: 400,  h: 300,  colors: 3 },
+  STAG42Q:  { size: '4.2"',   w: 400,  h: 300,  colors: 4 },
+  STAG58:   { size: '5.83"',  w: 648,  h: 480,  colors: 3 },
+  STAG58Q:  { size: '5.83"',  w: 648,  h: 480,  colors: 4 },
+  STAG75:   { size: '7.5"',   w: 800,  h: 480,  colors: 3 },
+  STAG116:  { size: '11.6"',  w: 960,  h: 640,  colors: 3 },
+  // MTag Series
+  MTAG15:   { size: '1.54"',  w: 152,  h: 152,  colors: 3 },
+  MTAG15Q:  { size: '1.54"',  w: 200,  h: 200,  colors: 4 },
+  MTAG21:   { size: '2.13"',  w: 250,  h: 122,  colors: 3 },
+  MTAG21Q:  { size: '2.13"',  w: 250,  h: 122,  colors: 4 },
+  MTAG29:   { size: '2.9"',   w: 296,  h: 128,  colors: 3 },
+  MTAG29Q:  { size: '2.9"',   w: 296,  h: 128,  colors: 4 },
+  MTAG29B:  { size: '2.9"',   w: 296,  h: 128,  colors: 2 },
+  MTAG42:   { size: '4.2"',   w: 400,  h: 300,  colors: 3 },
+  MTAG42Q:  { size: '4.2"',   w: 400,  h: 300,  colors: 4 },
+  MTAG58:   { size: '5.83"',  w: 648,  h: 480,  colors: 3 },
+  MTAG58Q:  { size: '5.83"',  w: 648,  h: 480,  colors: 4 },
+  MTAG75:   { size: '7.5"',   w: 800,  h: 480,  colors: 3 },
+  MTAG75Q:  { size: '7.5"',   w: 800,  h: 480,  colors: 4 },
+  // RS Series (6-color)
+  RS075:    { size: '7.3"',   w: 800,  h: 480,  colors: 6 },
+  RS133:    { size: '13.3"',  w: 1600, h: 1200, colors: 6 },
+  RS253:    { size: '25.3"',  w: 3200, h: 1800, colors: 6 },
+  RS315:    { size: '31.5"',  w: 2560, h: 1440, colors: 6 },
+  // Conference
+  RS075V:   { size: '7.3"',   w: 800,  h: 480,  colors: 6 },
+  WS075:    { size: '7.5"',   w: 800,  h: 480,  colors: 3 },
+  // MZ / WT
+  MZ5021:   { size: '2.13"',  w: 250,  h: 122,  colors: 4 },
+  WT029A:   { size: '2.9"',   w: 296,  h: 128,  colors: 2 },
+};
+
+function resolveScreen(model: string | null) {
+  if (!model) return undefined;
+  const upper = model.toUpperCase();
+  if (TAG_SCREEN_MAP[upper]) return TAG_SCREEN_MAP[upper];
+  for (const [code, info] of Object.entries(TAG_SCREEN_MAP)) {
+    if (upper.includes(code)) return info;
+  }
+  return undefined;
+}
+
+function colorLabel(c: number) {
+  if (c === 6) return '6c';
+  if (c === 4) return 'BWRY';
+  if (c === 3) return 'BWR';
+  return 'BW';
+}
+
+const MODEL_OPTIONS = [
+  { group: 'DS', models: ['DS021Q','DS026F','DS027Q','DS029Q','DS035Q','DS035B','DS042Q','DS042F','DS043Q','DS116'] },
+  { group: 'STag', models: ['STAG21','STAG21Q','STAG26','STAG26Q','STAG29','STAG29Q','STAG29B','STAG42','STAG42Q','STAG58','STAG58Q','STAG116'] },
+  { group: 'MTag', models: ['MTAG15','MTAG15Q','MTAG21','MTAG21Q','MTAG29','MTAG29Q','MTAG29B','MTAG42','MTAG42Q','MTAG58','MTAG58Q','MTAG75','MTAG75Q'] },
+  { group: 'RS', models: ['RS075','RS133'] },
+];
+
+function TagModelBadge({ model, tagInternalId }: { model: string | null; tagInternalId: string }) {
+  const { t } = useTranslation(['tags']);
+  const fetcher = useFetcher();
+  const [editing, setEditing] = useState(false);
+  const screen = resolveScreen(model);
+  const isKnown = !!screen;
+  const busy = fetcher.state !== 'idle';
+
+  useEffect(() => {
+    if (fetcher.state === 'idle' && fetcher.data) setEditing(false);
+  }, [fetcher.state, fetcher.data]);
+
+  const selectLabel = (m: string) => {
+    const s = TAG_SCREEN_MAP[m];
+    return s ? `${m}  ${s.size} ${s.w}×${s.h} ${colorLabel(s.colors)}` : m;
+  };
+
+  if (isKnown && !editing) {
+    return (
+      <button
+        type="button"
+        onClick={() => setEditing(true)}
+        className="flex flex-col gap-0.5 text-start"
+        title={t('tags:changeModel')}
+      >
+        <span className="rounded bg-indigo-50 px-1.5 py-0.5 text-[11px] font-semibold text-indigo-700">
+          {model}
+        </span>
+        <span className="text-[10px] leading-tight text-black/50">
+          {screen.size} · {screen.w}×{screen.h} · {colorLabel(screen.colors)}
+        </span>
+      </button>
+    );
+  }
+
+  return (
+    <fetcher.Form method="post" className="flex items-center gap-1">
+      <input type="hidden" name="intent" value="set-model" />
+      <input type="hidden" name="tagInternalId" value={tagInternalId} />
+      <select
+        name="tagModel"
+        defaultValue=""
+        onChange={(e) => {
+          if (e.target.value) e.target.form?.requestSubmit();
+        }}
+        onBlur={() => { if (isKnown) setEditing(false); }}
+        disabled={busy}
+        className="w-28 rounded border border-indigo-200 bg-indigo-50/50 px-1 py-0.5 text-[10px] text-indigo-700 disabled:opacity-40"
+        autoFocus={editing}
+      >
+        <option value="" disabled>
+          {model && !isKnown ? model : t('tags:selectModel')}
+        </option>
+        {MODEL_OPTIONS.map(({ group, models }) => (
+          <optgroup key={group} label={group}>
+            {models.map((m) => (
+              <option key={m} value={m}>
+                {selectLabel(m)}
+              </option>
+            ))}
+          </optgroup>
+        ))}
+      </select>
+      {editing && (
+        <button
+          type="button"
+          onClick={() => setEditing(false)}
+          className="text-[10px] text-black/40 hover:text-black/60"
+        >
+          ✕
+        </button>
+      )}
+    </fetcher.Form>
+  );
+}
+
 function RssiIndicator({ rssi }: { rssi: number | null }) {
   if (rssi === null) return <span className="text-xs text-black/30">--</span>;
   const strength = rssi > -50 ? 'strong' : rssi > -70 ? 'medium' : 'weak';
@@ -511,7 +671,7 @@ export function TagsTable({ initialTags, productOptions, gateways, bridgeHealth 
         {/* Desktop table */}
         <div className="hidden min-h-0 flex-1 overflow-auto p-3 lg:block">
           <div className="overflow-x-auto rounded-lg border border-content-border bg-white shadow-sm">
-            <table className="w-full min-w-[920px] border-collapse text-start text-sm">
+            <table className="w-full min-w-[1040px] border-collapse text-start text-sm">
               <thead>
                 <tr className="border-b border-content-border bg-surface-subtle/50">
                   <th className="w-12 p-3" scope="col">
@@ -528,6 +688,7 @@ export function TagsTable({ initialTags, productOptions, gateways, bridgeHealth 
                   </th>
                   <th className="w-28 p-3" scope="col"><HeaderCell>{t('common:table.tagId')}</HeaderCell></th>
                   <th className="w-32 p-3" scope="col"><HeaderCell>MAC</HeaderCell></th>
+                  <th className="w-28 p-3" scope="col"><HeaderCell>{t('tags:tagModel')}</HeaderCell></th>
                   <th className="p-3" scope="col"><HeaderCell>{t('common:table.linkedProduct')}</HeaderCell></th>
                   <th className="w-28 p-3" scope="col"><HeaderCell>{t('common:table.battery')}</HeaderCell></th>
                   <th className="w-20 p-3" scope="col"><HeaderCell>RSSI</HeaderCell></th>
@@ -570,6 +731,9 @@ export function TagsTable({ initialTags, productOptions, gateways, bridgeHealth 
                         ) : (
                           <span className="text-xs text-black/30">--</span>
                         )}
+                      </td>
+                      <td className="p-3 align-middle">
+                        <TagModelBadge model={tag.tagModel} tagInternalId={tag.id} />
                       </td>
                       <td className="p-3 align-middle">
                         {linkedLabel ? (
@@ -636,10 +800,11 @@ export function TagsTable({ initialTags, productOptions, gateways, bridgeHealth 
                     <HwStatus status={tag.status} />
                   </div>
                   {tag.mac && (
-                    <div className="mt-1">
+                    <div className="mt-1 flex flex-wrap items-center gap-2">
                       <span className="rounded bg-purple-50 px-2 py-0.5 font-mono text-[10px] text-purple-700">
                         {tag.mac}
                       </span>
+                      <TagModelBadge model={tag.tagModel} tagInternalId={tag.id} />
                     </div>
                   )}
                   <div className="mt-2 text-sm text-[#18171c]">

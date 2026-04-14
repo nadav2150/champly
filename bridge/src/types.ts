@@ -192,6 +192,17 @@ export interface AdvertisementEntry {
 }
 
 // ---------------------------------------------------------------------------
+// Screen info (resolved from tag model)
+// ---------------------------------------------------------------------------
+
+export interface ScreenInfo {
+  size: string;
+  width: number;
+  height: number;
+  colors: number;
+}
+
+// ---------------------------------------------------------------------------
 // In-memory tag state (held by status handler)
 // ---------------------------------------------------------------------------
 
@@ -204,6 +215,7 @@ export interface TagState {
   battery?: number;
   firmwareVersion?: string;
   tagModel?: string;
+  screen?: ScreenInfo;
   imgId?: number;
   opcode?: number;
   single?: boolean;

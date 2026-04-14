@@ -40,6 +40,10 @@ async function queryD1(sql: string, params: unknown[] = []): Promise<D1QueryResu
 // Tag status
 // ---------------------------------------------------------------------------
 
+// Generic type strings the gateway sends that should NOT overwrite
+// a user-chosen specific model (e.g. "DS027Q") in D1.
+const GENERIC_TAG_TYPES = new Set(['ds', 'esl', 'info_v3', 'tag', 'unknown']);
+
 export async function upsertTagStatus(
   mac: string,
   rssi: number,
@@ -65,7 +69,9 @@ export async function upsertTagStatus(
     setClauses.push('firmware_version = ?');
     values.push(firmwareVersion);
   }
-  if (tagModel) {
+  if (tagModel && !GENERIC_TAG_TYPES.has(tagModel.toLowerCase())) {
+    // Only overwrite tag_model when the gateway provides a specific model,
+    // never when it sends a generic type like "ds" or "info_v3".
     setClauses.push('tag_model = ?');
     values.push(tagModel);
   }

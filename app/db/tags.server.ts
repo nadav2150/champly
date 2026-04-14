@@ -198,6 +198,17 @@ export async function updateTagKey(
     .where(eq(tags.id, tagInternalId));
 }
 
+export async function setTagModel(
+  db: AppDatabase,
+  tagInternalId: string,
+  tagModel: string,
+): Promise<void> {
+  await db
+    .update(tags)
+    .set({ tagModel })
+    .where(eq(tags.id, tagInternalId));
+}
+
 export async function getGatewayStatus(db: AppDatabase) {
   const rows = await db
     .select({
