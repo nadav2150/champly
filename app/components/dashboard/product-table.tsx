@@ -1,9 +1,9 @@
 import type { ReactNode } from 'react';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useFetcher } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import type { Tag } from './tag-product';
-import { HwStatus, SignalBars } from './tag-status';
+import { HwStatus } from './tag-status';
 
 function IconSearch({ className }: { className?: string }) {
   return (
@@ -44,6 +44,14 @@ function IconLink({ className }: { className?: string }) {
     <svg className={className} width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
       <path d="M6.5 9.5a3 3 0 004.24 0l2-2a3 3 0 00-4.24-4.24L7.5 4.26" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round" />
       <path d="M9.5 6.5a3 3 0 00-4.24 0l-2 2a3 3 0 004.24 4.24l1-1" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function IconChevronDown({ className }: { className?: string }) {
+  return (
+    <svg className={className} width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+      <path d="M3 4.5L6 7.5 9 4.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
@@ -151,12 +159,213 @@ function PairTagForm({ tagInternalId, productOptions }: PairTagFormProps) {
   );
 }
 
+type GatewayInfo = {
+  id: string;
+  apId: string;
+  alias: string | null;
+  mac: string | null;
+  status: 'online' | 'offline';
+  lastSeen: string | null;
+};
+
+type BridgeHealth = {
+  status: string;
+  mqtt: 'connected' | 'disconnected';
+  gateway: string;
+  uptime: number;
+} | null;
+
+function RssiIndicator({ rssi }: { rssi: number | null }) {
+  if (rssi === null) return <span className="text-xs text-black/30">--</span>;
+  const strength = rssi > -50 ? 'strong' : rssi > -70 ? 'medium' : 'weak';
+  const color = strength === 'strong' ? 'text-churn-low' : strength === 'medium' ? 'text-churn-med' : 'text-churn-high';
+  return (
+    <span className={`text-xs font-medium tabular-nums ${color}`}>
+      {rssi} dBm
+    </span>
+  );
+}
+
+function GatewayStatusBar({ gateways, bridgeHealth }: { gateways?: GatewayInfo[]; bridgeHealth?: BridgeHealth }) {
+  const { t } = useTranslation(['tags']);
+  const mqttConnected = bridgeHealth?.mqtt === 'connected';
+
+  return (
+    <div className="flex flex-wrap items-center gap-3 rounded-lg border border-content-border bg-surface-subtle/50 px-4 py-2">
+      <div className="flex items-center gap-2">
+        <span className={`size-2 rounded-full ${mqttConnected ? 'bg-churn-low' : 'bg-black/30'}`} />
+        <span className="text-xs font-medium text-[#18171c]">
+          MQTT Bridge: {mqttConnected ? t('tags:online') : t('tags:offline')}
+        </span>
+      </div>
+      {gateways?.map((gw) => (
+        <div key={gw.id} className="flex items-center gap-2">
+          <span className={`size-2 rounded-full ${gw.status === 'online' ? 'bg-churn-low' : 'bg-black/30'}`} />
+          <span className="text-xs font-medium text-[#18171c]">
+            {gw.alias ?? gw.apId}
+          </span>
+          {gw.lastSeen && (
+            <span className="text-[10px] text-black/40">
+              {new Date(gw.lastSeen).toLocaleTimeString()}
+            </span>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Command dropdown for each tag
+// ---------------------------------------------------------------------------
+
+type CommandItem = {
+  intent: string;
+  labelKey: string;
+  color: string;
+};
+
+const COMMAND_ITEMS: CommandItem[] = [
+  { intent: 'send-version', labelKey: 'tags:commands.getVersion', color: 'text-purple-600' },
+  { intent: 'send-wake', labelKey: 'tags:commands.wake', color: 'text-emerald-600' },
+  { intent: 'send-led-radio', labelKey: 'tags:commands.ledRadio', color: 'text-amber-600' },
+  { intent: 'send-led-ble', labelKey: 'tags:commands.ledBle', color: 'text-amber-600' },
+  { intent: 'send-buzzer', labelKey: 'tags:commands.buzzer', color: 'text-orange-600' },
+  { intent: 'send-reboot', labelKey: 'tags:commands.reboot', color: 'text-red-500' },
+  { intent: 'send-shutdown', labelKey: 'tags:commands.shutdown', color: 'text-red-700' },
+];
+
+function TagCommandDropdown({ mac }: { mac: string }) {
+  const { t } = useTranslation(['tags']);
+  const fetcher = useFetcher();
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const busy = fetcher.state !== 'idle';
+
+  const result = fetcher.data as
+    | { ok: boolean; commandResult?: { status: string; error?: string; stage1Code?: number; stage2Code?: number }; error?: string }
+    | undefined;
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    if (open) document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [open]);
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        disabled={busy}
+        className="inline-flex items-center gap-1 rounded-[10px] border border-purple-200 bg-purple-50 px-2.5 py-1.5 text-xs font-medium text-purple-600 shadow-sm disabled:opacity-40"
+      >
+        {busy ? t('tags:sending') : t('tags:commandMenu')}
+        <IconChevronDown />
+      </button>
+
+      {open && (
+        <div className="absolute inset-e-0 z-30 mt-1 w-44 rounded-lg border border-content-border bg-white py-1 shadow-lg">
+          {COMMAND_ITEMS.map(({ intent, labelKey, color }) => (
+            <fetcher.Form key={intent} method="post" onSubmit={() => setOpen(false)}>
+              <input type="hidden" name="intent" value={intent} />
+              <input type="hidden" name="mac" value={mac} />
+              <button
+                type="submit"
+                className={`w-full px-3 py-1.5 text-start text-xs font-medium hover:bg-surface-subtle ${color}`}
+              >
+                {t(labelKey)}
+              </button>
+            </fetcher.Form>
+          ))}
+        </div>
+      )}
+
+      {result && (
+        <span className={`ms-2 text-[10px] font-medium ${result.ok ? 'text-churn-low' : 'text-churn-high'}`}>
+          {result.ok
+            ? result.commandResult?.status ?? t('tags:commandStatus.success')
+            : result.error ?? t('tags:commandStatus.failed')}
+        </span>
+      )}
+    </div>
+  );
+}
+
+function LocateTagButton({ mac, fullWidth }: { mac: string; fullWidth?: boolean }) {
+  const { t } = useTranslation(['tags', 'common']);
+  const fetcher = useFetcher();
+  const busy = fetcher.state !== 'idle';
+
+  return (
+    <fetcher.Form method="post">
+      <input type="hidden" name="intent" value="send-locate" />
+      <input type="hidden" name="mac" value={mac} />
+      <button
+        type="submit"
+        disabled={busy}
+        className={`inline-flex items-center justify-center gap-1 rounded-[10px] border border-blue-200 bg-blue-50 px-2.5 py-1.5 text-xs font-medium text-blue-600 shadow-sm disabled:opacity-40 ${fullWidth ? 'w-full' : ''}`}
+      >
+        <IconLocate className="shrink-0" />
+        {busy ? t('tags:sending') : t('common:actions.locate')}
+      </button>
+    </fetcher.Form>
+  );
+}
+
+function RegisterTagForm() {
+  const { t } = useTranslation(['tags']);
+  const fetcher = useFetcher();
+  const [mac, setMac] = useState('');
+  const [bleKey, setBleKey] = useState('');
+  const busy = fetcher.state !== 'idle';
+
+  return (
+    <fetcher.Form method="post" className="flex flex-wrap items-end gap-2 rounded-lg border border-dashed border-content-border bg-surface-subtle/30 p-3">
+      <div className="flex flex-col gap-1">
+        <label className="text-[10px] font-medium uppercase tracking-wider text-black/50">{t('tags:macAddress')}</label>
+        <input
+          type="text"
+          name="mac"
+          value={mac}
+          onChange={(e) => setMac(e.target.value)}
+          placeholder="e1000006638a"
+          className="w-36 rounded-md border border-content-border bg-white px-2 py-1.5 font-mono text-xs"
+        />
+      </div>
+      <div className="flex flex-col gap-1">
+        <label className="text-[10px] font-medium uppercase tracking-wider text-black/50">{t('tags:bleKeyLabel')}</label>
+        <input
+          type="text"
+          name="bleKey"
+          value={bleKey}
+          onChange={(e) => setBleKey(e.target.value)}
+          placeholder="3fa72abb4a794b15"
+          className="w-40 rounded-md border border-content-border bg-white px-2 py-1.5 font-mono text-xs"
+        />
+      </div>
+      <input type="hidden" name="intent" value="register-tag" />
+      <button
+        type="submit"
+        disabled={busy || !mac || !bleKey}
+        className="rounded-[10px] border border-accent-mint/30 bg-accent-mint/10 px-3 py-1.5 text-xs font-medium text-churn-low shadow-sm disabled:opacity-40"
+      >
+        {t('tags:registerTag')}
+      </button>
+    </fetcher.Form>
+  );
+}
+
 type TagsTableProps = {
   initialTags: Tag[];
   productOptions: Array<{ id: string; name: string }>;
+  gateways?: GatewayInfo[];
+  bridgeHealth?: BridgeHealth;
 };
 
-export function TagsTable({ initialTags, productOptions }: TagsTableProps) {
+export function TagsTable({ initialTags, productOptions, gateways, bridgeHealth }: TagsTableProps) {
   const { t } = useTranslation(['common', 'tags', 'products']);
   const [tags, setTags] = useState<Tag[]>(initialTags);
   const [filter, setFilter] = useState<TagFilterKey>('all');
@@ -193,6 +402,18 @@ export function TagsTable({ initialTags, productOptions }: TagsTableProps) {
     }
   }
 
+  const bulkLocateFetcher = useFetcher();
+  const bulkLocateBusy = bulkLocateFetcher.state !== 'idle';
+  const bulkLocateResult = bulkLocateFetcher.data as
+    | { ok: boolean; bulkLocate?: { total: number; succeeded: number }; error?: string }
+    | undefined;
+
+  function getSelectedMacs(): string[] {
+    return filtered
+      .filter((tag) => selectedIds.has(tag.id) && tag.mac)
+      .map((tag) => tag.mac!);
+  }
+
   function handleBulkSync() {
     if (selectedIds.size === 0) return;
     setTags((prev) =>
@@ -209,11 +430,13 @@ export function TagsTable({ initialTags, productOptions }: TagsTableProps) {
     return (
       <div className="relative flex min-h-0 min-w-0 flex-1 flex-col items-center justify-center overflow-hidden rounded-xl border border-[#e2e2e4] bg-white shadow-[0px_4px_6px_0px_rgba(207,207,207,0.1)]">
         <div className="flex flex-col items-center gap-4 p-12 text-center">
+          <GatewayStatusBar gateways={gateways} bridgeHealth={bridgeHealth} />
           <div className="flex size-16 items-center justify-center rounded-2xl border border-[#e2e2e4] bg-surface-subtle">
             <span className="text-3xl">🏷️</span>
           </div>
           <h2 className="text-xl font-medium text-[#18171c]">{t('tags:empty.title')}</h2>
           <p className="max-w-sm text-sm text-black/50">{t('tags:empty.description')}</p>
+          <RegisterTagForm />
         </div>
       </div>
     );
@@ -223,6 +446,7 @@ export function TagsTable({ initialTags, productOptions }: TagsTableProps) {
     <div className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-xl border border-[#e2e2e4] bg-white shadow-[0px_4px_6px_0px_rgba(207,207,207,0.1)]">
       <div className="flex min-h-0 flex-1 flex-col bg-surface-muted">
         <div className="shrink-0 flex flex-col gap-3 border-b border-black/4 px-4 py-3 sm:px-6">
+          <GatewayStatusBar gateways={gateways} bridgeHealth={bridgeHealth} />
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex flex-wrap items-center gap-4">
               <div className="flex items-center gap-3 text-base font-medium">
@@ -235,14 +459,35 @@ export function TagsTable({ initialTags, productOptions }: TagsTableProps) {
                 <span className="text-sm text-black/40">{t('common:table.searchTagId')}</span>
               </div>
             </div>
-            <button
-              type="button"
-              onClick={handleBulkSync}
-              disabled={selectedIds.size === 0}
-              className="rounded-full border border-dashboard-border bg-dashboard-card px-4 py-2 text-sm font-medium text-white shadow-sm disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              {t('common:actions.bulkSync')}
-            </button>
+            <div className="flex items-center gap-2">
+              <bulkLocateFetcher.Form method="post">
+                <input type="hidden" name="intent" value="bulk-locate" />
+                <input type="hidden" name="macs" value={getSelectedMacs().join(',')} />
+                <button
+                  type="submit"
+                  disabled={selectedIds.size === 0 || getSelectedMacs().length === 0 || bulkLocateBusy}
+                  className="rounded-full border border-blue-300 bg-blue-50 px-4 py-2 text-sm font-medium text-blue-600 shadow-sm disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  <span className="flex items-center gap-1.5">
+                    <IconLocate />
+                    {bulkLocateBusy ? t('tags:sending') : t('tags:bulkLocate')}
+                  </span>
+                </button>
+              </bulkLocateFetcher.Form>
+              {bulkLocateResult?.ok && bulkLocateResult.bulkLocate && (
+                <span className="text-xs font-medium text-churn-low">
+                  {bulkLocateResult.bulkLocate.succeeded}/{bulkLocateResult.bulkLocate.total}
+                </span>
+              )}
+              <button
+                type="button"
+                onClick={handleBulkSync}
+                disabled={selectedIds.size === 0}
+                className="rounded-full border border-dashboard-border bg-dashboard-card px-4 py-2 text-sm font-medium text-white shadow-sm disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                {t('common:actions.bulkSync')}
+              </button>
+            </div>
           </div>
           <div className="flex gap-2 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:flex-wrap lg:overflow-visible">
             {FILTER_PILLS.map(({ key, labelKey }) => (
@@ -260,7 +505,10 @@ export function TagsTable({ initialTags, productOptions }: TagsTableProps) {
               </button>
             ))}
           </div>
+          <RegisterTagForm />
         </div>
+
+        {/* Desktop table */}
         <div className="hidden min-h-0 flex-1 overflow-auto p-3 lg:block">
           <div className="overflow-x-auto rounded-lg border border-content-border bg-white shadow-sm">
             <table className="w-full min-w-[920px] border-collapse text-start text-sm">
@@ -279,12 +527,13 @@ export function TagsTable({ initialTags, productOptions }: TagsTableProps) {
                     </button>
                   </th>
                   <th className="w-28 p-3" scope="col"><HeaderCell>{t('common:table.tagId')}</HeaderCell></th>
+                  <th className="w-32 p-3" scope="col"><HeaderCell>MAC</HeaderCell></th>
                   <th className="p-3" scope="col"><HeaderCell>{t('common:table.linkedProduct')}</HeaderCell></th>
-                  <th className="w-36 p-3" scope="col"><HeaderCell>{t('common:table.battery')}</HeaderCell></th>
-                  <th className="w-28 p-3" scope="col"><HeaderCell>{t('common:table.signal')}</HeaderCell></th>
+                  <th className="w-28 p-3" scope="col"><HeaderCell>{t('common:table.battery')}</HeaderCell></th>
+                  <th className="w-20 p-3" scope="col"><HeaderCell>RSSI</HeaderCell></th>
                   <th className="w-28 p-3" scope="col"><HeaderCell>{t('common:table.syncStatus')}</HeaderCell></th>
                   <th className="w-28 p-3" scope="col"><HeaderCell>{t('common:table.lastSync')}</HeaderCell></th>
-                  <th className="w-52 p-3" scope="col"><HeaderCell>{t('common:table.action')}</HeaderCell></th>
+                  <th className="w-64 p-3" scope="col"><HeaderCell>{t('common:table.action')}</HeaderCell></th>
                 </tr>
               </thead>
               <tbody>
@@ -314,6 +563,15 @@ export function TagsTable({ initialTags, productOptions }: TagsTableProps) {
                         </span>
                       </td>
                       <td className="p-3 align-middle">
+                        {tag.mac ? (
+                          <span className="rounded bg-purple-50 px-2 py-1 font-mono text-[11px] text-purple-700">
+                            {tag.mac}
+                          </span>
+                        ) : (
+                          <span className="text-xs text-black/30">--</span>
+                        )}
+                      </td>
+                      <td className="p-3 align-middle">
                         {linkedLabel ? (
                           <span className="text-sm text-[#18171c]">{linkedLabel}</span>
                         ) : (
@@ -324,16 +582,19 @@ export function TagsTable({ initialTags, productOptions }: TagsTableProps) {
                         <BatteryBar percent={tag.battery} />
                       </td>
                       <td className="p-3 align-middle">
-                        <SignalBars strength={tag.signal} />
+                        <RssiIndicator rssi={tag.rssi ?? null} />
                       </td>
                       <td className="p-3 align-middle">
                         <HwStatus status={tag.status} />
                       </td>
                       <td className="p-3 align-middle text-xs text-black/60">
-                        {tag.lastSync}
+                        {tag.lastAdvertised
+                          ? new Date(tag.lastAdvertised).toLocaleString()
+                          : tag.lastSync ?? '--'}
                       </td>
                       <td className="p-3 align-middle">
                         <div className="flex flex-wrap items-center gap-1.5">
+                          {tag.mac && <TagCommandDropdown mac={tag.mac} />}
                           {!tag.linkedProductId ? (
                             <PairTagForm tagInternalId={tag.id} productOptions={productOptions} />
                           ) : (
@@ -345,13 +606,7 @@ export function TagsTable({ initialTags, productOptions }: TagsTableProps) {
                               {t('common:actions.replace')}
                             </button>
                           )}
-                          <button
-                            type="button"
-                            className="inline-flex items-center gap-1 rounded-[10px] border border-blue-200 bg-blue-50 px-2.5 py-1.5 text-xs font-medium text-blue-600 shadow-sm"
-                          >
-                            <IconLocate className="shrink-0" />
-                            {t('common:actions.locate')}
-                          </button>
+                          {tag.mac && <LocateTagButton mac={tag.mac} />}
                         </div>
                       </td>
                     </tr>
@@ -362,6 +617,7 @@ export function TagsTable({ initialTags, productOptions }: TagsTableProps) {
           </div>
         </div>
 
+        {/* Mobile cards */}
         <div className="min-h-0 flex-1 overflow-auto p-2 lg:hidden">
           <div className="flex flex-col gap-2">
             {filtered.map((tag) => {
@@ -379,6 +635,13 @@ export function TagsTable({ initialTags, productOptions }: TagsTableProps) {
                     </span>
                     <HwStatus status={tag.status} />
                   </div>
+                  {tag.mac && (
+                    <div className="mt-1">
+                      <span className="rounded bg-purple-50 px-2 py-0.5 font-mono text-[10px] text-purple-700">
+                        {tag.mac}
+                      </span>
+                    </div>
+                  )}
                   <div className="mt-2 text-sm text-[#18171c]">
                     {linkedLabel ? (
                       linkedLabel
@@ -393,10 +656,15 @@ export function TagsTable({ initialTags, productOptions }: TagsTableProps) {
                       </div>
                       <span className="text-[10px] font-medium tabular-nums text-black/60">{tag.battery}%</span>
                     </div>
-                    <SignalBars strength={tag.signal} />
-                    <span className="text-[10px] text-black/40">{tag.lastSync}</span>
+                    <RssiIndicator rssi={tag.rssi ?? null} />
+                    <span className="text-[10px] text-black/40">
+                      {tag.lastAdvertised
+                        ? new Date(tag.lastAdvertised).toLocaleTimeString()
+                        : tag.lastSync}
+                    </span>
                   </div>
                   <div className="mt-3 flex flex-col gap-2">
+                    {tag.mac && <TagCommandDropdown mac={tag.mac} />}
                     {!tag.linkedProductId ? (
                       <PairTagForm tagInternalId={tag.id} productOptions={productOptions} />
                     ) : (
@@ -408,13 +676,7 @@ export function TagsTable({ initialTags, productOptions }: TagsTableProps) {
                         {t('common:actions.replace')}
                       </button>
                     )}
-                    <button
-                      type="button"
-                      className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50 py-2 text-xs font-medium text-blue-600 active:bg-blue-100"
-                    >
-                      <IconLocate className="shrink-0" />
-                      {t('common:actions.locate')}
-                    </button>
+                    {tag.mac && <LocateTagButton mac={tag.mac} fullWidth />}
                   </div>
                 </article>
               );

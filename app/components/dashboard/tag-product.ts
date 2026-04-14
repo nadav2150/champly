@@ -25,4 +25,11 @@ export type Tag = {
   signal: 'strong' | 'weak' | 'none';
   status: 'online' | 'offline';
   lastSync: string | null;
+  mac: string | null;
+  bleKey: string | null;
+  rssi: number | null;
+  lastAdvertised: string | null;
+  gatewayId: string | null;
+  firmwareVersion: string | null;
+  tagModel: string | null;
 };

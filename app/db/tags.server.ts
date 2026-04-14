@@ -3,7 +3,7 @@ import type { AppDatabase } from './client.server';
 import { listOwnedProductIds, productOwnedByUser } from './products.server';
 import type { TagVisibilityIds } from './stats.server';
 import { listZoneIdsForUser } from './stats.server';
-import { products, stores, tags, zones } from './schema.server';
+import { gateways, products, stores, tagCommands, tags, zones } from './schema.server';
 
 export type TagTableRow = {
   id: string;
@@ -15,6 +15,13 @@ export type TagTableRow = {
   status: 'online' | 'offline';
   lastSync: string | null;
   zoneId: string | null;
+  mac: string | null;
+  bleKey: string | null;
+  rssi: number | null;
+  lastAdvertised: string | null;
+  gatewayId: string | null;
+  firmwareVersion: string | null;
+  tagModel: string | null;
 };
 
 export async function tagOwnedByUser(
@@ -95,6 +102,13 @@ export async function listTagsForTable(
     status: tag.status,
     lastSync: tag.lastSync,
     zoneId: tag.zoneId,
+    mac: tag.mac,
+    bleKey: tag.bleKey,
+    rssi: tag.rssi,
+    lastAdvertised: tag.lastAdvertised,
+    gatewayId: tag.gatewayId,
+    firmwareVersion: tag.firmwareVersion,
+    tagModel: tag.tagModel,
   }));
   return out;
 }
@@ -120,4 +134,115 @@ export async function linkTagToProduct(
     .set({ linkedProductId: productId })
     .where(eq(tags.id, tagInternalId));
   return true;
+}
+
+export async function getTagByMac(
+  db: AppDatabase,
+  mac: string,
+): Promise<TagTableRow | null> {
+  const rows = await db
+    .select({ tag: tags, productName: products.name })
+    .from(tags)
+    .leftJoin(products, eq(tags.linkedProductId, products.id))
+    .where(eq(tags.mac, mac));
+
+  if (rows.length === 0) return null;
+  const { tag, productName } = rows[0];
+  return {
+    id: tag.id,
+    tagId: tag.tagId,
+    linkedProductId: tag.linkedProductId,
+    linkedProductName: productName ?? null,
+    battery: tag.battery,
+    signal: tag.signal,
+    status: tag.status,
+    lastSync: tag.lastSync,
+    zoneId: tag.zoneId,
+    mac: tag.mac,
+    bleKey: tag.bleKey,
+    rssi: tag.rssi,
+    lastAdvertised: tag.lastAdvertised,
+    gatewayId: tag.gatewayId,
+    firmwareVersion: tag.firmwareVersion,
+    tagModel: tag.tagModel,
+  };
+}
+
+export async function registerTag(
+  db: AppDatabase,
+  id: string,
+  mac: string,
+  bleKey: string,
+  gatewayId: string,
+): Promise<void> {
+  await db.insert(tags).values({
+    id,
+    tagId: mac,
+    mac,
+    bleKey,
+    gatewayId,
+    status: 'offline',
+    battery: 100,
+    signal: 'none',
+  });
+}
+
+export async function updateTagKey(
+  db: AppDatabase,
+  tagInternalId: string,
+  bleKey: string,
+): Promise<void> {
+  await db
+    .update(tags)
+    .set({ bleKey })
+    .where(eq(tags.id, tagInternalId));
+}
+
+export async function getGatewayStatus(db: AppDatabase) {
+  const rows = await db
+    .select({
+      id: gateways.id,
+      apId: gateways.apId,
+      alias: gateways.alias,
+      mac: gateways.mac,
+      status: gateways.status,
+      lastSeen: gateways.lastSeen,
+    })
+    .from(gateways);
+  return rows;
+}
+
+export async function listAllTags(db: AppDatabase) {
+  const rows = await db
+    .select({ tag: tags, productName: products.name })
+    .from(tags)
+    .leftJoin(products, eq(tags.linkedProductId, products.id));
+
+  return rows.map(({ tag, productName }) => ({
+    id: tag.id,
+    tagId: tag.tagId,
+    linkedProductId: tag.linkedProductId,
+    linkedProductName: productName ?? null,
+    battery: tag.battery,
+    signal: tag.signal,
+    status: tag.status,
+    lastSync: tag.lastSync,
+    zoneId: tag.zoneId,
+    mac: tag.mac,
+    bleKey: tag.bleKey,
+    rssi: tag.rssi,
+    lastAdvertised: tag.lastAdvertised,
+    gatewayId: tag.gatewayId,
+    firmwareVersion: tag.firmwareVersion,
+    tagModel: tag.tagModel,
+  }));
+}
+
+export async function getRecentCommands(db: AppDatabase, mac: string) {
+  return db
+    .select()
+    .from(tagCommands)
+    .where(eq(tagCommands.mac, mac))
+    .orderBy(tagCommands.createdAt)
+    .limit(20);
 }

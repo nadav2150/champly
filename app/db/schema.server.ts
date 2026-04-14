@@ -1,4 +1,37 @@
-import { index, integer, sqliteTable, text } from 'drizzle-orm/sqlite-core';
+import {
+  index,
+  integer,
+  sqliteTable,
+  text,
+  uniqueIndex,
+} from 'drizzle-orm/sqlite-core';
+
+export const gateways = sqliteTable('gateways', {
+  id: text('id').primaryKey(),
+  apId: text('ap_id').notNull(),
+  alias: text('alias'),
+  storeId: text('store_id').references(() => stores.id),
+  ip: text('ip'),
+  mac: text('mac'),
+  apVersion: text('ap_version'),
+  modVersion: text('mod_version'),
+  diskSize: integer('disk_size'),
+  freeSpace: integer('free_space'),
+  server: text('server'),
+  encrypt: integer('encrypt', { mode: 'boolean' }).default(false),
+  heartbeatInterval: integer('heartbeat_interval').default(15),
+  status: text('status', { enum: ['online', 'offline'] })
+    .notNull()
+    .default('offline'),
+  lastSeen: text('last_seen'),
+  waitCount: integer('wait_count').default(0),
+  sendCount: integer('send_count').default(0),
+  createdAt: text('created_at').notNull(),
+  mqttBrokerUrl: text('mqtt_broker_url'),
+  mqttStatusTopic: text('mqtt_status_topic'),
+  mqttActionTopic: text('mqtt_action_topic'),
+  mqttResponseTopic: text('mqtt_response_topic'),
+});
 
 export const stores = sqliteTable(
   'stores',
@@ -92,12 +125,20 @@ export const tags = sqliteTable(
       .default('online'),
     lastSync: text('last_sync'),
     zoneId: text('zone_id').references(() => zones.id),
+    mac: text('mac'),
+    bleKey: text('ble_key'),
+    gatewayId: text('gateway_id').references(() => gateways.id),
+    rssi: integer('rssi'),
+    lastAdvertised: text('last_advertised'),
+    firmwareVersion: text('firmware_version'),
+    tagModel: text('tag_model'),
   },
   (table) => ({
     zoneIdx: index('idx_tags_zone_id').on(table.zoneId),
     linkedProductIdx: index('idx_tags_linked_product_id').on(
       table.linkedProductId,
     ),
+    macIdx: uniqueIndex('idx_tags_mac').on(table.mac),
   }),
 );
 
@@ -121,5 +162,29 @@ export const syncJobs = sqliteTable(
   },
   (table) => ({
     statusIdx: index('idx_sync_jobs_status').on(table.status),
+  }),
+);
+
+export const tagCommands = sqliteTable(
+  'tag_commands',
+  {
+    id: text('id').primaryKey(),
+    tagId: text('tag_id').references(() => tags.id),
+    mac: text('mac').notNull(),
+    reqId: integer('req_id').notNull(),
+    action: integer('action').notNull(),
+    method: text('method').notNull(),
+    payloadJson: text('payload_json').notNull(),
+    status: text('status', {
+      enum: ['pending', 'sent', 'success', 'failed'],
+    }).notNull(),
+    responseJson: text('response_json'),
+    errorMessage: text('error_message'),
+    createdAt: text('created_at').notNull(),
+    completedAt: text('completed_at'),
+  },
+  (table) => ({
+    reqIdIdx: index('idx_tag_commands_req_id').on(table.reqId),
+    statusIdx: index('idx_tag_commands_status').on(table.status),
   }),
 );

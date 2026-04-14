@@ -24,5 +24,33 @@
   "empty": {
     "title": "No tags yet",
     "description": "Pair your first ESL tag to start monitoring battery, signal, and sync status."
-  }
+  },
+  "testCommand": "Test",
+  "sending": "Sending…",
+  "macAddress": "MAC Address",
+  "bleKeyLabel": "BLE Key",
+  "registerTag": "Register Tag",
+  "bulkLocate": "Bulk Locate",
+  "commands": {
+    "getVersion": "Get Version",
+    "wake": "Wake",
+    "ledRadio": "LED (Radio)",
+    "ledBle": "LED (BLE)",
+    "buzzer": "Buzzer",
+    "reboot": "Reboot",
+    "shutdown": "Shutdown",
+    "refresh": "Refresh Region",
+    "operatingStatus": "Status"
+  },
+  "commandStatus": {
+    "accepted": "Accepted",
+    "success": "Success",
+    "failed": "Failed",
+    "timeout": "Timeout",
+    "stage1Error": "Gateway rejected",
+    "stage2Error": "Device error"
+  },
+  "commandMenu": "Commands",
+  "firmwareVersion": "Firmware",
+  "tagModel": "Model"
 }

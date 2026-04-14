@@ -22,6 +22,13 @@
       "when": 1774020400000,
       "tag": "0002_add_user_id",
       "breakpoints": false
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1776145480802,
+      "tag": "0003_thankful_natasha_romanoff",
+      "breakpoints": true
     }
   ]
 }

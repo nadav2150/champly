@@ -4,6 +4,8 @@ export interface Env {
   DB: D1Database;
   SUPABASE_URL: string;
   SUPABASE_ANON_KEY: string;
+  MQTT_BRIDGE_URL: string;
+  MQTT_BRIDGE_API_KEY: string;
 }
 
 declare module 'react-router' {

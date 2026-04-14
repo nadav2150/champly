@@ -24,5 +24,33 @@
   "empty": {
     "title": "אין תגיות עדיין",
     "description": "שייך את תגית ה-ESL הראשונה שלך כדי להתחיל לנטר סוללה, קליטה וסטטוס סנכרון."
-  }
+  },
+  "testCommand": "בדיקה",
+  "sending": "שולח…",
+  "macAddress": "כתובת MAC",
+  "bleKeyLabel": "מפתח BLE",
+  "registerTag": "רישום תגית",
+  "bulkLocate": "איתור מרובה",
+  "commands": {
+    "getVersion": "קבל גרסה",
+    "wake": "הער",
+    "ledRadio": "LED (רדיו)",
+    "ledBle": "LED (BLE)",
+    "buzzer": "זמזם",
+    "reboot": "אתחל",
+    "shutdown": "כיבוי",
+    "refresh": "רענן אזור",
+    "operatingStatus": "סטטוס"
+  },
+  "commandStatus": {
+    "accepted": "התקבל",
+    "success": "הצלחה",
+    "failed": "נכשל",
+    "timeout": "פסק זמן",
+    "stage1Error": "השער דחה",
+    "stage2Error": "שגיאת מכשיר"
+  },
+  "commandMenu": "פקודות",
+  "firmwareVersion": "גרסת קושחה",
+  "tagModel": "דגם"
 }

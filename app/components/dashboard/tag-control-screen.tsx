@@ -17,6 +17,22 @@ type ProductsProps = SidebarData & {
   productStats: { total: number; pending: number; failed: number };
 };
 
+type GatewayInfo = {
+  id: string;
+  apId: string;
+  alias: string | null;
+  mac: string | null;
+  status: 'online' | 'offline';
+  lastSeen: string | null;
+};
+
+type BridgeHealth = {
+  status: string;
+  mqtt: 'connected' | 'disconnected';
+  gateway: string;
+  uptime: number;
+} | null;
+
 type TagsProps = SidebarData & {
   variant: 'tags';
   tags: TagTableRow[];
@@ -27,6 +43,8 @@ type TagsProps = SidebarData & {
     total: number;
   };
   productOptions: Array<{ id: string; name: string }>;
+  gateways?: GatewayInfo[];
+  bridgeHealth?: BridgeHealth;
 };
 
 export type TagControlScreenProps = ProductsProps | TagsProps;
@@ -67,6 +85,8 @@ export function TagControlScreen(props: TagControlScreenProps) {
             <TagsTable
               initialTags={props.tags}
               productOptions={props.productOptions}
+              gateways={props.gateways}
+              bridgeHealth={props.bridgeHealth}
             />
           )}
         </div>

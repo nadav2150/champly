@@ -2,6 +2,9 @@
 .env
 .dev.vars
 /node_modules/
+/bridge/node_modules/
+/bridge/dist/
+/bridge/.env
 
 # React Router
 /.react-router/
