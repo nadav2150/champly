@@ -1,0 +1,28 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "champty-bridge",
+  "main": "./src/worker.ts",
+  "compatibility_date": "2025-10-08",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": {
+    "enabled": true
+  },
+  "workers_dev": true,
+  "routes": [
+    { "pattern": "bridge.champty.com", "custom_domain": true }
+  ],
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "MQTT_BRIDGE",
+        "class_name": "MqttBridgeDO"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": ["MqttBridgeDO"]
+    }
+  ]
+}

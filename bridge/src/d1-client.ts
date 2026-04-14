@@ -1,6 +1,4 @@
-import { config } from './config.js';
-
-const D1_API_BASE = `https://api.cloudflare.com/client/v4/accounts/${config.cloudflare.accountId}/d1/database/${config.cloudflare.databaseId}`;
+import type { BridgeConfig } from './config.js';
 
 interface D1QueryResult {
   results: Record<string, unknown>[];
@@ -14,11 +12,15 @@ interface D1ApiResponse {
   errors: Array<{ code: number; message: string }>;
 }
 
-async function queryD1(sql: string, params: unknown[] = []): Promise<D1QueryResult> {
-  const res = await fetch(`${D1_API_BASE}/query`, {
+function d1ApiBase(cfg: BridgeConfig): string {
+  return `https://api.cloudflare.com/client/v4/accounts/${cfg.cloudflare.accountId}/d1/database/${cfg.cloudflare.databaseId}`;
+}
+
+async function queryD1(cfg: BridgeConfig, sql: string, params: unknown[] = []): Promise<D1QueryResult> {
+  const res = await fetch(`${d1ApiBase(cfg)}/query`, {
     method: 'POST',
     headers: {
-      Authorization: `Bearer ${config.cloudflare.apiToken}`,
+      Authorization: `Bearer ${cfg.cloudflare.apiToken}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({ sql, params }),
@@ -40,11 +42,10 @@ async function queryD1(sql: string, params: unknown[] = []): Promise<D1QueryResu
 // Tag status
 // ---------------------------------------------------------------------------
 
-// Generic type strings the gateway sends that should NOT overwrite
-// a user-chosen specific model (e.g. "DS027Q") in D1.
 const GENERIC_TAG_TYPES = new Set(['ds', 'esl', 'info_v3', 'tag', 'unknown']);
 
 export async function upsertTagStatus(
+  cfg: BridgeConfig,
   mac: string,
   rssi: number,
   lastAdvertised: string,
@@ -70,8 +71,6 @@ export async function upsertTagStatus(
     values.push(firmwareVersion);
   }
   if (tagModel && !GENERIC_TAG_TYPES.has(tagModel.toLowerCase())) {
-    // Only overwrite tag_model when the gateway provides a specific model,
-    // never when it sends a generic type like "ds" or "info_v3".
     setClauses.push('tag_model = ?');
     values.push(tagModel);
   }
@@ -79,6 +78,7 @@ export async function upsertTagStatus(
   values.push(mac);
 
   await queryD1(
+    cfg,
     `UPDATE tags SET ${setClauses.join(', ')} WHERE mac = ?`,
     values,
   );
@@ -89,10 +89,12 @@ export async function upsertTagStatus(
 // ---------------------------------------------------------------------------
 
 export async function updateGatewayLastSeen(
+  cfg: BridgeConfig,
   apId: string,
   lastSeen: string,
 ): Promise<void> {
   await queryD1(
+    cfg,
     `UPDATE gateways SET last_seen = ?, status = 'online' WHERE ap_id = ?`,
     [lastSeen, apId],
   );
@@ -102,8 +104,9 @@ export async function updateGatewayLastSeen(
 // Tag keys
 // ---------------------------------------------------------------------------
 
-export async function getTagKeyByMac(mac: string): Promise<string | null> {
+export async function getTagKeyByMac(cfg: BridgeConfig, mac: string): Promise<string | null> {
   const result = await queryD1(
+    cfg,
     'SELECT ble_key FROM tags WHERE mac = ?',
     [mac],
   );
@@ -111,8 +114,9 @@ export async function getTagKeyByMac(mac: string): Promise<string | null> {
   return (result.results[0].ble_key as string) ?? null;
 }
 
-export async function getAllTagKeys(): Promise<Record<string, string>> {
+export async function getAllTagKeys(cfg: BridgeConfig): Promise<Record<string, string>> {
   const result = await queryD1(
+    cfg,
     'SELECT mac, ble_key FROM tags WHERE mac IS NOT NULL AND ble_key IS NOT NULL',
   );
   const map: Record<string, string> = {};
@@ -127,17 +131,20 @@ export async function getAllTagKeys(): Promise<Record<string, string>> {
 // ---------------------------------------------------------------------------
 
 export async function updateTagFirmware(
+  cfg: BridgeConfig,
   mac: string,
   firmwareVersion: string,
   tagModel?: string,
 ): Promise<void> {
   if (tagModel) {
     await queryD1(
+      cfg,
       'UPDATE tags SET firmware_version = ?, tag_model = ? WHERE mac = ?',
       [firmwareVersion, tagModel, mac],
     );
   } else {
     await queryD1(
+      cfg,
       'UPDATE tags SET firmware_version = ? WHERE mac = ?',
       [firmwareVersion, mac],
     );
@@ -149,6 +156,7 @@ export async function updateTagFirmware(
 // ---------------------------------------------------------------------------
 
 export async function insertTagCommand(
+  cfg: BridgeConfig,
   id: string,
   mac: string,
   reqId: number,
@@ -157,6 +165,7 @@ export async function insertTagCommand(
   payloadJson: string,
 ): Promise<void> {
   await queryD1(
+    cfg,
     `INSERT INTO tag_commands (id, mac, req_id, action, method, payload_json, status, created_at)
      VALUES (?, ?, ?, ?, ?, ?, 'sent', ?)`,
     [id, mac, reqId, action, method, payloadJson, new Date().toISOString()],
@@ -164,12 +173,14 @@ export async function insertTagCommand(
 }
 
 export async function updateTagCommandResult(
+  cfg: BridgeConfig,
   reqId: number,
   status: 'success' | 'failed',
   responseJson: string | null,
   errorMessage: string | null,
 ): Promise<void> {
   await queryD1(
+    cfg,
     `UPDATE tag_commands SET status = ?, response_json = ?, error_message = ?, completed_at = ?
      WHERE req_id = ? AND status = 'sent'`,
     [status, responseJson, errorMessage, new Date().toISOString(), reqId],
@@ -177,9 +188,11 @@ export async function updateTagCommandResult(
 }
 
 export async function getCommandByReqId(
+  cfg: BridgeConfig,
   reqId: number,
 ): Promise<Record<string, unknown> | null> {
   const result = await queryD1(
+    cfg,
     'SELECT * FROM tag_commands WHERE req_id = ? LIMIT 1',
     [reqId],
   );

@@ -1,5 +1,5 @@
 import mqtt from 'mqtt';
-import { config } from './config.js';
+import type { BridgeConfig } from './config.js';
 
 let client: mqtt.MqttClient | null = null;
 
@@ -12,32 +12,33 @@ export function isMqttConnected(): boolean {
   return client?.connected ?? false;
 }
 
-export function connectMqtt(): Promise<mqtt.MqttClient> {
+export function connectMqtt(cfg: BridgeConfig): Promise<mqtt.MqttClient> {
   return new Promise((resolve, reject) => {
-    console.log(`[mqtt] Connecting to ${config.hivemq.url}...`);
+    console.log(`[mqtt] Connecting to ${cfg.hivemq.url}...`);
 
-    client = mqtt.connect(config.hivemq.url, {
-      username: config.hivemq.username,
-      password: config.hivemq.password,
+    client = mqtt.connect(cfg.hivemq.url, {
+      username: cfg.hivemq.username,
+      password: cfg.hivemq.password,
       protocolVersion: 5,
       clean: true,
       connectTimeout: 10_000,
       reconnectPeriod: 5_000,
+      forceNativeWebSocket: true,
     });
 
     client.on('connect', () => {
       console.log('[mqtt] Connected to HiveMQ Cloud');
 
       client!.subscribe(
-        [config.gateway.statusTopic, config.gateway.responseTopic],
+        [cfg.gateway.statusTopic, cfg.gateway.responseTopic],
         { qos: 1 },
         (err) => {
           if (err) {
             console.error('[mqtt] Subscribe error:', err);
             reject(err);
           } else {
-            console.log(`[mqtt] Subscribed to ${config.gateway.statusTopic}`);
-            console.log(`[mqtt] Subscribed to ${config.gateway.responseTopic}`);
+            console.log(`[mqtt] Subscribed to ${cfg.gateway.statusTopic}`);
+            console.log(`[mqtt] Subscribed to ${cfg.gateway.responseTopic}`);
             resolve(client!);
           }
         },
@@ -81,11 +82,11 @@ export function disconnectMqtt(): Promise<void> {
   });
 }
 
-export function publishAction(payload: object): Promise<void> {
-  const client = getMqttClient();
+export function publishAction(cfg: BridgeConfig, payload: object): Promise<void> {
+  const mqttClient = getMqttClient();
   const message = JSON.stringify(payload);
   return new Promise((resolve, reject) => {
-    client.publish(config.gateway.actionTopic, message, { qos: 1 }, (err) => {
+    mqttClient.publish(cfg.gateway.actionTopic, message, { qos: 1 }, (err) => {
       if (err) reject(err);
       else resolve();
     });

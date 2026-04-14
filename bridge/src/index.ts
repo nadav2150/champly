@@ -1,6 +1,6 @@
 import 'dotenv/config';
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
-import { config } from './config.js';
+import { getConfig } from './config.js';
 import { connectMqtt, isMqttConnected, disconnectMqtt, publishAction } from './mqtt-client.js';
 import { handleStatusMessage, getRecentTags } from './status-handler.js';
 import { initResponseListener, sendCommand, allocReqId, allocOpcode, registerPending } from './command-sender.js';
@@ -8,6 +8,7 @@ import { getCommandByReqId, getTagKeyByMac } from './d1-client.js';
 import { actionRegistry } from './command-registry.js';
 import type { SendCommandRequest } from './types.js';
 
+const cfg = getConfig();
 const pendingImageTags = new Set<string>();
 
 function parseBody(req: IncomingMessage): Promise<string> {
@@ -26,7 +27,7 @@ function json(res: ServerResponse, status: number, data: unknown): void {
 
 function checkAuth(req: IncomingMessage): boolean {
   const authHeader = req.headers.authorization;
-  return authHeader === `Bearer ${config.bridge.apiKey}`;
+  return authHeader === `Bearer ${cfg.bridge.apiKey}`;
 }
 
 function parsePathname(url: URL): { path: string; param?: string } {
@@ -41,7 +42,7 @@ async function handleRequest(
   req: IncomingMessage,
   res: ServerResponse,
 ): Promise<void> {
-  const url = new URL(req.url ?? '/', `http://localhost:${config.bridge.port}`);
+  const url = new URL(req.url ?? '/', `http://localhost:${cfg.bridge.port}`);
   const method = req.method ?? 'GET';
   const { path, param } = parsePathname(url);
 
@@ -61,7 +62,7 @@ async function handleRequest(
     json(res, 200, {
       status: 'ok',
       mqtt: isMqttConnected() ? 'connected' : 'disconnected',
-      gateway: config.gateway.mac,
+      gateway: cfg.gateway.mac,
       uptime: process.uptime(),
       actions: Object.keys(actionRegistry),
     });
@@ -88,7 +89,7 @@ async function handleRequest(
       return;
     }
     try {
-      const row = await getCommandByReqId(reqId);
+      const row = await getCommandByReqId(cfg, reqId);
       if (!row) {
         json(res, 404, { error: `Command with req_id ${reqId} not found` });
         return;
@@ -123,7 +124,7 @@ async function handleRequest(
         return;
       }
 
-      const key = await getTagKeyByMac(tagMac);
+      const key = await getTagKeyByMac(cfg, tagMac);
       if (!key) {
         json(res, 400, { error: `No BLE key found for tag ${tagMac}` });
         return;
@@ -164,7 +165,7 @@ async function handleRequest(
 
       const resultPromise = registerPending(reqId, tagMac, 'ble', 90_000);
 
-      await publishAction(imageCommand);
+      await publishAction(cfg, imageCommand);
       console.log(`[image] Action 2 published for ${tagMac}, waiting for response...`);
 
       const result = await resultPromise;
@@ -195,7 +196,7 @@ async function handleRequest(
         return;
       }
 
-      const result = await sendCommand(payload);
+      const result = await sendCommand(cfg, payload);
       json(res, result.status === 'success' ? 200 : 502, result);
     } catch (err) {
       json(res, 500, {
@@ -211,13 +212,13 @@ async function handleRequest(
 async function main(): Promise<void> {
   console.log('[bridge] Starting Champty MQTT Bridge...');
 
-  const mqttClient = await connectMqtt();
+  const mqttClient = await connectMqtt(cfg);
 
-  initResponseListener();
+  initResponseListener(cfg);
 
   mqttClient.on('message', (topic: string, payload: Buffer) => {
-    if (topic === config.gateway.statusTopic) {
-      handleStatusMessage(payload).catch((err) =>
+    if (topic === cfg.gateway.statusTopic) {
+      handleStatusMessage(cfg, payload).catch((err) =>
         console.error('[bridge] Status handler error:', err),
       );
     }
@@ -230,16 +231,15 @@ async function main(): Promise<void> {
     });
   });
 
-  server.listen(config.bridge.port, () => {
-    console.log(`[bridge] HTTP server listening on port ${config.bridge.port}`);
-    console.log(`[bridge] Gateway: ${config.gateway.mac}`);
-    console.log(`[bridge] Status topic: ${config.gateway.statusTopic}`);
-    console.log(`[bridge] Action topic: ${config.gateway.actionTopic}`);
-    console.log(`[bridge] Response topic: ${config.gateway.responseTopic}`);
+  server.listen(cfg.bridge.port, () => {
+    console.log(`[bridge] HTTP server listening on port ${cfg.bridge.port}`);
+    console.log(`[bridge] Gateway: ${cfg.gateway.mac}`);
+    console.log(`[bridge] Status topic: ${cfg.gateway.statusTopic}`);
+    console.log(`[bridge] Action topic: ${cfg.gateway.actionTopic}`);
+    console.log(`[bridge] Response topic: ${cfg.gateway.responseTopic}`);
     console.log(`[bridge] Supported actions: ${Object.keys(actionRegistry).join(', ')}`);
   });
 
-  // Graceful shutdown
   const shutdown = async () => {
     console.log('[bridge] Shutting down...');
     server.close();

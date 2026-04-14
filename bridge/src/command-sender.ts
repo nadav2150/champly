@@ -1,5 +1,5 @@
 import { getMqttClient, publishAction } from './mqtt-client.js';
-import { config } from './config.js';
+import type { BridgeConfig } from './config.js';
 import { getTagKeyByMac, insertTagCommand, updateTagCommandResult } from './d1-client.js';
 import { type ActionDef, getActionDef, findActionDefByNumber } from './command-registry.js';
 import type {
@@ -63,11 +63,11 @@ export function registerPending(
 // Response listener — handles the two-stage Jengine response model
 // ---------------------------------------------------------------------------
 
-export function initResponseListener(): void {
+export function initResponseListener(cfg: BridgeConfig): void {
   const client = getMqttClient();
 
   client.on('message', (topic: string, payload: Buffer) => {
-    if (topic !== config.gateway.responseTopic) return;
+    if (topic !== cfg.gateway.responseTopic) return;
 
     let response: JengineResponse;
     try {
@@ -89,12 +89,10 @@ export function initResponseListener(): void {
 
     if (stage1Code !== undefined && !hasDetails) {
       if (stage1Code === 1) {
-        // Gateway accepted, waiting for stage 2 — do NOT delete pending entry
         console.log(`[command] Stage 1 accepted for req_id ${response.req_id}`);
         return;
       }
 
-      // Stage 1 error (code >= 100)
       clearTimeout(pending.timeout);
       pendingCommands.delete(response.req_id);
 
@@ -107,7 +105,7 @@ export function initResponseListener(): void {
         error: errorMsg,
       };
 
-      updateTagCommandResult(response.req_id, 'failed', JSON.stringify(response), errorMsg).catch(() => {});
+      updateTagCommandResult(cfg, response.req_id, 'failed', JSON.stringify(response), errorMsg).catch(() => {});
       pending.resolve(result);
       return;
     }
@@ -129,10 +127,8 @@ export function initResponseListener(): void {
       deviceError = detail.error;
 
       if (pending.transport === 'radio') {
-        // Radio commands: success = code 3
         isSuccess = detail.code === 3;
       } else {
-        // BLE commands: success = code 2 AND error 0
         isSuccess = detail.code === 2 && detail.error === 0;
       }
     }
@@ -151,6 +147,7 @@ export function initResponseListener(): void {
     };
 
     updateTagCommandResult(
+      cfg,
       response.req_id,
       dbStatus,
       JSON.stringify(response),
@@ -170,8 +167,7 @@ export function initResponseListener(): void {
 // Send a command using the registry
 // ---------------------------------------------------------------------------
 
-export async function sendCommand(req: SendCommandRequest): Promise<CommandResult> {
-  // Resolve the action definition
+export async function sendCommand(cfg: BridgeConfig, req: SendCommandRequest): Promise<CommandResult> {
   let def: ActionDef | undefined;
   let actionName: string;
 
@@ -193,10 +189,9 @@ export async function sendCommand(req: SendCommandRequest): Promise<CommandResul
     };
   }
 
-  // Fetch BLE key from D1 when required
   let key: string | undefined;
   if (def.requiresKey) {
-    const fetchedKey = await getTagKeyByMac(req.mac);
+    const fetchedKey = await getTagKeyByMac(cfg, req.mac);
     if (!fetchedKey) {
       return { reqId: 0, status: 'failed', error: `No BLE key found for tag ${req.mac}` };
     }
@@ -207,7 +202,6 @@ export async function sendCommand(req: SendCommandRequest): Promise<CommandResul
   const opcode = allocOpcode();
   const mac = req.mac.toLowerCase();
 
-  // Use the registry's method, but allow override for slot (get_req vs set_req)
   const method: JengineMethod = req.method ?? def.method;
 
   const perDeviceDetails = def.buildDetails(mac, req.params);
@@ -228,10 +222,10 @@ export async function sendCommand(req: SendCommandRequest): Promise<CommandResul
     },
   };
 
-  // Persist command to D1
   const commandId = `cmd-${reqId}-${Date.now()}`;
   try {
     await insertTagCommand(
+      cfg,
       commandId,
       mac,
       reqId,
@@ -243,7 +237,6 @@ export async function sendCommand(req: SendCommandRequest): Promise<CommandResul
     console.error('[command] Failed to insert command record:', err);
   }
 
-  // If suppress_stage2 is on, we get only stage 1 — resolve immediately after stage 1 accept
   const timeoutMs = def.defaultSuppressStage2 ? 10_000 : 30_000;
 
   return new Promise<CommandResult>((resolve) => {
@@ -255,7 +248,7 @@ export async function sendCommand(req: SendCommandRequest): Promise<CommandResul
         error: def!.defaultSuppressStage2 ? undefined : `Command timeout (${timeoutMs / 1000}s)`,
       };
       if (!def!.defaultSuppressStage2) {
-        updateTagCommandResult(reqId, 'failed', null, result.error!).catch(() => {});
+        updateTagCommandResult(cfg, reqId, 'failed', null, result.error!).catch(() => {});
       }
       resolve(result);
     }, timeoutMs);
@@ -268,7 +261,7 @@ export async function sendCommand(req: SendCommandRequest): Promise<CommandResul
       reqId,
     });
 
-    publishAction(command).catch((err) => {
+    publishAction(cfg, command).catch((err) => {
       clearTimeout(timeout);
       pendingCommands.delete(reqId);
       resolve({

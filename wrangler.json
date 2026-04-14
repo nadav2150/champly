@@ -7,6 +7,11 @@
   "observability": {
     "enabled": true
   },
+  "workers_dev": true,
+  "routes": [
+    { "pattern": "champty.com", "custom_domain": true },
+    { "pattern": "www.champty.com", "custom_domain": true }
+  ],
   "d1_databases": [
     {
       "binding": "DB",
