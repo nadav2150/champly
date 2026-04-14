@@ -13,7 +13,7 @@ export async function listCategoriesWithCounts(
       icon: categories.icon,
       productCount: sql<number>`(SELECT count(*) FROM ${products} WHERE ${products.categoryId} = ${categories.id})`,
       pendingTags: sql<number>`(SELECT count(*) FROM ${products} WHERE ${products.categoryId} = ${categories.id} AND ${products.syncStatus} = 'pending')`,
-      connectedTags: sql<number>`(SELECT count(*) FROM ${tags} INNER JOIN ${products} ON ${tags.linkedProductId} = ${products.id} WHERE ${products.categoryId} = ${categories.id})`,
+      connectedTags: sql<number>`(SELECT count(*) FROM ${tags} INNER JOIN ${products} ON ${tags}."linked_product_id" = ${products}."id" WHERE ${products}."category_id" = ${categories}."id")`,
     })
     .from(categories)
     .where(eq(categories.userId, userId));
