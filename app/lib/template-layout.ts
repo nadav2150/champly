@@ -16,7 +16,8 @@ export type LayoutField =
   | 'detail1'
   | 'detail2'
   | 'detail3'
-  | 'imageUrl';
+  | 'imageUrl'
+  | 'old_price';
 
 export type TextElement = {
   type: 'text';
@@ -29,6 +30,7 @@ export type TextElement = {
   align?: TextAlign;
   color: EslColor;
   maxLines?: number;
+  strikethrough?: boolean;
 };
 
 export type LabelElement = {
@@ -118,6 +120,7 @@ export const SAMPLE_PRODUCT_DATA: Record<string, string> = {
   detail2: 'Fat: 3%',
   detail3: 'Organic: Yes',
   imageUrl: '',
+  old_price: '₪14.90',
 };
 
 function isRecord(v: unknown): v is Record<string, unknown> {
@@ -130,7 +133,8 @@ function isEslColor(v: unknown): v is EslColor {
 
 const VALID_FIELDS = new Set<string>([
   'name', 'price', 'unit', 'category', 'currency',
-  'description', 'discount', 'badge_text', 'detail1', 'detail2', 'detail3', 'imageUrl',
+  'description', 'discount', 'badge_text', 'detail1', 'detail2', 'detail3',
+  'imageUrl', 'old_price',
 ]);
 
 function isLayoutField(v: unknown): v is LayoutField {
@@ -174,6 +178,7 @@ function parseTextElement(raw: Record<string, unknown>): TextElement | null {
     color: raw.color,
     maxLines:
       maxLines !== undefined && maxLines > 0 ? Math.floor(maxLines) : undefined,
+    strikethrough: raw.strikethrough === true ? true : undefined,
   };
 }
 
@@ -396,6 +401,7 @@ const FIELD_LABELS: Record<string, string> = {
   detail3: 'Detail 3',
   description: 'Description',
   imageUrl: 'Image URL',
+  old_price: 'Old price',
 };
 
 export function humanizeField(field: string): string {

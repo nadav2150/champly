@@ -26,7 +26,13 @@ function KindBadge({ kind }: { kind: string }) {
   const styles: Record<string, string> = {
     price: 'bg-accent-mint/15 text-accent-mint',
     promo: 'bg-amber-400/15 text-amber-300',
+    discount: 'bg-rose-400/15 text-rose-300',
+    produce: 'bg-emerald-400/15 text-emerald-300',
+    minimal: 'bg-zinc-400/15 text-zinc-300',
     info: 'bg-sky-400/15 text-sky-300',
+    unit_price: 'bg-orange-400/15 text-orange-300',
+    status: 'bg-red-400/15 text-red-300',
+    image_price: 'bg-indigo-400/15 text-indigo-300',
     showcase: 'bg-violet-400/15 text-violet-300',
   };
   const cls = styles[kind] ?? 'bg-white/10 text-white/60';
@@ -38,21 +44,72 @@ function KindBadge({ kind }: { kind: string }) {
 }
 
 export function previewDataForKind(kind: string): Record<string, string> {
-  if (kind === 'promo') {
-    return { ...SAMPLE_PRODUCT_DATA, badge_text: 'SALE', discount: '20% OFF' };
+  switch (kind) {
+    case 'promo':
+      return {
+        ...SAMPLE_PRODUCT_DATA,
+        badge_text: 'SALE',
+        discount: '20% OFF',
+        old_price: '₪14.90',
+        price: '₪11.90',
+      };
+    case 'discount':
+      return {
+        ...SAMPLE_PRODUCT_DATA,
+        discount: '-30%',
+        price: '₪11.90',
+      };
+    case 'produce':
+      return {
+        ...SAMPLE_PRODUCT_DATA,
+        name: 'Tomatoes',
+        price: '₪8.90',
+        unit: 'per kg',
+      };
+    case 'minimal':
+      return {
+        name: 'Premium Coffee 250g',
+        price: '₪42.00',
+      };
+    case 'info':
+      return {
+        ...SAMPLE_PRODUCT_DATA,
+        category: 'Dairy',
+        description: 'Pasteurized whole milk, locally sourced',
+      };
+    case 'unit_price':
+      return {
+        ...SAMPLE_PRODUCT_DATA,
+        name: 'Cheddar Cheese',
+        price: '₪39.90',
+        unit: 'per kg',
+      };
+    case 'status':
+      return {
+        ...SAMPLE_PRODUCT_DATA,
+        badge_text: 'OUT OF STOCK',
+        name: 'Fresh Milk 1L',
+      };
+    case 'image_price':
+      return {
+        ...SAMPLE_PRODUCT_DATA,
+        name: 'Organic Yogurt',
+        price: '₪9.90',
+        imageUrl: '',
+      };
+    case 'showcase':
+      return {
+        ...SAMPLE_PRODUCT_DATA,
+        name: 'Watch Series 10',
+        price: '€355',
+        discount: 'Rabais de 20%',
+        detail1: 'Communication: Bluetooth',
+        detail2: 'Étanchéité: 50 mètres',
+        detail3: 'Oxygénation: manuelle',
+      };
+    default:
+      return { ...SAMPLE_PRODUCT_DATA };
   }
-  if (kind === 'showcase') {
-    return {
-      ...SAMPLE_PRODUCT_DATA,
-      name: 'Watch Series 10',
-      price: '€355',
-      discount: 'Rabais de 20%',
-      detail1: 'Communication: Bluetooth',
-      detail2: 'Étanchéité: 50 mètres',
-      detail3: 'Oxygénation: manuelle',
-    };
-  }
-  return { ...SAMPLE_PRODUCT_DATA };
 }
 
 type TemplateCardProps = {
@@ -110,7 +167,7 @@ export function TemplateCard({ template, activeVariant, onPreview }: TemplateCar
         ) : null}
       </div>
 
-      <div className="flex items-center gap-2 px-3 py-2.5">
+      <div className="flex flex-col gap-1 px-3 py-2.5">
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             <h2 className="truncate text-[13px] font-semibold text-white">
@@ -126,6 +183,11 @@ export function TemplateCard({ template, activeVariant, onPreview }: TemplateCar
             <span>{template.variantCount} {t('variants').toLowerCase()}</span>
           </div>
         </div>
+        {template.whenToUse ? (
+          <p className="line-clamp-2 text-[10px] leading-tight text-white/40">
+            {template.whenToUse}
+          </p>
+        ) : null}
       </div>
     </article>
   );

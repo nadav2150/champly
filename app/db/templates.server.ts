@@ -15,6 +15,8 @@ export type TemplateRow = {
   description: string | null;
   kind: string;
   createdAt: string;
+  purpose: string | null;
+  whenToUse: string | null;
   variantCount: number;
   linkedProductCount: number;
   firstVariant: TemplateVariantInfo | null;
@@ -89,6 +91,8 @@ export async function listTemplatesWithVariants(
         description: templates.description,
         kind: templates.kind,
         createdAt: templates.createdAt,
+        purpose: templates.purpose,
+        whenToUse: templates.whenToUse,
       })
       .from(templates),
     db
@@ -138,6 +142,8 @@ export async function listTemplatesWithVariants(
       description: t.description,
       kind: t.kind,
       createdAt: t.createdAt,
+      purpose: t.purpose ?? null,
+      whenToUse: t.whenToUse ?? null,
       variantCount: variants.length,
       linkedProductCount: productCountMap.get(t.id) ?? 0,
       firstVariant: variants[0] ?? null,

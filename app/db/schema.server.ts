@@ -72,6 +72,8 @@ export const templates = sqliteTable('templates', {
   description: text('description'),
   kind: text('kind').notNull(),
   createdAt: text('created_at').notNull(),
+  purpose: text('purpose'),
+  whenToUse: text('when_to_use'),
 });
 
 export const templateVariants = sqliteTable('template_variants', {

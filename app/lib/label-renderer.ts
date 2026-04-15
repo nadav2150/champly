@@ -91,6 +91,7 @@ function drawTextLines(
   maxWidth: number,
   maxLines: number,
   boxWidth?: number,
+  strikethrough?: boolean,
 ): void {
   setFont(ctx, fontSize, fontWeight);
   ctx.fillStyle = resolveColor(color);
@@ -114,6 +115,18 @@ function drawTextLines(
       drawX = x + effectiveBox - metrics.width;
     }
     ctx.fillText(line, drawX, drawY);
+
+    if (strikethrough) {
+      const lineY = drawY - fontSize * 0.35;
+      const thickness = Math.max(1, Math.round(fontSize / 14));
+      ctx.strokeStyle = resolveColor(color);
+      ctx.lineWidth = thickness;
+      ctx.beginPath();
+      ctx.moveTo(drawX, lineY);
+      ctx.lineTo(drawX + metrics.width, lineY);
+      ctx.stroke();
+    }
+
     drawY += lineHeight;
   }
 }
@@ -135,6 +148,7 @@ function drawTextElement(
     maxWidth,
     el.maxLines ?? 1,
     el.w,
+    el.strikethrough,
   );
 }
 
