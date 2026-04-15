@@ -4,16 +4,8 @@ import { useTranslation } from 'react-i18next';
 import { createSupabaseServerClient } from '../lib/supabase.server';
 import type { Route } from './+types/register';
 
-export async function loader({ request, context }: Route.LoaderArgs) {
-  const { supabase } = createSupabaseServerClient(
-    request,
-    context.cloudflare.env,
-  );
-  const { data: { user } } = await supabase.auth.getUser();
-  if (user) {
-    throw redirect('/dashboard');
-  }
-  return null;
+export async function loader() {
+  throw redirect('/login');
 }
 
 export async function action({ request, context }: Route.ActionArgs) {

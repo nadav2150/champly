@@ -4,18 +4,19 @@ import { HiOutlineCheck, HiOutlineXMark } from 'react-icons/hi2';
 import { useReveal } from '../../lib/use-reveal';
 
 const traditionalKeys = [
-  'closedBundle',
-  'vendorLock',
-  'limitedFlexibility',
-  'noAutomation',
+  'manualUpdates',
+  'slowPromos',
+  'noConnection',
+  'separateBranches',
+  'noTesting',
 ] as const;
 
 const champtyKeys = [
-  'systemNotManufacturer',
-  'existingHardware',
-  'flexible',
-  'builtForIntegration',
-  'allInOne',
+  'autoSync',
+  'instantPromos',
+  'fullSync',
+  'oneDashboard',
+  'abTesting',
 ] as const;
 
 export function Comparison() {

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { useReveal } from '../../lib/use-reveal';
@@ -15,10 +15,29 @@ export function Faq() {
     [t]
   );
   const [openIndex, setOpenIndex] = useState(0);
+  const [revealed, setRevealed] = useState(false);
+  const sectionRef = useRef<HTMLElement>(null);
   const ref = useReveal();
 
+  const handleRef = useCallback(
+    (el: HTMLElement | null) => {
+      (ref as React.MutableRefObject<HTMLElement | null>).current = el;
+      sectionRef.current = el;
+      if (!el) return;
+      const observer = new MutationObserver(() => {
+        const firstCard = el.querySelector('.reveal.visible');
+        if (firstCard) {
+          setRevealed(true);
+          observer.disconnect();
+        }
+      });
+      observer.observe(el, { subtree: true, attributes: true, attributeFilter: ['class'] });
+    },
+    [ref]
+  );
+
   return (
-    <section className='bg-gradient-to-b from-landing-faq-from to-landing-faq-to py-16 text-white sm:py-24' ref={ref}>
+    <section className='bg-gradient-to-b from-landing-faq-from to-landing-faq-to py-16 text-white sm:py-24' ref={handleRef}>
       <div className='mx-auto max-w-4xl px-5 sm:px-6 lg:px-8'>
         <h2 className='reveal text-center text-3xl font-bold sm:text-4xl lg:text-5xl'>
           {t('faq.title')}
@@ -30,7 +49,7 @@ export function Faq() {
             return (
               <article
                 key={item.question}
-                className={`reveal reveal-delay-${Math.min(index + 1, 6)} overflow-hidden rounded-xl border transition-all ${
+                className={`reveal reveal-delay-${Math.min(index + 1, 6)}${revealed ? ' visible' : ''} overflow-hidden rounded-xl border transition-all ${
                   isOpen
                     ? 'border-accent-mint/30 bg-white/10'
                     : 'border-white/10 bg-white/5 hover:border-white/20 hover:bg-white/[0.08]'

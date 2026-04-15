@@ -1,7 +1,6 @@
 import {
   data,
   Form,
-  Link,
   redirect,
   useActionData,
   useNavigation,
@@ -123,12 +122,6 @@ export default function LoginPage() {
             </button>
           </Form>
 
-          <p className="mt-6 text-center text-sm text-white/50">
-            {t('noAccount')}{' '}
-            <Link to="/register" className="text-accent-mint hover:underline">
-              {t('register')}
-            </Link>
-          </p>
         </div>
       </div>
     </div>

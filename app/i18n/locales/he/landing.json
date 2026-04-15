@@ -1,14 +1,14 @@
 {
   "nav": {
     "brandName": "Champty",
-    "requestDemo": "בקשו דמו",
+    "requestDemo": "ראה עוד",
     "contactUs": "דברו איתנו",
     "login": "התחברות"
   },
   "hero": {
     "tagline": "Real-time pricing. Real-world impact.",
     "subtitle": "עדכנו, אוטומטו, וסנכרנו את התצוגות בחנות בזמן אמת, ישירות מהקופה והמערכות העסקיות שלכם.",
-    "requestDemo": "בקשו דמו",
+    "requestDemo": "ראה עוד",
     "contactUs": "דברו איתנו",
     "bottomLine": "המחיר משתנה במערכת. המדף מתעדכן לבד."
   },
@@ -17,7 +17,7 @@
   },
   "howItWorks": {
     "title": "איך זה עובד",
-    "step1Title": "שינוי מתבצע במערכת שלכם",
+    "step1Title": "שינויים קורים. המדפים נשארים מסונכרנים.",
     "step1Text": "מחיר, מבצע, טקסט או סטטוס מתעדכנים דרך הקופה, המלאי או הדשבורד.",
     "step2Title": "Champty מחליטה מה להציג",
     "step2Text": "המערכת מפעילה תבניות, חוקים, אוטומציות ולוחות זמנים כדי להתאים את התצוגה לכל מסך.",
@@ -52,7 +52,7 @@
   },
   "integration": {
     "title": "מחובר למערכת שלכם",
-    "headline": "Your system updates the price. Champty updates the shelf.",
+    "headline": "המערכת שלכם מעדכנת את המחיר. Champty מעדכנת את המדף.",
     "subtitle": "Champty מתחברת למערכת הקופה, המלאי והמערכות העסקיות שלכם כך שכל שינוי זורם אוטומטית לתצוגות.",
     "items": {
       "posSync": "סנכרון מחירים מה-POS",
@@ -83,25 +83,26 @@
   },
   "comparison": {
     "title": "למה Champty",
-    "traditional": "מערכות מסורתיות",
+    "traditional": "בלי Champty",
     "traditionalItems": {
-      "closedBundle": "מגיעות כחבילה סגורה של חומרה + תוכנה",
-      "vendorLock": "תלויות ביצרן אחד",
-      "limitedFlexibility": "מוגבלות בגמישות",
-      "noAutomation": "לא בנויות לאוטומציה אמיתית"
+      "manualUpdates": "עדכון מחירים ידני על כל מדף",
+      "slowPromos": "מבצעים לוקחים שעות עד שהם בשטח",
+      "noConnection": "אין חיבור בין הקופה למדף",
+      "separateBranches": "כל סניף מנוהל בנפרד",
+      "noTesting": "אין דרך לבדוק מה עובד"
     },
-    "champty": "Champty",
+    "champty": "עם Champty",
     "champtyItems": {
-      "systemNotManufacturer": "מערכת, לא יצרן תגים",
-      "existingHardware": "עובדת עם חומרה קיימת",
-      "flexible": "גמישה, פתוחה וסקיילבילית",
-      "builtForIntegration": "בנויה לחיבור למערכות העסקיות שלכם",
-      "allInOne": "מאפשרת שליטה, אוטומציה ואופטימיזציה במקום אחד"
+      "autoSync": "מחירים מתעדכנים אוטומטית תוך שניות",
+      "instantPromos": "מבצעים עולים לאוויר מיידית בכל הסניפים",
+      "fullSync": "קופה, מלאי ומדף תמיד מסונכרנים",
+      "oneDashboard": "כל הסניפים מדשבורד אחד",
+      "abTesting": "A/B Testing ואופטימיזציה חכמה מובנים"
     },
-    "bottomLine": "לא רק תגים. החלטות מאחורי כל תצוגה."
+    "bottomLine": "פחות עבודה ידנית. יותר שליטה. תוצאות טובות יותר."
   },
   "useCases": {
-    "title": "מתאימה ליותר מריטייל",
+    "title": "מתאים לכל סוג עסק",
     "subtitle": "Champty נבנתה לעולמות שבהם צריך לנהל מידע פיזי בזמן אמת.",
     "retail": "ריטייל",
     "warehouses": "מחסנים",
@@ -174,7 +175,7 @@
   "cta": {
     "title": "תנו למחירים שלכם לעבוד בזמן אמת.",
     "subtitle": "Champty עוזרת לכם לחסוך זמן, להפחית טעויות, לשפר נראות, ולהפוך כל תצוגה פיזית לחלק חכם ומחובר מהעסק שלכם.",
-    "requestDemo": "בקשו דמו",
+    "requestDemo": "ראה עוד",
     "contactUs": "דברו איתנו"
   },
   "footer": {

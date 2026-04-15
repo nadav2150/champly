@@ -17,7 +17,7 @@
   },
   "howItWorks": {
     "title": "How It Works",
-    "step1Title": "A change is made in your system",
+    "step1Title": "Changes happen. Shelves stay in sync.",
     "step1Text": "A price, promotion, text, or status is updated through the POS, inventory, or dashboard.",
     "step2Title": "Champty decides what to display",
     "step2Text": "The system applies templates, rules, automations, and schedules to adapt the display for each screen.",
@@ -52,7 +52,7 @@
   },
   "integration": {
     "title": "Connected to your system",
-    "headline": "Your system updates the price. Champty updates the shelf.",
+    "headline": "Prices change. Shelves stay accurate.",
     "subtitle": "Champty connects to your POS, inventory, and business systems so every change flows automatically to the displays.",
     "items": {
       "posSync": "Price sync from POS",
@@ -83,25 +83,26 @@
   },
   "comparison": {
     "title": "Why Champty",
-    "traditional": "Traditional Systems",
+    "traditional": "Without Champty",
     "traditionalItems": {
-      "closedBundle": "Come as a closed hardware + software bundle",
-      "vendorLock": "Locked to one manufacturer",
-      "limitedFlexibility": "Limited flexibility",
-      "noAutomation": "Not built for real automation"
+      "manualUpdates": "Manual price updates on every shelf",
+      "slowPromos": "Promotions take hours to go live",
+      "noConnection": "No connection between POS and shelf",
+      "separateBranches": "Each branch managed separately",
+      "noTesting": "No way to test what works"
     },
-    "champty": "Champty",
+    "champty": "With Champty",
     "champtyItems": {
-      "systemNotManufacturer": "A system, not a tag manufacturer",
-      "existingHardware": "Works with existing hardware",
-      "flexible": "Flexible, open, and scalable",
-      "builtForIntegration": "Built for integration with your business systems",
-      "allInOne": "Control, automation, and optimization in one place"
+      "autoSync": "Prices sync automatically in seconds",
+      "instantPromos": "Promotions go live instantly across all stores",
+      "fullSync": "POS, inventory, and shelf always in sync",
+      "oneDashboard": "All branches from one dashboard",
+      "abTesting": "A/B testing and smart optimization built in"
     },
-    "bottomLine": "Not just tags. Decisions behind every display."
+    "bottomLine": "Less manual work. More control. Better results."
   },
   "useCases": {
-    "title": "Built for more than retail",
+    "title": "Built for every type of business",
     "subtitle": "Champty was built for environments where physical information needs to be managed in real time.",
     "retail": "Retail",
     "warehouses": "Warehouses",
