@@ -3,7 +3,8 @@ import { useTranslation } from 'react-i18next';
 import type { DashboardOutletContext } from '../../types/dashboard-outlet-context';
 import { renderLabel } from '../../lib/label-renderer';
 import { encodeForTag } from '../../lib/minew-image-encoder';
-import { minorUnitsToDecimalString, parseDecimalToMinorUnits } from '../../lib/money';
+import { minorUnitsToDecimalString, parseDecimalToMinorUnits, currencySymbol, SUPPORTED_CURRENCIES } from '../../lib/money';
+import type { CurrencyCode } from '../../lib/money';
 import {
   getEditableFields,
   humanizeField,
@@ -25,6 +26,7 @@ export type EditModalProduct = {
   id: string;
   name: string;
   priceCents: number;
+  currency: string;
   hardwareTagId: string;
   unit: UnitOption;
   templateId: string | null;
@@ -69,6 +71,7 @@ type EditProductModalProps = {
     id: string;
     name: string;
     priceCents: number;
+    currency: string;
     unit: UnitOption;
     templateId: string | null;
     categoryId: string | null;
@@ -93,6 +96,7 @@ export function EditProductModal({
   const formId = useId();
   const [name, setName] = useState('');
   const [price, setPrice] = useState('');
+  const [currency, setCurrency] = useState<CurrencyCode>('ILS');
   const [unit, setUnit] = useState<UnitOption>('per_kg');
   const [templateId, setTemplateId] = useState<string>('');
   const [categoryId, setCategoryId] = useState<string>('');
@@ -105,6 +109,7 @@ export function EditProductModal({
     if (product && open) {
       setName(product.name);
       setPrice(minorUnitsToDecimalString(product.priceCents));
+      setCurrency((product.currency || 'ILS') as CurrencyCode);
       setUnit(product.unit);
       setTemplateId(product.templateId ?? '');
       setCategoryId(product.categoryId ?? '');
@@ -123,6 +128,12 @@ export function EditProductModal({
     }
     return product?.tagModel ?? null;
   }, [tagAction, selectedTagId, unlinkedTags, product?.tagModel]);
+
+  const hasTag = useMemo(() => {
+    if (tagAction === 'remove') return false;
+    if (tagAction === 'change') return !!selectedTagId;
+    return !!(product?.hardwareTagId && product.hardwareTagId !== '—');
+  }, [tagAction, selectedTagId, product?.hardwareTagId]);
 
   const tagScreen = useMemo(
     () => resolveScreen(effectiveTagModel),
@@ -182,15 +193,16 @@ export function EditProductModal({
       unit === 'per_kg' ? t('common:units.perKg') : t('common:units.perUnit');
     const displayName = name.trim() || product?.name || '';
     const priceStr = price.trim() || '0.00';
+    const sym = currencySymbol(currency);
     return {
       name: displayName,
-      price: `₪${priceStr}`,
+      price: `${sym}${priceStr}`,
       unit: unitLabel,
       category: categoryDisplay || '—',
-      currency: '₪',
+      currency: sym,
       ...templateDataState,
     };
-  }, [categories, categoryId, name, price, product?.name, t, unit, templateDataState]);
+  }, [categories, categoryId, name, price, currency, product?.name, t, unit, templateDataState]);
 
   const displayTagId = useMemo(() => {
     if (!product) return '—';
@@ -255,6 +267,7 @@ export function EditProductModal({
       priceCents: parseDecimalToMinorUnits(
         price.trim() || minorUnitsToDecimalString(activeProduct.priceCents),
       ),
+      currency,
       unit,
       templateId: templateId.length > 0 ? templateId : null,
       categoryId: categoryId.length > 0 ? categoryId : null,
@@ -339,7 +352,27 @@ export function EditProductModal({
                     className="w-full rounded-lg border border-white/20 bg-dashboard-bg px-3 py-2.5 text-sm text-white placeholder:text-white/30 focus:border-accent-mint focus:outline-none"
                   />
                 </div>
-                <div className="w-[120px] shrink-0">
+                <div className="w-[100px] shrink-0">
+                  <label
+                    htmlFor={`${formId}-currency`}
+                    className="mb-1.5 block text-xs font-medium text-white/60"
+                  >
+                    {t('products:currency')}
+                  </label>
+                  <select
+                    id={`${formId}-currency`}
+                    value={currency}
+                    onChange={(e) => setCurrency(e.target.value as CurrencyCode)}
+                    className="w-full rounded-lg border border-white/20 bg-dashboard-bg px-3 py-2.5 text-sm text-white focus:border-accent-mint focus:outline-none"
+                  >
+                    {SUPPORTED_CURRENCIES.map((c) => (
+                      <option key={c} value={c}>
+                        {currencySymbol(c)} {c}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="w-[100px] shrink-0">
                   <label
                     htmlFor={`${formId}-unit`}
                     className="mb-1.5 block text-xs font-medium text-white/60"
@@ -406,7 +439,11 @@ export function EditProductModal({
                       </button>
                       <button
                         type="button"
-                        onClick={() => setTagAction(tagAction === 'remove' ? 'keep' : 'remove')}
+                        onClick={() => {
+                          const next = tagAction === 'remove' ? 'keep' : 'remove';
+                          setTagAction(next);
+                          if (next === 'remove') setTemplateId('');
+                        }}
                         className={`rounded-md px-2.5 py-1 text-xs font-medium ${
                           tagAction === 'remove'
                             ? 'border border-red-400/50 bg-red-500/20 text-red-400'
@@ -475,8 +512,9 @@ export function EditProductModal({
                 <select
                   id={`${formId}-template`}
                   value={templateId}
+                  disabled={!hasTag}
                   onChange={(e) => setTemplateId(e.target.value)}
-                  className="w-full rounded-lg border border-white/20 bg-dashboard-bg px-3 py-2.5 text-sm text-white focus:border-accent-mint focus:outline-none"
+                  className="w-full rounded-lg border border-white/20 bg-dashboard-bg px-3 py-2.5 text-sm text-white focus:border-accent-mint focus:outline-none disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   <option value="">{t('products:templatePlaceholder')}</option>
                   {filteredTemplates.map((tpl) => (
@@ -485,7 +523,12 @@ export function EditProductModal({
                     </option>
                   ))}
                 </select>
-                {tagScreen && (
+                {!hasTag && (
+                  <p className="mt-1 text-[10px] text-white/40">
+                    {t('products:selectTagFirst')}
+                  </p>
+                )}
+                {hasTag && tagScreen && (
                   <p className="mt-1 text-[10px] text-white/40">
                     {t('products:filteredForTag', {
                       size: tagScreen.size,

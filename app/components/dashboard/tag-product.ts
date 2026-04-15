@@ -14,6 +14,7 @@ export type Product = {
   templateId: string | null;
   templateData: string | null;
   templateStyle: string | null;
+  tagInternalId: string | null;
   hardwareTagId: string | null;
   tagModel: string | null;
 };

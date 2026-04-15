@@ -15,14 +15,14 @@ export function getDb(context: AppLoadContext): AppDatabase {
 
 export async function withRetry<T>(
   fn: () => Promise<T>,
-  retries = 1,
+  retries = 3,
 ): Promise<T> {
   for (let i = 0; i <= retries; i++) {
     try {
       return await fn();
     } catch (err) {
       if (i === retries) throw err;
-      await new Promise((r) => setTimeout(r, 500));
+      await new Promise((r) => setTimeout(r, 300 * (i + 1)));
     }
   }
   throw new Error('Unreachable');

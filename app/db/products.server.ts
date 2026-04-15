@@ -15,6 +15,7 @@ export type ProductTableRow = {
   templateId: string | null;
   templateData: string | null;
   templateStyle: string | null;
+  tagInternalId: string | null;
   hardwareTagId: string | null;
   tagModel: string | null;
 };
@@ -92,10 +93,10 @@ export async function listProductsForTable(db: AppDatabase, userId: string) {
 
   const ownedIds = new Set(rows.map((r) => r.product.id));
   const allTags = await db.select().from(tags);
-  const tagByProduct = new Map<string, { tagId: string; tagModel: string | null }>();
+  const tagByProduct = new Map<string, { id: string; tagId: string; mac: string | null; tagModel: string | null; status: string }>();
   for (const t of allTags) {
     if (t.linkedProductId && ownedIds.has(t.linkedProductId)) {
-      tagByProduct.set(t.linkedProductId, { tagId: t.tagId, tagModel: t.tagModel });
+      tagByProduct.set(t.linkedProductId, { id: t.id, tagId: t.tagId, mac: t.mac, tagModel: t.tagModel, status: t.status });
     }
   }
 
@@ -115,6 +116,7 @@ export async function listProductsForTable(db: AppDatabase, userId: string) {
         templateId: product.templateId,
         templateData: product.templateData ?? null,
         templateStyle: product.templateStyle ?? null,
+        tagInternalId: linked?.id ?? null,
         hardwareTagId: linked?.tagId ?? null,
         tagModel: linked?.tagModel ?? null,
       };
@@ -240,6 +242,7 @@ export async function updateProductFields(
     id: string;
     name: string;
     priceCents: number;
+    currency?: string;
     unit: 'per_unit' | 'per_kg';
     templateId: string | null;
     categoryId: string | null;
@@ -268,6 +271,7 @@ export async function updateProductFields(
     .set({
       name: input.name,
       priceCents: input.priceCents,
+      ...(input.currency ? { currency: input.currency } : {}),
       unit: input.unit,
       templateId: input.templateId,
       categoryId: input.categoryId,

@@ -59,10 +59,12 @@ export async function action({ request, context }: Route.ActionArgs) {
       templateStyleRaw && String(templateStyleRaw).length > 0
         ? String(templateStyleRaw)
         : null;
+    const updateCurrencyRaw = formData.get('currency');
     const updated = await updateProductFields(db, user.id, {
       id: String(formData.get('id') ?? ''),
       name: String(formData.get('name') ?? ''),
       priceCents: Number.parseInt(String(formData.get('priceCents') ?? '0'), 10),
+      currency: updateCurrencyRaw ? String(updateCurrencyRaw) : undefined,
       unit:
         formData.get('unit') === 'per_unit'
           ? 'per_unit'
@@ -82,10 +84,18 @@ export async function action({ request, context }: Route.ActionArgs) {
       return data({ ok: false as const, error: 'forbidden' }, { headers });
     }
 
+    const productId = String(formData.get('id') ?? '');
+    const unassignTagFlag = formData.get('unassignTag');
+    const assignTagIdRaw = String(formData.get('assignTagId') ?? '').trim();
+    if (unassignTagFlag) {
+      await unassignTagFromProduct(db, productId);
+    } else if (assignTagIdRaw) {
+      await assignTagToProduct(db, assignTagIdRaw, productId);
+    }
+
     const imageBase64 = String(formData.get('imageBase64') ?? '');
     console.log(`[update-product] imageBase64 length: ${imageBase64.length}`);
     if (imageBase64.length > 0) {
-      const productId = String(formData.get('id') ?? '');
       const { getTagMacByProductId } = await import('../db/tags.server');
       const tagMac = await getTagMacByProductId(db, productId);
       console.log(`[update-product] productId=${productId}, tagMac=${tagMac}`);
@@ -144,10 +154,16 @@ export async function action({ request, context }: Route.ActionArgs) {
     const templateRaw = formData.get('templateId');
     const templateDataRaw = formData.get('templateData');
     const templateStyleRaw = formData.get('templateStyle');
+    const currencyRaw = formData.get('currency');
+    const currency =
+      currencyRaw && String(currencyRaw).length > 0
+        ? String(currencyRaw)
+        : 'ILS';
     const created = await createProduct(db, {
       userId: user.id,
       name,
       priceCents,
+      currency,
       unit:
         formData.get('unit') === 'per_unit' ? 'per_unit' : 'per_kg',
       categoryId,
@@ -168,7 +184,13 @@ export async function action({ request, context }: Route.ActionArgs) {
     if ('error' in created) {
       return data({ ok: false as const, error: 'validation' }, { headers });
     }
-    return data({ ok: true as const }, { headers });
+
+    const tagInternalId = String(formData.get('tagInternalId') ?? '').trim();
+    if (tagInternalId) {
+      await assignTagToProduct(db, tagInternalId, created.id);
+    }
+
+    return data({ ok: true as const, id: created.id }, { headers });
   }
 
   if (intent === 'delete-product') {

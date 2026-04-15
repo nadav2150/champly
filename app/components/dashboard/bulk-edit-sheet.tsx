@@ -3,7 +3,7 @@ import { useFetcher, useFetchers } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { renderLabel } from '../../lib/label-renderer';
 import { encodeForTag } from '../../lib/minew-image-encoder';
-import { minorUnitsToDecimalString, parseDecimalToMinorUnits } from '../../lib/money';
+import { minorUnitsToDecimalString, parseDecimalToMinorUnits, currencySymbol } from '../../lib/money';
 import { resolveScreen } from '../../lib/tag-screen-map';
 import { parseLayoutJson, parseTemplateStyle } from '../../lib/template-layout';
 import type { TemplateSelectRow } from '../../db/templates.server';
@@ -13,6 +13,7 @@ type EditRow = {
   id: string;
   name: string;
   price: string;
+  currency: string;
   emoji: string;
   unit: 'per_unit' | 'per_kg';
   categoryName: string;
@@ -80,12 +81,13 @@ function renderTagImage(
     : '';
   const priceStr = row.price.trim() || '0.00';
 
+  const sym = currencySymbol(row.currency);
   const previewData: Record<string, string> = {
     name: row.name.trim(),
-    price: `₪${priceStr}`,
+    price: `${sym}${priceStr}`,
     unit: unitLabel,
     category: categoryDisplay || '—',
-    currency: '₪',
+    currency: sym,
   };
 
   try {
@@ -181,6 +183,7 @@ export function BulkEditSheet({
       id: p.id,
       name: t(productKeyByName[p.name] ?? p.name),
       price: minorUnitsToDecimalString(p.priceCents),
+      currency: p.currency || 'ILS',
       emoji: p.categoryIcon,
       unit: p.unit,
       categoryName: p.categoryName,
@@ -352,7 +355,7 @@ export function BulkEditSheet({
 
                   {/* Mobile: price row */}
                   <div className="flex items-center gap-2 lg:hidden">
-                    <span className="w-9 shrink-0 text-center text-sm font-semibold text-black/30">₪</span>
+                    <span className="w-9 shrink-0 text-center text-sm font-semibold text-black/30">{currencySymbol(row.currency)}</span>
                     <input
                       type="text"
                       inputMode="decimal"
@@ -376,7 +379,7 @@ export function BulkEditSheet({
 
                   {/* Desktop: price */}
                   <div className="hidden w-32 shrink-0 items-center gap-1 lg:flex">
-                    <span className="text-sm text-black/30">₪</span>
+                    <span className="text-sm text-black/30">{currencySymbol(row.currency)}</span>
                     <input
                       type="text"
                       inputMode="decimal"

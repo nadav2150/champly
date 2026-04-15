@@ -231,6 +231,10 @@ export async function assignTagToProduct(
 ): Promise<void> {
   await db
     .update(tags)
+    .set({ linkedProductId: null })
+    .where(eq(tags.linkedProductId, productId));
+  await db
+    .update(tags)
     .set({ linkedProductId: productId })
     .where(eq(tags.id, tagInternalId));
 }

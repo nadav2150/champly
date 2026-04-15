@@ -9,3 +9,17 @@ export function parseDecimalToMinorUnits(input: string): number {
   if (Number.isNaN(n)) return 0;
   return Math.round(n * 100);
 }
+
+export const SUPPORTED_CURRENCIES = ['ILS', 'USD', 'EUR', 'GBP'] as const;
+export type CurrencyCode = (typeof SUPPORTED_CURRENCIES)[number];
+
+const CURRENCY_SYMBOLS: Record<CurrencyCode, string> = {
+  ILS: '₪',
+  USD: '$',
+  EUR: '€',
+  GBP: '£',
+};
+
+export function currencySymbol(code: string): string {
+  return CURRENCY_SYMBOLS[code as CurrencyCode] ?? code;
+}

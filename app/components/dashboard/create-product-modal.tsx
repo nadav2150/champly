@@ -2,7 +2,8 @@ import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { useFetcher } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import type { DashboardOutletContext } from '../../types/dashboard-outlet-context';
-import { parseDecimalToMinorUnits } from '../../lib/money';
+import { parseDecimalToMinorUnits, currencySymbol, SUPPORTED_CURRENCIES } from '../../lib/money';
+import type { CurrencyCode } from '../../lib/money';
 import {
   getEditableFields,
   humanizeField,
@@ -11,6 +12,7 @@ import {
   sanitizeTemplateData,
 } from '../../lib/template-layout';
 import type { TemplateStyle } from '../../lib/template-layout';
+import { resolveScreen } from '../../lib/tag-screen-map';
 import { LabelPreview } from './label-preview';
 import { StyleCustomizer } from './style-customizer';
 
@@ -18,7 +20,27 @@ const CREATE_NEW_CATEGORY = '__new__';
 
 type UnitOption = 'per_unit' | 'per_kg';
 
-type TemplateOption = { id: string; name: string; layoutJson: string | null };
+type TemplateVariantOption = {
+  tagModel: string;
+  width: number;
+  height: number;
+  layoutJson: string;
+};
+
+type TemplateOption = {
+  id: string;
+  name: string;
+  layoutJson: string | null;
+  variants?: TemplateVariantOption[];
+};
+
+type UnlinkedTagOption = {
+  id: string;
+  tagId: string;
+  mac: string | null;
+  tagModel: string | null;
+  status: 'online' | 'offline';
+};
 
 type FetcherData = { ok: boolean; id?: string; error?: string };
 
@@ -27,6 +49,7 @@ export type CreateProductModalProps = {
   onClose: () => void;
   categories: DashboardOutletContext['categories'];
   templates: TemplateOption[];
+  unlinkedTags: UnlinkedTagOption[];
 };
 
 export function CreateProductModal({
@@ -34,6 +57,7 @@ export function CreateProductModal({
   onClose,
   categories,
   templates,
+  unlinkedTags,
 }: CreateProductModalProps) {
   const { t } = useTranslation(['common', 'products']);
   const formId = useId();
@@ -43,10 +67,12 @@ export function CreateProductModal({
 
   const [name, setName] = useState('');
   const [price, setPrice] = useState('');
+  const [currency, setCurrency] = useState<CurrencyCode>('ILS');
   const [unit, setUnit] = useState<UnitOption>('per_kg');
   const [categoryId, setCategoryId] = useState('');
   const [newCategoryName, setNewCategoryName] = useState('');
   const [newCategoryIcon, setNewCategoryIcon] = useState('📦');
+  const [selectedTagId, setSelectedTagId] = useState('');
   const [templateId, setTemplateId] = useState('');
   const [templateDataState, setTemplateDataState] = useState<Record<string, string>>({});
   const [templateStyleState, setTemplateStyleState] = useState<TemplateStyle>({});
@@ -60,10 +86,12 @@ export function CreateProductModal({
     }
     setName('');
     setPrice('');
+    setCurrency('ILS');
     setUnit('per_kg');
     setCategoryId(categories[0]?.id ?? CREATE_NEW_CATEGORY);
     setNewCategoryName('');
     setNewCategoryIcon('📦');
+    setSelectedTagId('');
     setTemplateId('');
     setTemplateDataState({});
     setTemplateStyleState({});
@@ -86,7 +114,9 @@ export function CreateProductModal({
           String(parseDecimalToMinorUnits(price.trim() || '0')),
         );
         fd.set('unit', unit);
+        fd.set('currency', currency);
         fd.set('categoryId', d.id);
+        if (selectedTagId) fd.set('tagInternalId', selectedTagId);
         if (templateId) fd.set('templateId', templateId);
         const sanitized = layout
           ? sanitizeTemplateData(templateDataState, layout)
@@ -122,16 +152,45 @@ export function CreateProductModal({
     }
   }, [open, fetcher.state, fetcher.data, name, price, unit, templateId, onClose, t]);
 
-  const selectedTemplate = useMemo(
-    () => templates.find((tpl) => tpl.id === templateId),
-    [templates, templateId],
+  const effectiveTagModel = useMemo(() => {
+    if (!selectedTagId) return null;
+    const tag = unlinkedTags.find((t) => t.id === selectedTagId);
+    return tag?.tagModel ?? null;
+  }, [selectedTagId, unlinkedTags]);
+
+  const tagScreen = useMemo(
+    () => resolveScreen(effectiveTagModel),
+    [effectiveTagModel],
   );
 
+  const filteredTemplates = useMemo(() => {
+    if (!tagScreen) return templates;
+    return templates.filter((tpl) => {
+      if (!tpl.variants || tpl.variants.length === 0) return true;
+      return tpl.variants.some(
+        (v) => v.width === tagScreen.w && v.height === tagScreen.h,
+      );
+    });
+  }, [templates, tagScreen]);
+
+  const hasTag = selectedTagId.length > 0;
+
+  const matchingLayoutJson = useMemo(() => {
+    const tpl = filteredTemplates.find((t) => t.id === templateId);
+    if (!tpl) return null;
+    if (tagScreen && tpl.variants) {
+      const match = tpl.variants.find(
+        (v) => v.width === tagScreen.w && v.height === tagScreen.h,
+      );
+      if (match) return match.layoutJson;
+    }
+    return tpl.layoutJson;
+  }, [filteredTemplates, templateId, tagScreen]);
+
   const layout = useMemo(() => {
-    const raw = selectedTemplate?.layoutJson;
-    if (!raw) return null;
-    return parseLayoutJson(raw);
-  }, [selectedTemplate?.layoutJson]);
+    if (!matchingLayoutJson) return null;
+    return parseLayoutJson(matchingLayoutJson);
+  }, [matchingLayoutJson]);
 
   const editableFields = useMemo(
     () => (layout ? getEditableFields(layout) : []),
@@ -159,15 +218,16 @@ export function CreateProductModal({
       unit === 'per_kg' ? t('common:units.perKg') : t('common:units.perUnit');
     const displayName = name.trim() || '—';
     const priceStr = price.trim() || '0.00';
+    const sym = currencySymbol(currency);
     return {
       name: displayName,
-      price: `₪${priceStr}`,
+      price: `${sym}${priceStr}`,
       unit: unitLabel,
       category: categoryDisplay || '—',
-      currency: '₪',
+      currency: sym,
       ...templateDataState,
     };
-  }, [categories, categoryId, name, price, t, unit, templateDataState]);
+  }, [categories, categoryId, name, price, currency, t, unit, templateDataState]);
 
   if (!open) {
     return null;
@@ -184,7 +244,9 @@ export function CreateProductModal({
       String(parseDecimalToMinorUnits(price.trim() || '0')),
     );
     fd.set('unit', unit);
+    fd.set('currency', currency);
     fd.set('categoryId', resolvedCategoryId);
+    if (selectedTagId) fd.set('tagInternalId', selectedTagId);
     if (templateId) fd.set('templateId', templateId);
     const sanitized = layout
       ? sanitizeTemplateData(templateDataState, layout)
@@ -314,7 +376,27 @@ export function CreateProductModal({
                     className="w-full rounded-lg border border-white/20 bg-dashboard-bg px-3 py-2.5 text-sm text-white placeholder:text-white/30 focus:border-accent-mint focus:outline-none"
                   />
                 </div>
-                <div className="w-[120px] shrink-0">
+                <div className="w-[100px] shrink-0">
+                  <label
+                    htmlFor={`${formId}-currency`}
+                    className="mb-1.5 block text-xs font-medium text-white/60"
+                  >
+                    {t('products:currency')}
+                  </label>
+                  <select
+                    id={`${formId}-currency`}
+                    value={currency}
+                    onChange={(e) => setCurrency(e.target.value as CurrencyCode)}
+                    className="w-full rounded-lg border border-white/20 bg-dashboard-bg px-3 py-2.5 text-sm text-white focus:border-accent-mint focus:outline-none"
+                  >
+                    {SUPPORTED_CURRENCIES.map((c) => (
+                      <option key={c} value={c}>
+                        {currencySymbol(c)} {c}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="w-[100px] shrink-0">
                   <label
                     htmlFor={`${formId}-unit`}
                     className="mb-1.5 block text-xs font-medium text-white/60"
@@ -405,6 +487,35 @@ export function CreateProductModal({
                   </div>
                 </div>
               ) : null}
+
+              <div>
+                <label
+                  htmlFor={`${formId}-tag`}
+                  className="mb-1.5 block text-xs font-medium text-white/60"
+                >
+                  {t('products:linkedTag')}
+                </label>
+                <select
+                  id={`${formId}-tag`}
+                  value={selectedTagId}
+                  onChange={(e) => {
+                    setSelectedTagId(e.target.value);
+                    if (!e.target.value) {
+                      setTemplateId('');
+                    }
+                  }}
+                  className="w-full rounded-lg border border-white/20 bg-dashboard-bg px-3 py-2.5 text-sm text-white focus:border-accent-mint focus:outline-none"
+                >
+                  <option value="">{t('products:noTag')}</option>
+                  {unlinkedTags.map((tag) => (
+                    <option key={tag.id} value={tag.id}>
+                      {tag.mac ?? tag.tagId}
+                      {tag.tagModel ? ` (${tag.tagModel})` : ''}
+                      {tag.status === 'online' ? ' ●' : ''}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
 
             {/* Right column — template + preview */}
@@ -419,16 +530,32 @@ export function CreateProductModal({
                 <select
                   id={`${formId}-template`}
                   value={templateId}
+                  disabled={!hasTag}
                   onChange={(e) => setTemplateId(e.target.value)}
-                  className="w-full rounded-lg border border-white/20 bg-dashboard-bg px-3 py-2.5 text-sm text-white focus:border-accent-mint focus:outline-none"
+                  className="w-full rounded-lg border border-white/20 bg-dashboard-bg px-3 py-2.5 text-sm text-white focus:border-accent-mint focus:outline-none disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   <option value="">{t('products:templatePlaceholder')}</option>
-                  {templates.map((tpl) => (
+                  {filteredTemplates.map((tpl) => (
                     <option key={tpl.id} value={tpl.id}>
                       {tpl.name}
                     </option>
                   ))}
                 </select>
+                {!hasTag && (
+                  <p className="mt-1 text-[10px] text-white/40">
+                    {t('products:selectTagFirst')}
+                  </p>
+                )}
+                {hasTag && tagScreen && (
+                  <p className="mt-1 text-[10px] text-white/40">
+                    {t('products:filteredForTag', {
+                      size: tagScreen.size,
+                      w: tagScreen.w,
+                      h: tagScreen.h,
+                      defaultValue: `Showing templates for {{size}} ({{w}}×{{h}})`,
+                    })}
+                  </p>
+                )}
               </div>
 
               <div className="hidden shrink-0 rounded-lg border border-white/15 bg-dashboard-card p-3 lg:block">

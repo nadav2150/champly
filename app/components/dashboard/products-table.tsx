@@ -4,7 +4,7 @@ import { useFetcher } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { IoCreateOutline, IoTrashOutline } from 'react-icons/io5';
-import { minorUnitsToDecimalString } from '../../lib/money';
+import { minorUnitsToDecimalString, currencySymbol } from '../../lib/money';
 import type { TemplateSelectRow } from '../../db/templates.server';
 import type { DashboardOutletContext } from '../../types/dashboard-outlet-context';
 import { BulkEditSheet } from './bulk-edit-sheet';
@@ -164,6 +164,7 @@ export function ProductsTable({
   const { t } = useTranslation(['common', 'products']);
   const fetcher = useFetcher();
   const [products, setProducts] = useState<Product[]>(initialProducts);
+  const [localUnlinkedTags, setLocalUnlinkedTags] = useState<UnlinkedTag[]>(unlinkedTags);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [editProduct, setEditProduct] = useState<Product | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
@@ -183,6 +184,10 @@ export function ProductsTable({
   useEffect(() => {
     setProducts(initialProducts);
   }, [initialProducts]);
+
+  useEffect(() => {
+    setLocalUnlinkedTags(unlinkedTags);
+  }, [unlinkedTags]);
 
   useEffect(() => {
     if (fetcher.state !== 'idle' || !fetcher.data) return;
@@ -236,6 +241,7 @@ export function ProductsTable({
       id: string;
       name: string;
       priceCents: number;
+      currency: string;
       unit: 'per_unit' | 'per_kg';
       templateId: string | null;
       categoryId: string | null;
@@ -245,24 +251,12 @@ export function ProductsTable({
       assignTagId: string | null;
       unassignTag: boolean;
     }) => {
-      if (payload.unassignTag) {
-        const ufd = new FormData();
-        ufd.set('intent', 'unassign-tag');
-        ufd.set('productId', payload.id);
-        fetcher.submit(ufd, { method: 'post' });
-      } else if (payload.assignTagId) {
-        const afd = new FormData();
-        afd.set('intent', 'assign-tag');
-        afd.set('productId', payload.id);
-        afd.set('tagInternalId', payload.assignTagId);
-        fetcher.submit(afd, { method: 'post' });
-      }
-
       const fd = new FormData();
       fd.set('intent', 'update-product');
       fd.set('id', payload.id);
       fd.set('name', payload.name);
       fd.set('priceCents', String(payload.priceCents));
+      fd.set('currency', payload.currency);
       fd.set('unit', payload.unit);
       if (payload.templateId) {
         fd.set('templateId', payload.templateId);
@@ -277,21 +271,67 @@ export function ProductsTable({
       if (payload.imageBase64) {
         fd.set('imageBase64', payload.imageBase64);
       }
+      if (payload.unassignTag) {
+        fd.set('unassignTag', '1');
+      } else if (payload.assignTagId) {
+        fd.set('assignTagId', payload.assignTagId);
+      }
       lastFetcherIntent.current = 'update-product';
       fetcher.submit(fd, { method: 'post' });
 
       const cat = categories.find((c) => c.id === payload.categoryId);
       let newHardwareTagId: string | null | undefined;
       let newTagModel: string | null | undefined;
+
+      const currentProduct = products.find((p) => p.id === payload.id);
+
+      let newTagInternalId: string | null | undefined;
+
       if (payload.unassignTag) {
         newHardwareTagId = null;
         newTagModel = null;
+        newTagInternalId = null;
+        if (currentProduct?.tagInternalId) {
+          setLocalUnlinkedTags((prev) => {
+            if (prev.some((t) => t.id === currentProduct.tagInternalId)) return prev;
+            return [
+              ...prev,
+              {
+                id: currentProduct.tagInternalId!,
+                tagId: currentProduct.hardwareTagId ?? '',
+                mac: currentProduct.hardwareTagId,
+                tagModel: currentProduct.tagModel ?? null,
+                status: 'online',
+              },
+            ];
+          });
+        }
       } else if (payload.assignTagId) {
-        const assignedTag = unlinkedTags.find((t) => t.id === payload.assignTagId);
+        const assignedTag = localUnlinkedTags.find((t) => t.id === payload.assignTagId);
         if (assignedTag) {
           newHardwareTagId = assignedTag.mac ?? assignedTag.tagId;
           newTagModel = assignedTag.tagModel;
+          newTagInternalId = assignedTag.id;
         }
+
+        setLocalUnlinkedTags((prev) => {
+          let next = prev.filter((t) => t.id !== payload.assignTagId);
+          if (currentProduct?.tagInternalId) {
+            if (!next.some((t) => t.id === currentProduct.tagInternalId)) {
+              next = [
+                ...next,
+                {
+                  id: currentProduct.tagInternalId!,
+                  tagId: currentProduct.hardwareTagId ?? '',
+                  mac: currentProduct.hardwareTagId,
+                  tagModel: currentProduct.tagModel ?? null,
+                  status: 'online',
+                },
+              ];
+            }
+          }
+          return next;
+        });
       }
 
       setProducts((prev) =>
@@ -301,6 +341,7 @@ export function ProductsTable({
                 ...p,
                 name: payload.name,
                 priceCents: payload.priceCents,
+                currency: payload.currency,
                 unit: payload.unit,
                 templateId: payload.templateId,
                 templateData: payload.templateData,
@@ -309,6 +350,7 @@ export function ProductsTable({
                 categoryName: cat?.name ?? p.categoryName,
                 categoryIcon: cat?.icon ?? p.categoryIcon,
                 syncStatus: 'pending',
+                ...(newTagInternalId !== undefined && { tagInternalId: newTagInternalId }),
                 ...(newHardwareTagId !== undefined && { hardwareTagId: newHardwareTagId }),
                 ...(newTagModel !== undefined && { tagModel: newTagModel }),
               }
@@ -316,7 +358,7 @@ export function ProductsTable({
         ),
       );
     },
-    [categories, fetcher, unlinkedTags],
+    [categories, fetcher, products, localUnlinkedTags],
   );
 
   function handleBulkPriceUpdate() {
@@ -364,6 +406,7 @@ export function ProductsTable({
         id: editProduct.id,
         name: editProduct.name,
         priceCents: editProduct.priceCents,
+        currency: editProduct.currency || 'ILS',
         hardwareTagId: editProduct.hardwareTagId ?? '—',
         unit: editProduct.unit,
         templateId: editProduct.templateId,
@@ -386,13 +429,14 @@ export function ProductsTable({
         onClose={() => setCreateOpen(false)}
         categories={categories}
         templates={templates}
+        unlinkedTags={localUnlinkedTags}
       />
       <EditProductModal
         open={modalOpen}
         product={modalProduct}
         templates={templates}
         categories={categories}
-        unlinkedTags={unlinkedTags}
+        unlinkedTags={localUnlinkedTags}
         onClose={() => {
           setModalOpen(false);
           setEditProduct(null);
@@ -576,7 +620,7 @@ export function ProductsTable({
                           </div>
                         </td>
                         <td className="p-3 align-middle text-xs text-black/60">{translatedCategory}</td>
-                        <td className="p-3 align-middle tabular-nums text-[#18171c]">₪{minorUnitsToDecimalString(product.priceCents)}</td>
+                        <td className="p-3 align-middle tabular-nums text-[#18171c]">{currencySymbol(product.currency)}{minorUnitsToDecimalString(product.priceCents)}</td>
                         <td className="p-3 align-middle text-xs text-black/60">
                           {product.unit === 'per_kg' ? t('common:units.perKg') : t('common:units.perUnit')}
                         </td>
@@ -650,7 +694,7 @@ export function ProductsTable({
                         <span className="truncate text-sm font-semibold text-[#18171c]">{translatedName}</span>
                         <div className="mt-0.5 text-[11px] text-black/40">{translatedCategory} · {unitLabel}</div>
                       </div>
-                      <span className="shrink-0 tabular-nums text-sm font-bold text-[#18171c]">₪{minorUnitsToDecimalString(product.priceCents)}</span>
+                      <span className="shrink-0 tabular-nums text-sm font-bold text-[#18171c]">{currencySymbol(product.currency)}{minorUnitsToDecimalString(product.priceCents)}</span>
                     </button>
                     {product.hardwareTagId && (
                       <div className="mt-2 flex items-center border-t border-black/5 pt-2">
