@@ -562,11 +562,11 @@ export function EditProductModal({
 
           <div className="sticky bottom-0 z-20 -mx-5 -mb-5 border-t border-white/10 bg-dashboard-card px-5 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-3 lg:static lg:mx-0 lg:mb-0 lg:border-t lg:bg-transparent lg:px-0 lg:pb-0 lg:pt-4">
             {layout && (
-              <div dir="ltr" className="mb-3 flex items-center justify-center overflow-x-auto rounded-lg border border-white/10 bg-black/20 p-2 lg:hidden">
+              <div dir="ltr" className="mb-3 flex items-center justify-center overflow-x-auto rounded-lg border border-white/10 bg-black/20 p-3 lg:hidden">
                 <LabelPreview
                   layout={layout}
                   data={previewData}
-                  scale={0.35}
+                  scale={0.5}
                   style={templateStyleState}
                   aria-label={t('products:tagPreview')}
                 />

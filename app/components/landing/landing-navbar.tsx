@@ -38,7 +38,7 @@ export function LandingNavbar() {
             </span>
           </Link>
 
-          <div className='flex shrink-0 items-center gap-1.5 sm:gap-3'>
+          <div className='flex min-w-0 items-center gap-1.5 sm:gap-3'>
             <Link
               to={toLocalizedPath(pathname, nextLanguage)}
               className='whitespace-nowrap rounded-full border border-white/15 px-2.5 py-1 text-[11px] font-medium text-white/80 transition-all hover:border-white/30 hover:bg-white/10 sm:px-4 sm:py-2 sm:text-sm'
@@ -53,7 +53,7 @@ export function LandingNavbar() {
             </Link>
             <a
               href='#cta'
-              className='btn-primary-pill hidden rounded-full! px-5! py-2.5! text-sm! sm:inline-flex'
+              className='hidden whitespace-nowrap rounded-full bg-accent-mint px-5 py-2 text-sm font-bold text-accent-mint-text shadow-[0_0_34px_0_rgba(195,244,225,0.2)] transition-all hover:-translate-y-0.5 hover:shadow-[0_0_44px_0_rgba(195,244,225,0.35)] md:inline-flex'
             >
               {t('landing:nav.requestDemo')}
             </a>
