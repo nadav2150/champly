@@ -436,8 +436,8 @@ export const ROLE_RULES: Partial<Record<StyleRole, RoleRule>> = {
   },
   price: {
     labelKey: 'common:style.roles.price',
-    sizePresets: ['s', 'm', 'l', 'xl', '2xl'],
-    sizeRatios: { xs: 0.6, s: 0.85, m: 1.0, l: 1.25, xl: 1.5, '2xl': 1.8 },
+    sizePresets: ['s', 'm', 'l', 'xl', '2xl', '3xl'],
+    sizeRatios: { xs: 0.8, s: 1.0, m: 1.5, l: 2.2, xl: 3.0, '2xl': 4.0, '3xl': 5.0 },
     allowedColors: ['black', 'white', 'red', 'yellow'],
     allowBoldToggle: false,
     allowedAligns: ['left', 'center', 'right'],
@@ -473,8 +473,8 @@ export const ROLE_RULES: Partial<Record<StyleRole, RoleRule>> = {
   },
   old_price: {
     labelKey: 'common:style.roles.old_price',
-    sizePresets: ['s', 'm', 'l'],
-    sizeRatios: { xs: 0.7, s: 0.85, m: 1.0, l: 1.2, xl: 1.4 },
+    sizePresets: ['s', 'm', 'l', 'xl', '2xl', '3xl'],
+    sizeRatios: { xs: 0.8, s: 1.0, m: 1.5, l: 2.2, xl: 3.0, '2xl': 4.0, '3xl': 5.0 },
     allowedColors: ['black', 'white', 'red', 'yellow'],
     allowBoldToggle: false,
   },

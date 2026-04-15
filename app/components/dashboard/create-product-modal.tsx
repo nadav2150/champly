@@ -219,7 +219,7 @@ export function CreateProductModal({
     const displayName = name.trim() || '—';
     const priceStr = price.trim() || '0.00';
     const sym = currencySymbol(currency);
-    return {
+    const merged: Record<string, string> = {
       name: displayName,
       price: `${sym}${priceStr}`,
       unit: unitLabel,
@@ -227,6 +227,10 @@ export function CreateProductModal({
       currency: sym,
       ...templateDataState,
     };
+    if (merged.old_price && !merged.old_price.startsWith(sym)) {
+      merged.old_price = `${sym}${merged.old_price}`;
+    }
+    return merged;
   }, [categories, categoryId, name, price, currency, t, unit, templateDataState]);
 
   if (!open) {

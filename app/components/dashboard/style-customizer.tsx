@@ -157,7 +157,7 @@ function RoleEditor({
           <ColorDots
             options={rule.allowedColors}
             value={ovr.color ?? rule.allowedColors[0]}
-            onChange={(val) => onChange({ ...ovr, color: val === rule.allowedColors[0] ? undefined : val })}
+            onChange={(val) => onChange({ ...ovr, color: val })}
           />
         </div>
       )}
