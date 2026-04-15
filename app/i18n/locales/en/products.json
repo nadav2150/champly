@@ -7,6 +7,7 @@
   "pending": "Pending",
   "issues": "Issues",
   "allProducts": "All Products",
+  "filterByCategory": "Filter by category",
   "byCategory": "By Category",
   "recentlyUpdated": "Recently Updated",
   "productsNeedSync": "{{count}} products need price sync",

@@ -219,12 +219,11 @@ export function EditProductModal({
     >
       <button
         type="button"
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+        className="absolute inset-0 bg-black/60 backdrop-blur-sm max-lg:hidden"
         aria-label={t('common:actions.cancel')}
         onClick={onClose}
       />
-      <div className="relative max-h-[90dvh] w-full max-w-none overflow-y-auto rounded-t-2xl border border-dashboard-border bg-dashboard-card p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] shadow-[0px_8px_32px_rgba(0,0,0,0.4)] lg:max-w-2xl lg:rounded-xl lg:p-6 lg:pb-6">
-        <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-white/25 lg:hidden" aria-hidden />
+      <div className="relative h-full w-full overflow-y-auto bg-dashboard-card p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] lg:h-auto lg:max-h-[90dvh] lg:max-w-2xl lg:rounded-xl lg:border lg:border-dashboard-border lg:p-6 lg:pb-6 lg:shadow-[0px_8px_32px_rgba(0,0,0,0.4)]">
         <div className="mb-5 flex items-start justify-between gap-4 lg:mb-6">
           <div>
             <h2

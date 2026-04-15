@@ -3,10 +3,9 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useFetcher } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
+import { IoFilterOutline } from 'react-icons/io5';
 import { TAG_SCREEN_MAP, resolveScreen } from '../../lib/tag-screen-map';
 import type { Tag } from './tag-product';
-import { HwStatus } from './tag-status';
-
 function Spinner({ className = 'size-3.5' }: { className?: string }) {
   return (
     <svg className={`animate-spin ${className}`} viewBox="0 0 24 24" fill="none" aria-hidden>
@@ -59,37 +58,87 @@ function HeaderCell({ children }: { children: ReactNode }) {
   );
 }
 
-function BatteryBar({ percent }: { percent: number }) {
+function BatteryBar({ percent, size = 'md' }: { percent: number; size?: 'sm' | 'md' }) {
   const safe = Math.min(100, Math.max(0, percent));
   const filled = safe > 87 ? 4 : safe > 62 ? 3 : safe > 37 ? 2 : safe > 12 ? 1 : 0;
   const fill =
     safe > 50 ? 'bg-churn-low' : safe > 25 ? 'bg-churn-med' : 'bg-churn-high';
+  const sm = size === 'sm';
   return (
-    <div className="flex items-center gap-1.5" title={`${safe}%`}>
+    <div className="flex items-center" title={`${safe}%`}>
       <div className="flex items-center">
-        <div className="flex h-[14px] w-[26px] items-center gap-[2px] rounded-[3px] border-[1.5px] border-current p-[2px] text-black/50">
+        <div className={`flex items-center text-black/${sm ? '40' : '50'} ${sm ? 'h-[9px] w-[17px] gap-[1.5px] rounded-[2px] border-[1.2px] p-[1.5px]' : 'h-[14px] w-[26px] gap-[2px] rounded-[3px] border-[1.5px] p-[2px]'} border-current`}>
           {[1, 2, 3, 4].map((i) => (
             <div
               key={i}
-              className={`h-full flex-1 rounded-[1px] ${i <= filled ? fill : 'bg-black/8'}`}
+              className={`h-full flex-1 ${sm ? 'rounded-[0.5px]' : 'rounded-[1px]'} ${i <= filled ? fill : 'bg-black/8'}`}
             />
           ))}
         </div>
-        <div className="h-[6px] w-[2px] rounded-e-[1px] bg-current text-black/50" />
+        <div className={`rounded-e-[${sm ? '0.5px' : '1px'}] bg-current text-black/${sm ? '40' : '50'} ${sm ? 'h-[4px] w-[1.5px]' : 'h-[6px] w-[2px]'}`} />
       </div>
     </div>
   );
 }
 
-type TagFilterKey = 'all' | 'online' | 'offline' | 'low_battery' | 'unassigned';
+type TagFilterKey = 'all' | 'assigned' | 'unassigned' | 'low_battery';
 
 const FILTER_PILLS: { key: TagFilterKey; labelKey: string }[] = [
   { key: 'all', labelKey: 'tags:allTags' },
-  { key: 'online', labelKey: 'tags:online' },
-  { key: 'offline', labelKey: 'tags:offline' },
-  { key: 'low_battery', labelKey: 'tags:lowBattery' },
+  { key: 'assigned', labelKey: 'tags:assigned' },
   { key: 'unassigned', labelKey: 'tags:unassigned' },
+  { key: 'low_battery', labelKey: 'tags:lowBattery' },
 ];
+
+function MobileFilterButton({ filter, onFilterChange }: { filter: TagFilterKey; onFilterChange: (k: TagFilterKey) => void }) {
+  const { t } = useTranslation('tags');
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const active = filter !== 'all';
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    if (open) document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [open]);
+
+  return (
+    <div className="relative lg:hidden" ref={ref}>
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        className={`flex size-9 items-center justify-center rounded-lg border shadow-sm transition ${
+          active
+            ? 'border-dashboard-card bg-dashboard-card text-white'
+            : 'border-[#ddd] bg-white text-black/50'
+        }`}
+        aria-label={t('tags:filter')}
+      >
+        <IoFilterOutline size={18} />
+      </button>
+      {open && (
+        <div className="absolute inset-e-0 z-30 mt-1 w-40 rounded-lg border border-content-border bg-white py-1 shadow-lg">
+          {FILTER_PILLS.map(({ key, labelKey }) => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => { onFilterChange(key); setOpen(false); }}
+              className={`w-full px-3 py-2 text-start text-sm font-medium transition ${
+                filter === key
+                  ? 'bg-surface-subtle text-[#18171c]'
+                  : 'text-black/60 hover:bg-surface-subtle/60'
+              }`}
+            >
+              {t(labelKey)}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 const productKeyByName: Record<string, string> = {
   Tomato: 'products:items.tomato',
@@ -226,18 +275,19 @@ function TagModelBadge({ model, tagInternalId }: { model: string | null; tagInte
   );
 }
 
-function RssiIndicator({ rssi }: { rssi: number | null }) {
+function RssiIndicator({ rssi, size = 'md' }: { rssi: number | null; size?: 'sm' | 'md' }) {
   if (rssi === null) return <span className="text-xs text-black/30">--</span>;
   const bars = rssi > -50 ? 3 : rssi > -70 ? 2 : 1;
   const color = bars === 3 ? 'bg-churn-low' : bars === 2 ? 'bg-churn-med' : 'bg-churn-high';
   const label = bars === 3 ? 'Strong' : bars === 2 ? 'Medium' : 'Weak';
+  const sm = size === 'sm';
   return (
-    <div className="flex items-end gap-[3px]" title={`${rssi} dBm`} aria-label={label}>
+    <div className={`flex items-end ${sm ? 'gap-[2px]' : 'gap-[3px]'}`} title={`${rssi} dBm`} aria-label={label}>
       {[1, 2, 3].map((i) => (
         <div
           key={i}
-          className={`w-[5px] rounded-sm ${i <= bars ? color : 'bg-black/10'}`}
-          style={{ height: `${8 + (i - 1) * 5}px` }}
+          className={`${sm ? 'w-[3px] rounded-[0.5px]' : 'w-[5px] rounded-sm'} ${i <= bars ? color : 'bg-black/10'}`}
+          style={{ height: sm ? `${4 + (i - 1) * 3}px` : `${8 + (i - 1) * 5}px` }}
         />
       ))}
     </div>
@@ -249,7 +299,7 @@ function GatewayStatusBar({ gateways, bridgeHealth }: { gateways?: GatewayInfo[]
   const mqttConnected = bridgeHealth?.mqtt === 'connected';
 
   return (
-    <div className="flex flex-wrap items-center gap-3 rounded-lg border border-content-border bg-surface-subtle/50 px-4 py-2">
+    <div className="hidden flex-wrap items-center gap-3 rounded-lg border border-content-border bg-surface-subtle/50 px-4 py-2 lg:flex">
       <div className="flex items-center gap-2">
         <span className={`size-2 rounded-full ${mqttConnected ? 'bg-churn-low' : 'bg-black/30'}`} />
         <span className="text-xs font-medium text-[#18171c]">
@@ -285,9 +335,6 @@ type CommandItem = {
 
 const COMMAND_ITEMS: CommandItem[] = [
   { intent: 'send-version', labelKey: 'tags:commands.getVersion', color: 'text-purple-600' },
-  { intent: 'send-wake', labelKey: 'tags:commands.wake', color: 'text-emerald-600' },
-  { intent: 'send-led-radio', labelKey: 'tags:commands.ledRadio', color: 'text-amber-600' },
-  { intent: 'send-led-ble', labelKey: 'tags:commands.ledBle', color: 'text-amber-600' },
   { intent: 'send-buzzer', labelKey: 'tags:commands.buzzer', color: 'text-orange-600' },
   { intent: 'send-reboot', labelKey: 'tags:commands.reboot', color: 'text-red-500' },
   { intent: 'send-shutdown', labelKey: 'tags:commands.shutdown', color: 'text-red-700' },
@@ -318,22 +365,31 @@ function TagCommandDropdown({ mac }: { mac: string }) {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [open]);
 
+  const allItems: CommandItem[] = COMMAND_ITEMS;
+
   return (
     <div className="relative" ref={ref}>
       <button
         type="button"
         onClick={() => setOpen(!open)}
         disabled={busy}
-        className="inline-flex items-center gap-1 rounded-[10px] border border-purple-200 bg-purple-50 px-2.5 py-1.5 text-xs font-medium text-purple-600 shadow-sm disabled:opacity-40"
+        className="inline-flex size-8 items-center justify-center rounded-lg border border-black/10 bg-white text-black/50 shadow-sm transition hover:bg-surface-subtle disabled:opacity-40"
+        aria-label={t('tags:commandMenu')}
       >
-        {busy ? <Spinner className="size-3.5 text-purple-600" /> : null}
-        <span>{busy ? t('tags:sending') : t('tags:commandMenu')}</span>
-        <IconChevronDown />
+        {busy ? (
+          <Spinner className="size-3.5" />
+        ) : (
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden>
+            <circle cx="3" cy="8" r="1.5" />
+            <circle cx="8" cy="8" r="1.5" />
+            <circle cx="13" cy="8" r="1.5" />
+          </svg>
+        )}
       </button>
 
       {open && (
         <div className="absolute inset-e-0 z-30 mt-1 w-44 rounded-lg border border-content-border bg-white py-1 shadow-lg">
-          {COMMAND_ITEMS.map(({ intent, labelKey, color }) => (
+          {allItems.map(({ intent, labelKey, color }) => (
             <fetcher.Form key={intent} method="post" onSubmit={() => setOpen(false)}>
               <input type="hidden" name="intent" value={intent} />
               <input type="hidden" name="mac" value={mac} />
@@ -382,6 +438,44 @@ function LocateTagButton({ mac, fullWidth }: { mac: string; fullWidth?: boolean 
   );
 }
 
+function LocateIconCell({ mac }: { mac: string | null }) {
+  const { t } = useTranslation(['common']);
+  const fetcher = useFetcher();
+  const busy = fetcher.state !== 'idle';
+
+  useEffect(() => {
+    if (fetcher.state !== 'idle' || !fetcher.data) return;
+    const res = fetcher.data as { ok: boolean; error?: string };
+    if (res.ok) {
+      toast.success(t('common:toast.locateSuccess'));
+    } else {
+      toast.error(res.error ?? t('common:toast.locateFailed'));
+    }
+  }, [fetcher.state, fetcher.data, t]);
+
+  return (
+    <div className="flex flex-1 flex-col items-center gap-1">
+      {mac ? (
+        <fetcher.Form method="post">
+          <input type="hidden" name="intent" value="send-locate" />
+          <input type="hidden" name="mac" value={mac} />
+          <button
+            type="submit"
+            disabled={busy}
+            className="text-blue-500 active:text-blue-700 disabled:opacity-40"
+            aria-label={t('common:actions.locate')}
+          >
+            {busy ? <Spinner className="size-4 text-blue-500" /> : <IconLocate className="size-4" />}
+          </button>
+        </fetcher.Form>
+      ) : (
+        <span className="text-[10px] text-black/30">—</span>
+      )}
+      <span className="text-[9px] font-medium uppercase tracking-wide text-black/25">{t('common:actions.locate')}</span>
+    </div>
+  );
+}
+
 type TagsTableProps = {
   initialTags: Tag[];
   gateways?: GatewayInfo[];
@@ -400,10 +494,9 @@ export function TagsTable({ initialTags, gateways, bridgeHealth }: TagsTableProp
 
   const filtered = useMemo(() => {
     switch (filter) {
-      case 'online': return tags.filter((x) => x.status === 'online');
-      case 'offline': return tags.filter((x) => x.status === 'offline');
-      case 'low_battery': return tags.filter((x) => x.battery <= 25);
+      case 'assigned': return tags.filter((x) => !!x.linkedProductId);
       case 'unassigned': return tags.filter((x) => !x.linkedProductId);
+      case 'low_battery': return tags.filter((x) => x.battery <= 25);
       default: return tags;
     }
   }, [tags, filter]);
@@ -486,17 +579,23 @@ export function TagsTable({ initialTags, gateways, bridgeHealth }: TagsTableProp
           <GatewayStatusBar gateways={gateways} bridgeHealth={bridgeHealth} />
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex flex-wrap items-center gap-4">
-              <div className="flex items-center gap-3 text-base font-medium">
-                <span className="text-black">{t('tags:tagInventory')}</span>
-                <span className="text-sm text-black/30">{tags.length}</span>
+              <div>
+                <div className="flex items-center gap-3 text-base font-medium">
+                  <span className="text-black">{t('tags:tagInventory')}</span>
+                  <span className="text-sm text-black/30">{tags.length}</span>
+                </div>
+                <p className="mt-0.5 text-xs text-black/40 lg:hidden">{t('tags:subheading')}</p>
               </div>
               <span className="hidden h-[26px] w-px bg-black/10 sm:block" aria-hidden />
-              <div className="flex w-full max-w-[270px] items-center gap-2 rounded-[10px] border border-[#ddd] bg-white py-1.5 ps-2 pe-3 sm:w-[270px]">
-                <IconSearch className="text-black/40" />
-                <span className="text-sm text-black/40">{t('common:table.searchTagId')}</span>
+              <div className="flex items-center gap-2">
+                <div className="flex w-full max-w-[270px] items-center gap-2 rounded-[10px] border border-[#ddd] bg-white py-1.5 ps-2 pe-3 sm:w-[270px]">
+                  <IconSearch className="text-black/40" />
+                  <span className="text-sm text-black/40">{t('common:table.searchTagId')}</span>
+                </div>
+                <MobileFilterButton filter={filter} onFilterChange={setFilter} />
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="hidden items-center gap-2 lg:flex">
               <bulkLocateFetcher.Form method="post">
                 <input type="hidden" name="intent" value="bulk-locate" />
                 <input type="hidden" name="macs" value={getSelectedMacs().join(',')} />
@@ -521,7 +620,7 @@ export function TagsTable({ initialTags, gateways, bridgeHealth }: TagsTableProp
               </button>
             </div>
           </div>
-          <div className="flex gap-2 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:flex-wrap lg:overflow-visible">
+          <div className="hidden flex-wrap gap-2 lg:flex">
             {FILTER_PILLS.map(({ key, labelKey }) => (
               <button
                 key={key}
@@ -540,8 +639,8 @@ export function TagsTable({ initialTags, gateways, bridgeHealth }: TagsTableProp
         </div>
 
         {/* Desktop table */}
-        <div className="hidden min-h-0 flex-1 overflow-auto p-3 lg:block">
-          <div className="overflow-x-auto rounded-lg border border-content-border bg-white shadow-sm">
+        <div className="hidden min-h-0 flex-1 overflow-auto p-3 lg:flex lg:flex-col">
+          <div className="flex-1 overflow-x-auto rounded-lg border border-content-border bg-white shadow-sm">
             <table className="w-full min-w-[1040px] border-collapse text-start text-sm">
               <thead>
                 <tr className="border-b border-content-border bg-surface-subtle/50">
@@ -562,7 +661,6 @@ export function TagsTable({ initialTags, gateways, bridgeHealth }: TagsTableProp
                   <th className="p-3" scope="col"><HeaderCell>{t('common:table.linkedProduct')}</HeaderCell></th>
                   <th className="w-28 p-3" scope="col"><HeaderCell>{t('common:table.battery')}</HeaderCell></th>
                   <th className="w-20 p-3" scope="col"><HeaderCell>{t('common:table.signal')}</HeaderCell></th>
-                  <th className="w-28 p-3" scope="col"><HeaderCell>{t('common:table.syncStatus')}</HeaderCell></th>
                   <th className="w-64 p-3" scope="col"><HeaderCell>{t('common:table.action')}</HeaderCell></th>
                 </tr>
               </thead>
@@ -609,9 +707,6 @@ export function TagsTable({ initialTags, gateways, bridgeHealth }: TagsTableProp
                         <RssiIndicator rssi={tag.rssi ?? null} />
                       </td>
                       <td className="p-3 align-middle">
-                        <HwStatus status={tag.status} />
-                      </td>
-                      <td className="p-3 align-middle">
                         <div className="flex flex-wrap items-center gap-1.5">
                           {tag.mac && <TagCommandDropdown mac={tag.mac} />}
                           {tag.mac && <LocateTagButton mac={tag.mac} />}
@@ -629,42 +724,47 @@ export function TagsTable({ initialTags, gateways, bridgeHealth }: TagsTableProp
         <div className="min-h-0 flex-1 overflow-auto p-2 lg:hidden">
           <div className="flex flex-col gap-2">
             {filtered.map((tag) => {
-              const batteryColor =
-                tag.battery > 50 ? 'bg-churn-low' : tag.battery > 25 ? 'bg-churn-med' : 'bg-churn-high';
               const linkedLabel = translateLinkedName(t, tag.linkedProductName);
+              const signalBars = tag.rssi !== null ? (tag.rssi > -50 ? 3 : tag.rssi > -70 ? 2 : 1) : 0;
+              const signalLabel = signalBars === 3 ? t('tags:strong') : signalBars === 2 ? t('tags:medium') : t('tags:weak');
               return (
                 <article
                   key={tag.id}
-                  className="rounded-lg border border-content-border bg-white p-3 shadow-sm"
+                  className="rounded-xl border border-content-border bg-white px-4 py-3 shadow-sm"
                 >
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="rounded bg-[#f0f4f5] px-2 py-1 font-mono text-sm font-semibold text-[#18171c]">
-                      {tag.tagId}
-                    </span>
-                    <HwStatus status={tag.status} />
-                  </div>
-                  <div className="mt-1">
-                    <TagModelBadge model={tag.tagModel} tagInternalId={tag.id} />
-                  </div>
-                  <div className="mt-2 text-sm text-[#18171c]">
-                    {linkedLabel ? (
-                      linkedLabel
-                    ) : (
-                      <span className="text-xs italic text-churn-med">{t('common:table.unassigned')}</span>
-                    )}
-                  </div>
-                  <div className="mt-2 flex items-center gap-3">
-                    <div className="flex items-center gap-1.5">
-                      <div className="h-2 w-12 overflow-hidden rounded-full bg-black/10">
-                        <div className={`h-full rounded-full ${batteryColor}`} style={{ width: `${tag.battery}%` }} />
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0 flex-1 space-y-1.5">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[9px] font-medium uppercase tracking-wide text-black/30">{t('tags:tagModel')}</span>
+                        <TagModelBadge model={tag.tagModel} tagInternalId={tag.id} />
                       </div>
-                      <span className="text-[10px] font-medium tabular-nums text-black/60">{tag.battery}%</span>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[9px] font-medium uppercase tracking-wide text-black/30">{t('common:table.tagId')}</span>
+                        <span className="rounded bg-[#f0f4f5] px-1.5 py-px font-mono text-[10px] font-medium text-[#18171c]">{tag.tagId}</span>
+                        {linkedLabel && (
+                          <>
+                            <span className="text-black/15">·</span>
+                            <span className="truncate text-[11px] text-black/45">{linkedLabel}</span>
+                          </>
+                        )}
+                      </div>
                     </div>
-                    <RssiIndicator rssi={tag.rssi ?? null} />
-                  </div>
-                  <div className="mt-3 flex flex-col gap-2">
                     {tag.mac && <TagCommandDropdown mac={tag.mac} />}
-                    {tag.mac && <LocateTagButton mac={tag.mac} fullWidth />}
+                  </div>
+                  <div className="mt-3 flex items-start border-t border-black/5 pt-3">
+                    <div className="flex flex-1 flex-col items-center gap-1">
+                      <BatteryBar percent={tag.battery} size="sm" />
+                      <span className="text-[10px] text-black/40">{tag.battery}%</span>
+                      <span className="text-[9px] font-medium uppercase tracking-wide text-black/25">{t('common:table.battery')}</span>
+                    </div>
+                    <span className="mt-1 h-6 w-px bg-black/6" aria-hidden />
+                    <div className="flex flex-1 flex-col items-center gap-1">
+                      <RssiIndicator rssi={tag.rssi ?? null} size="sm" />
+                      <span className="text-[10px] text-black/40">{signalLabel}</span>
+                      <span className="text-[9px] font-medium uppercase tracking-wide text-black/25">{t('common:table.signal')}</span>
+                    </div>
+                    <span className="mt-1 h-6 w-px bg-black/6" aria-hidden />
+                    <LocateIconCell mac={tag.mac} />
                   </div>
                 </article>
               );

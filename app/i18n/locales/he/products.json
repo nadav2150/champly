@@ -7,6 +7,7 @@
   "pending": "ממתין",
   "issues": "בעיות",
   "allProducts": "כל המוצרים",
+  "filterByCategory": "סינון לפי קטגוריה",
   "byCategory": "לפי קטגוריה",
   "recentlyUpdated": "עודכן לאחרונה",
   "productsNeedSync": "{{count}} מוצרים דורשים סנכרון מחיר",
