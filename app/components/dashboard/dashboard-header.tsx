@@ -30,7 +30,6 @@ function StatDot({ color }: { color: 'green' | 'amber' | 'red' }) {
 type DashboardHeaderProps =
   | {
       variant: 'products';
-      productStats: { total: number; pending: number; failed: number };
       onAddProduct?: () => void;
     }
   | {
@@ -48,7 +47,6 @@ export function DashboardHeader(props: DashboardHeaderProps) {
   const isProducts = props.variant === 'products';
 
   if (isProducts) {
-    const stats = props.productStats;
     const onAddProduct = props.onAddProduct;
     return (
       <>
@@ -56,36 +54,14 @@ export function DashboardHeader(props: DashboardHeaderProps) {
           className="w-full max-w-none rounded-lg border border-dashboard-border bg-dashboard-card px-4 py-3 lg:px-5 shadow-[0px_0px_0px_1px_#0d171a]"
           aria-labelledby="products-heading"
         >
-          <div className="flex flex-col gap-3">
-            <div className="flex flex-wrap items-center justify-between gap-4">
-              <div className="flex items-center gap-6">
-                <div>
-                  <h1 id="products-heading" className="text-xl font-medium leading-7 text-white">
-                    {t('products:heading')}
-                  </h1>
-                  <p className="text-xs leading-4 text-white/50">
-                    {t('products:subheading')}
-                  </p>
-                </div>
-                <div className="hidden h-8 w-px bg-white/10 sm:block" aria-hidden />
-                <div className="hidden items-center gap-5 sm:flex lg:gap-7">
-                  <div className="flex items-center gap-1.5">
-                    <StatDot color="green" />
-                    <span className="text-xs text-white/50">{t('products:total')}</span>
-                    <span className="text-sm font-semibold text-white">{stats.total}</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <StatDot color="amber" />
-                    <span className="text-xs text-white/50">{t('products:pending')}</span>
-                    <span className="text-sm font-semibold text-white">{stats.pending}</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <StatDot color="red" />
-                    <span className="text-xs text-white/50">{t('products:issues')}</span>
-                    <span className="text-sm font-semibold text-white">{stats.failed}</span>
-                  </div>
-                </div>
-              </div>
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <h1 id="products-heading" className="text-xl font-medium leading-7 text-white">
+                {t('products:heading')}
+              </h1>
+              <p className="text-xs leading-4 text-white/50">
+                {t('products:subheading')}
+              </p>
             </div>
           </div>
         </section>

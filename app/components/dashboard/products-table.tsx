@@ -12,8 +12,6 @@ import { CreateProductModal } from './create-product-modal';
 import { DeleteProductDialog } from './delete-product-dialog';
 import { EditProductModal } from './edit-product-modal';
 import type { Product } from './tag-product';
-import { TagStatus, type TagSyncStatus } from './tag-status';
-
 function Spinner({ className = 'size-3.5' }: { className?: string }) {
   return (
     <svg className={`animate-spin ${className}`} viewBox="0 0 24 24" fill="none" aria-hidden>
@@ -89,15 +87,6 @@ function HeaderCell({ children }: { children: ReactNode }) {
   );
 }
 
-type FilterKey = 'all' | TagSyncStatus;
-
-const FILTER_PILLS: { key: FilterKey; labelKey: string }[] = [
-  { key: 'all', labelKey: 'products:allProductsFilter' },
-  { key: 'updated', labelKey: 'products:syncedFilter' },
-  { key: 'pending', labelKey: 'products:pendingFilter' },
-  { key: 'failed', labelKey: 'products:failedFilter' },
-];
-
 const productKeyByName: Record<string, string> = {
   Tomato: 'products:items.tomato',
   Banana: 'products:items.banana',
@@ -141,7 +130,6 @@ export function ProductsTable({
   const { t } = useTranslation(['common', 'products']);
   const fetcher = useFetcher();
   const [products, setProducts] = useState<Product[]>(initialProducts);
-  const [statusFilter, setStatusFilter] = useState<FilterKey>('all');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [editProduct, setEditProduct] = useState<Product | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
@@ -185,11 +173,8 @@ export function ProductsTable({
         return translatedName.includes(q) || p.name.toLowerCase().includes(q) || translatedCategory.includes(q);
       });
     }
-    if (statusFilter !== 'all') {
-      result = result.filter((p) => p.syncStatus === statusFilter);
-    }
     return result;
-  }, [products, searchQuery, statusFilter, t]);
+  }, [products, searchQuery, t]);
 
   function toggleSelect(id: string) {
     setSelectedIds((prev) => {
@@ -456,22 +441,6 @@ export function ProductsTable({
                 className="w-full bg-transparent text-sm text-[#18171c] placeholder:text-black/40 focus:outline-none"
               />
             </div>
-            <div className="flex gap-2 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:flex-wrap lg:overflow-visible">
-              {FILTER_PILLS.map(({ key, labelKey }) => (
-                <button
-                  key={key}
-                  type="button"
-                  onClick={() => setStatusFilter(key)}
-                  className={`shrink-0 rounded-full px-3.5 py-1.5 text-sm font-medium transition ${
-                    statusFilter === key
-                      ? 'bg-dashboard-card text-white shadow-sm'
-                      : 'bg-white text-black/70 ring-1 ring-black/10 hover:bg-surface-subtle'
-                  }`}
-                >
-                  {t(labelKey)}
-                </button>
-              ))}
-            </div>
           </div>
           <div className="hidden min-h-0 flex-1 overflow-auto p-3 lg:block">
             <div className="overflow-x-auto rounded-lg border border-content-border bg-white shadow-sm">
@@ -495,7 +464,6 @@ export function ProductsTable({
                     <th className="w-24 p-3" scope="col"><HeaderCell>{t('common:table.price')}</HeaderCell></th>
                     <th className="w-24 p-3" scope="col"><HeaderCell>{t('common:table.unit')}</HeaderCell></th>
                     <th className="w-44 p-3" scope="col"><HeaderCell>{t('common:table.tag')}</HeaderCell></th>
-                    <th className="w-32 p-3" scope="col"><HeaderCell>{t('common:table.syncStatus')}</HeaderCell></th>
                     <th className="w-36 p-3" scope="col"><HeaderCell>{t('common:table.action')}</HeaderCell></th>
                   </tr>
                 </thead>
@@ -546,9 +514,6 @@ export function ProductsTable({
                           ) : (
                             <span className="text-xs text-black/30">—</span>
                           )}
-                        </td>
-                        <td className="p-3 align-middle">
-                          <TagStatus status={product.syncStatus} />
                         </td>
                         <td className="p-3 align-middle">
                           <div className="flex items-center gap-2">
@@ -618,7 +583,6 @@ export function ProductsTable({
 
                     <div className="flex items-center justify-between border-t border-black/4 px-4 py-2">
                       <div className="flex items-center gap-2">
-                        <TagStatus status={product.syncStatus} />
                         {product.hardwareTagId && (
                           <span className="rounded-md bg-purple-50 px-1.5 py-0.5 font-mono text-[10px] text-purple-600">
                             {product.hardwareTagId}

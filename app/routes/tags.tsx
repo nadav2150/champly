@@ -2,7 +2,7 @@ import type { Route } from './+types/tags';
 import { data, useLoaderData, useOutletContext } from 'react-router';
 import { TagControlScreen } from '../components/dashboard/tag-control-screen';
 import { getDb, withRetry } from '../db/client.server';
-import { listOwnedProductIds, listProductPairOptions } from '../db/products.server';
+import { listOwnedProductIds } from '../db/products.server';
 import { getTagHeaderStats, listZoneIdsForUser } from '../db/stats.server';
 import {
   getGatewayStatus,
@@ -44,7 +44,6 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   let tagStats: Awaited<ReturnType<typeof getTagHeaderStats>> = {
     ...emptyTagStats,
   };
-  let productOptions: Awaited<ReturnType<typeof listProductPairOptions>> = [];
   let gatewayList: Awaited<ReturnType<typeof getGatewayStatus>> = [];
   let bridgeHealth: Awaited<ReturnType<typeof getBridgeHealth>> = null;
 
@@ -63,9 +62,8 @@ export async function loader({ request, context }: Route.LoaderArgs) {
       tags = allTags.length > 0 ? allTags : await withRetry(() => listTagsForTable(db, user.id, visibility));
     }
 
-    [tagStats, productOptions, gatewayList, bridgeHealth] = await Promise.all([
+    [tagStats, gatewayList, bridgeHealth] = await Promise.all([
       withRetry(() => getTagHeaderStats(db, user.id, visibility)),
-      withRetry(() => listProductPairOptions(db, user.id)),
       withRetry(() => getGatewayStatus(db)),
       getBridgeHealth(env),
     ]);
@@ -79,7 +77,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   }
 
   return data(
-    { tags, tagStats, productOptions, gateways: gatewayList, bridgeHealth },
+    { tags, tagStats, gateways: gatewayList, bridgeHealth },
     { headers },
   );
 }
@@ -289,7 +287,7 @@ export function meta({ params }: Route.MetaArgs) {
 }
 
 export default function TagsPage() {
-  const { tags, tagStats, productOptions, gateways, bridgeHealth } =
+  const { tags, tagStats, gateways, bridgeHealth } =
     useLoaderData<typeof loader>();
   const { categories, zones } = useOutletContext<DashboardOutletContext>();
 
@@ -300,7 +298,6 @@ export default function TagsPage() {
       zones={zones}
       tags={tags}
       tagStats={tagStats}
-      productOptions={productOptions}
       gateways={gateways}
       bridgeHealth={bridgeHealth}
     />

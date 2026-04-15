@@ -13,7 +13,6 @@ import {
 } from '../db/products.server';
 import { assignTagToProduct, listUnlinkedTags, unassignTagFromProduct } from '../db/tags.server';
 import { listTemplatesForSelect } from '../db/templates.server';
-import { getProductHeaderStats } from '../db/stats.server';
 import { isSupportedLanguage } from '../i18n/config';
 import { requireUser } from '../lib/require-user.server';
 import type { DashboardOutletContext } from '../types/dashboard-outlet-context';
@@ -26,24 +25,18 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   let products: Awaited<ReturnType<typeof listProductsForTable>> = [];
   let templates: Awaited<ReturnType<typeof listTemplatesForSelect>> = [];
   let unlinkedTags: Awaited<ReturnType<typeof listUnlinkedTags>> = [];
-  let productStats: Awaited<ReturnType<typeof getProductHeaderStats>> = {
-    total: 0,
-    pending: 0,
-    failed: 0,
-  };
 
   try {
-    [products, templates, unlinkedTags, productStats] = await Promise.all([
+    [products, templates, unlinkedTags] = await Promise.all([
       withRetry(() => listProductsForTable(db, user.id)),
       withRetry(() => listTemplatesForSelect(db)),
       withRetry(() => listUnlinkedTags(db)),
-      withRetry(() => getProductHeaderStats(db, user.id)),
     ]);
   } catch (err) {
     console.error('Failed to load products data:', err);
   }
 
-  return data({ products, templates, unlinkedTags, productStats }, { headers });
+  return data({ products, templates, unlinkedTags }, { headers });
 }
 
 export async function action({ request, context }: Route.ActionArgs) {
@@ -282,7 +275,7 @@ export function meta({ params }: Route.MetaArgs) {
 }
 
 export default function ProductsPage() {
-  const { products, templates, unlinkedTags, productStats } = useLoaderData<typeof loader>();
+  const { products, templates, unlinkedTags } = useLoaderData<typeof loader>();
   const { categories, zones } = useOutletContext<DashboardOutletContext>();
 
   return (
@@ -292,7 +285,6 @@ export default function ProductsPage() {
       zones={zones}
       products={products}
       templates={templates}
-      productStats={productStats}
       unlinkedTags={unlinkedTags}
     />
   );

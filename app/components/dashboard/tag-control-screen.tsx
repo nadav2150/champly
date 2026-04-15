@@ -3,7 +3,6 @@ import type { ProductTableRow } from '../../db/products.server';
 import type { TagTableRow } from '../../db/tags.server';
 import type { TemplateSelectRow } from '../../db/templates.server';
 import type { DashboardOutletContext } from '../../types/dashboard-outlet-context';
-import { BatchSidebar } from './batch-sidebar';
 import { DashboardHeader } from './dashboard-header';
 import { TagsTable } from './product-table';
 import { ProductsTable } from './products-table';
@@ -22,7 +21,6 @@ type ProductsProps = SidebarData & {
   variant: 'products';
   products: ProductTableRow[];
   templates: TemplateSelectRow[];
-  productStats: { total: number; pending: number; failed: number };
   unlinkedTags?: UnlinkedTag[];
 };
 
@@ -51,7 +49,6 @@ type TagsProps = SidebarData & {
     offline: number;
     total: number;
   };
-  productOptions: Array<{ id: string; name: string }>;
   gateways?: GatewayInfo[];
   bridgeHealth?: BridgeHealth;
 };
@@ -68,7 +65,6 @@ export function TagControlScreen(props: TagControlScreenProps) {
         {variant === 'products' ? (
           <DashboardHeader
             variant="products"
-            productStats={props.productStats}
             onAddProduct={() => setCreateOpen(true)}
           />
         ) : (
@@ -77,7 +73,6 @@ export function TagControlScreen(props: TagControlScreenProps) {
       </div>
       <div className="mt-2 flex min-h-0 w-full flex-1 flex-col rounded-xl border border-surface-muted bg-white p-2 shadow-[0px_4px_6px_0px_rgba(207,207,207,0.1)] lg:mt-3 lg:p-3">
         <div className="flex min-h-0 w-full flex-1 flex-col gap-2 lg:flex-row lg:items-stretch lg:gap-3">
-          <BatchSidebar variant={variant} categories={categories} zones={zones} />
           {variant === 'products' ? (
             <ProductsTable
               initialProducts={props.products}
@@ -90,7 +85,6 @@ export function TagControlScreen(props: TagControlScreenProps) {
           ) : (
             <TagsTable
               initialTags={props.tags}
-              productOptions={props.productOptions}
               gateways={props.gateways}
               bridgeHealth={props.bridgeHealth}
             />
