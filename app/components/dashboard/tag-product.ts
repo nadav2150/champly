@@ -13,6 +13,7 @@ export type Product = {
   syncStatus: TagSyncStatus;
   templateId: string | null;
   templateData: string | null;
+  templateStyle: string | null;
   hardwareTagId: string | null;
   tagModel: string | null;
 };

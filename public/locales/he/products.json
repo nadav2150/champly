@@ -39,6 +39,7 @@
   "createCategory": "קטגוריה חדשה",
   "categoryName": "שם הקטגוריה",
   "categoryIcon": "אייקון (אימוג׳י)",
+  "templateFields": "שדות תבנית",
   "validationNamePrice": "הזן שם ומחיר תקינים.",
   "bulkEdit": "עריכה מהירה",
   "bulkEditTitle": "עריכה מהירה",

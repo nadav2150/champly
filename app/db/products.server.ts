@@ -14,6 +14,7 @@ export type ProductTableRow = {
   syncStatus: 'updated' | 'pending' | 'failed';
   templateId: string | null;
   templateData: string | null;
+  templateStyle: string | null;
   hardwareTagId: string | null;
   tagModel: string | null;
 };
@@ -113,6 +114,7 @@ export async function listProductsForTable(db: AppDatabase, userId: string) {
         syncStatus: product.syncStatus,
         templateId: product.templateId,
         templateData: product.templateData ?? null,
+        templateStyle: product.templateStyle ?? null,
         hardwareTagId: linked?.tagId ?? null,
         tagModel: linked?.tagModel ?? null,
       };
@@ -164,6 +166,7 @@ export async function createProduct(
     storeId?: string | null;
     templateId?: string | null;
     templateData?: string | null;
+    templateStyle?: string | null;
   },
 ): Promise<{ id: string } | { error: 'validation' }> {
   if (!input.storeId && !input.categoryId) {
@@ -209,6 +212,7 @@ export async function createProduct(
     syncStatus: 'pending',
     templateId: input.templateId ?? null,
     templateData: input.templateData ?? null,
+    templateStyle: input.templateStyle ?? null,
   });
   return { id };
 }
@@ -240,6 +244,7 @@ export async function updateProductFields(
     templateId: string | null;
     categoryId: string | null;
     templateData: string | null;
+    templateStyle: string | null;
   },
 ): Promise<boolean> {
   const ok = await productOwnedByUser(db, userId, input.id);
@@ -267,6 +272,7 @@ export async function updateProductFields(
       templateId: input.templateId,
       categoryId: input.categoryId,
       templateData: input.templateData,
+      templateStyle: input.templateStyle,
       syncStatus: 'pending',
     })
     .where(eq(products.id, input.id));

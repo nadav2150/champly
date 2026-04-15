@@ -1,4 +1,12 @@
-import type { EslColor, LayoutElement, TemplateLayout, TextAlign } from './template-layout';
+import type {
+  EslColor,
+  LayoutElement,
+  TemplateLayout,
+  TemplateStyle,
+  TextAlign,
+} from './template-layout';
+import { ROLE_RULES } from './template-layout';
+import type { StyleRole } from './template-layout';
 
 const ESL_HEX: Record<EslColor, string> = {
   white: '#ffffff',
@@ -308,15 +316,59 @@ function drawImageElement(
   ctx.drawImage(img, dx, dy, dw, dh);
 }
 
+export function applyStyle(
+  layout: TemplateLayout,
+  style: TemplateStyle,
+): TemplateLayout {
+  if (!style || Object.keys(style).length === 0) return layout;
+
+  const elements = layout.elements.map((el) => {
+    if (el.type !== 'text') return el;
+    const role = el.field as StyleRole;
+    const ovr = style[role];
+    const rule = ROLE_RULES[role];
+    if (!ovr || !rule) return el;
+
+    const patched = { ...el };
+
+    if (ovr.size) {
+      const ratio = rule.sizeRatios[ovr.size] ?? 1;
+      const newSize = Math.round(el.fontSize * ratio);
+      const maxFit = el.w ? Math.floor(el.w * 0.9) : newSize;
+      patched.fontSize = Math.min(newSize, maxFit);
+    }
+
+    if (ovr.color && rule.allowedColors.includes(ovr.color)) {
+      patched.color = ovr.color;
+    }
+
+    if (rule.allowBoldToggle && typeof ovr.bold === 'boolean') {
+      patched.fontWeight = ovr.bold ? 'bold' : 'normal';
+    }
+
+    if (ovr.align && rule.allowedAligns?.includes(ovr.align)) {
+      patched.align = ovr.align;
+    }
+
+    return patched;
+  });
+
+  const background = style.background ?? layout.background;
+  return { ...layout, elements, background };
+}
+
 export function renderLabel(
   canvas: HTMLCanvasElement,
   layout: TemplateLayout,
   data: Record<string, string>,
-  options?: { scale?: number },
+  options?: { scale?: number; style?: TemplateStyle },
 ): void {
+  const styledLayout = options?.style
+    ? applyStyle(layout, options.style)
+    : layout;
   const scale = options?.scale ?? 1;
-  const w = Math.max(1, Math.round(layout.width * scale));
-  const h = Math.max(1, Math.round(layout.height * scale));
+  const w = Math.max(1, Math.round(styledLayout.width * scale));
+  const h = Math.max(1, Math.round(styledLayout.height * scale));
   canvas.width = w;
   canvas.height = h;
 
@@ -324,12 +376,10 @@ export function renderLabel(
   if (!ctx) return;
 
   ctx.setTransform(scale, 0, 0, scale, 0, 0);
-  ctx.fillStyle = resolveColor(
-    layout.background === 'white' ? 'white' : 'black',
-  );
-  ctx.fillRect(0, 0, layout.width, layout.height);
+  ctx.fillStyle = resolveColor(styledLayout.background);
+  ctx.fillRect(0, 0, styledLayout.width, styledLayout.height);
 
-  for (const el of layout.elements) {
+  for (const el of styledLayout.elements) {
     switch (el.type) {
       case 'rect':
         drawRectElement(ctx, el);
@@ -338,10 +388,10 @@ export function renderLabel(
         drawLineElement(ctx, el);
         break;
       case 'text':
-        drawTextElement(ctx, el, data, layout.width);
+        drawTextElement(ctx, el, data, styledLayout.width);
         break;
       case 'label':
-        drawLabelElement(ctx, el, layout.width);
+        drawLabelElement(ctx, el, styledLayout.width);
         break;
       case 'badge':
         drawBadgeElement(ctx, el, data);

@@ -1,6 +1,6 @@
 import { useLayoutEffect, useRef } from 'react';
 import { renderLabel } from '../../lib/label-renderer';
-import type { TemplateLayout } from '../../lib/template-layout';
+import type { TemplateLayout, TemplateStyle } from '../../lib/template-layout';
 
 export type LabelPreviewProps = {
   layout: TemplateLayout;
@@ -8,6 +8,7 @@ export type LabelPreviewProps = {
   scale?: number;
   className?: string;
   fillWidth?: boolean;
+  style?: TemplateStyle;
   'aria-label'?: string;
 };
 
@@ -17,6 +18,7 @@ export function LabelPreview({
   scale = 1,
   className = '',
   fillWidth = false,
+  style,
   'aria-label': ariaLabel,
 }: LabelPreviewProps) {
   const ref = useRef<HTMLCanvasElement>(null);
@@ -24,8 +26,8 @@ export function LabelPreview({
   useLayoutEffect(() => {
     const canvas = ref.current;
     if (!canvas) return;
-    renderLabel(canvas, layout, data, { scale });
-  }, [layout, data, scale]);
+    renderLabel(canvas, layout, data, { scale, style });
+  }, [layout, data, scale, style]);
 
   const styleWidth = layout.width * scale;
   const styleHeight = layout.height * scale;
@@ -33,6 +35,7 @@ export function LabelPreview({
   return (
     <canvas
       ref={ref}
+      dir="ltr"
       className={className}
       style={{
         width: fillWidth ? '100%' : `${styleWidth}px`,

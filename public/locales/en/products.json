@@ -39,6 +39,7 @@
   "createCategory": "New category",
   "categoryName": "Category name",
   "categoryIcon": "Icon (emoji)",
+  "templateFields": "Template fields",
   "validationNamePrice": "Enter a valid name and price.",
   "bulkEdit": "Quick edit",
   "bulkEditTitle": "Quick edit",

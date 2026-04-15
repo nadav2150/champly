@@ -132,7 +132,7 @@ export function TemplateCard({ template, activeVariant, onPreview }: TemplateCar
     <article className="group relative flex flex-col overflow-hidden rounded-lg border border-white/8 bg-white/3 transition hover:border-white/15 hover:bg-white/5">
       <div className="relative flex h-40 items-center justify-center overflow-hidden border-b border-white/6 bg-white/1">
         {layout ? (
-          <div className="flex h-full w-full items-center justify-center p-2">
+          <div dir="ltr" className="flex h-full w-full items-center justify-center p-2">
             <LabelPreview
               layout={layout}
               data={previewData}

@@ -105,6 +105,7 @@ export const products = sqliteTable(
       .default('updated'),
     templateId: text('template_id').references(() => templates.id),
     templateData: text('template_data'),
+    templateStyle: text('template_style'),
   },
   (table) => ({
     categoryIdx: index('idx_products_category_id').on(table.categoryId),

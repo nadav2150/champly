@@ -79,7 +79,7 @@ export function TemplatePreviewModal({
       </div>
 
       <div className="overflow-auto p-5">
-        <div className="overflow-hidden rounded-lg border border-white/[0.06]">
+        <div dir="ltr" className="overflow-hidden rounded-lg border border-white/[0.06]">
           {layout ? (
             <LabelPreview
               layout={layout}

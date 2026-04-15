@@ -104,7 +104,7 @@ export type LayoutElement =
 export interface TemplateLayout {
   width: number;
   height: number;
-  background: 'white' | 'black';
+  background: EslColor;
   elements: LayoutElement[];
 }
 
@@ -332,7 +332,7 @@ export function parseLayoutJson(json: string): TemplateLayout | null {
       return null;
     }
     const bg = v.background;
-    if (bg !== 'white' && bg !== 'black') return null;
+    if (!isEslColor(bg)) return null;
     const elementsRaw = v.elements;
     if (!Array.isArray(elementsRaw)) return null;
     const elements: LayoutElement[] = [];
@@ -392,6 +392,200 @@ export function sanitizeTemplateData(
   }
   return clean;
 }
+
+// ---------------------------------------------------------------------------
+// Style customization types and rules
+// ---------------------------------------------------------------------------
+
+export type StyleRole =
+  | 'name' | 'price' | 'unit' | 'category'
+  | 'discount' | 'badge_text' | 'old_price' | 'description';
+
+export type SizePreset = 'xs' | 's' | 'm' | 'l' | 'xl' | '2xl' | '3xl';
+
+export type HorizontalAlign = 'left' | 'center' | 'right';
+
+export type RoleStyleOverride = {
+  size?: SizePreset;
+  color?: EslColor;
+  bold?: boolean;
+  align?: HorizontalAlign;
+};
+
+export type TemplateStyle = Partial<Record<StyleRole, RoleStyleOverride>> & {
+  background?: EslColor;
+};
+
+export type RoleRule = {
+  labelKey: string;
+  sizePresets: SizePreset[];
+  sizeRatios: Partial<Record<SizePreset, number>>;
+  allowedColors: EslColor[];
+  allowBoldToggle: boolean;
+  allowedAligns?: HorizontalAlign[];
+};
+
+export const ROLE_RULES: Partial<Record<StyleRole, RoleRule>> = {
+  name: {
+    labelKey: 'common:style.roles.name',
+    sizePresets: ['s', 'm', 'l', 'xl', '2xl', '3xl'],
+    sizeRatios: { xs: 0.7, s: 0.85, m: 1.0, l: 1.2, xl: 1.4, '2xl': 1.7, '3xl': 2.0 },
+    allowedColors: ['black', 'red', 'yellow'],
+    allowBoldToggle: true,
+    allowedAligns: ['left', 'center', 'right'],
+  },
+  price: {
+    labelKey: 'common:style.roles.price',
+    sizePresets: ['s', 'm', 'l', 'xl', '2xl'],
+    sizeRatios: { xs: 0.6, s: 0.8, m: 1.0, l: 1.25, xl: 1.5, '2xl': 1.8 },
+    allowedColors: ['black', 'red', 'yellow'],
+    allowBoldToggle: false,
+    allowedAligns: ['left', 'center', 'right'],
+  },
+  unit: {
+    labelKey: 'common:style.roles.unit',
+    sizePresets: ['s', 'm', 'l'],
+    sizeRatios: { xs: 0.7, s: 0.85, m: 1.0, l: 1.2, xl: 1.4 },
+    allowedColors: ['black', 'red'],
+    allowBoldToggle: false,
+  },
+  category: {
+    labelKey: 'common:style.roles.category',
+    sizePresets: ['s', 'm', 'l'],
+    sizeRatios: { xs: 0.7, s: 0.85, m: 1.0, l: 1.2, xl: 1.4 },
+    allowedColors: ['black', 'red'],
+    allowBoldToggle: false,
+    allowedAligns: ['left', 'center', 'right'],
+  },
+  discount: {
+    labelKey: 'common:style.roles.discount',
+    sizePresets: ['s', 'm', 'l', 'xl', '2xl'],
+    sizeRatios: { xs: 0.6, s: 0.8, m: 1.0, l: 1.3, xl: 1.6, '2xl': 2.0 },
+    allowedColors: ['red', 'black'],
+    allowBoldToggle: false,
+  },
+  badge_text: {
+    labelKey: 'common:style.roles.badge_text',
+    sizePresets: ['s', 'm', 'l'],
+    sizeRatios: { xs: 0.7, s: 0.85, m: 1.0, l: 1.2, xl: 1.4 },
+    allowedColors: ['white', 'black'],
+    allowBoldToggle: false,
+  },
+  old_price: {
+    labelKey: 'common:style.roles.old_price',
+    sizePresets: ['s', 'm', 'l'],
+    sizeRatios: { xs: 0.7, s: 0.85, m: 1.0, l: 1.2, xl: 1.4 },
+    allowedColors: ['black'],
+    allowBoldToggle: false,
+  },
+  description: {
+    labelKey: 'common:style.roles.description',
+    sizePresets: ['s', 'm', 'l'],
+    sizeRatios: { xs: 0.7, s: 0.85, m: 1.0, l: 1.2, xl: 1.4 },
+    allowedColors: ['black'],
+    allowBoldToggle: false,
+    allowedAligns: ['left', 'center'],
+  },
+};
+
+const VALID_STYLE_ROLES = new Set<string>(Object.keys(ROLE_RULES));
+const VALID_SIZE_PRESETS = new Set<string>(['xs', 's', 'm', 'l', 'xl', '2xl', '3xl']);
+const VALID_ALIGNS = new Set<string>(['left', 'center', 'right']);
+
+export function getStyleableRoles(layout: TemplateLayout): StyleRole[] {
+  const roles = new Set<StyleRole>();
+  for (const el of layout.elements) {
+    if (el.type === 'text' && VALID_STYLE_ROLES.has(el.field)) {
+      roles.add(el.field as StyleRole);
+    }
+  }
+  return [...roles];
+}
+
+export function parseTemplateStyle(
+  raw: string | null | undefined,
+): TemplateStyle {
+  if (!raw) return {};
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
+      return {};
+    }
+    const obj = parsed as Record<string, unknown>;
+    const result: TemplateStyle = {};
+    if (isEslColor(obj.background)) {
+      result.background = obj.background;
+    }
+    for (const [k, v] of Object.entries(obj)) {
+      if (!VALID_STYLE_ROLES.has(k)) continue;
+      if (typeof v !== 'object' || v === null || Array.isArray(v)) continue;
+      const roleObj = v as Record<string, unknown>;
+      const entry: RoleStyleOverride = {};
+      if (typeof roleObj.size === 'string' && VALID_SIZE_PRESETS.has(roleObj.size)) {
+        entry.size = roleObj.size as SizePreset;
+      }
+      if (typeof roleObj.color === 'string' && isEslColor(roleObj.color)) {
+        entry.color = roleObj.color;
+      }
+      if (typeof roleObj.bold === 'boolean') {
+        entry.bold = roleObj.bold;
+      }
+      if (typeof roleObj.align === 'string' && VALID_ALIGNS.has(roleObj.align)) {
+        entry.align = roleObj.align as HorizontalAlign;
+      }
+      if (Object.keys(entry).length > 0) {
+        result[k as StyleRole] = entry;
+      }
+    }
+    return result;
+  } catch {
+    return {};
+  }
+}
+
+export function sanitizeStyle(
+  raw: TemplateStyle,
+  layout: TemplateLayout,
+): TemplateStyle {
+  const validRoles = new Set(getStyleableRoles(layout));
+  const clean: TemplateStyle = {};
+
+  if (raw.background && isEslColor(raw.background)) {
+    clean.background = raw.background;
+  }
+
+  for (const [k, ovr] of Object.entries(raw) as Array<[StyleRole, RoleStyleOverride]>) {
+    if (k === 'background' as string) continue;
+    if (!validRoles.has(k)) continue;
+    const rule = ROLE_RULES[k];
+    if (!rule || !ovr) continue;
+
+    const entry: RoleStyleOverride = {};
+
+    if (ovr.size && rule.sizePresets.includes(ovr.size) && ovr.size !== 'm') {
+      entry.size = ovr.size;
+    }
+    if (ovr.color && rule.allowedColors.includes(ovr.color)) {
+      entry.color = ovr.color;
+    }
+    if (rule.allowBoldToggle && typeof ovr.bold === 'boolean') {
+      entry.bold = ovr.bold;
+    }
+    if (ovr.align && rule.allowedAligns?.includes(ovr.align)) {
+      entry.align = ovr.align;
+    }
+
+    if (Object.keys(entry).length > 0) {
+      clean[k] = entry;
+    }
+  }
+
+  return clean;
+}
+
+// ---------------------------------------------------------------------------
+// Field labels
+// ---------------------------------------------------------------------------
 
 const FIELD_LABELS: Record<string, string> = {
   badge_text: 'Badge text',

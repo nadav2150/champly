@@ -42,7 +42,8 @@
     "save": "שמור",
     "delete": "מחק",
     "next": "הבא",
-    "back": "חזרה"
+    "back": "חזרה",
+    "reset": "איפוס"
   },
   "status": {
     "synced": "מסונכרן",
@@ -84,5 +85,24 @@
   "units": {
     "perKg": "לק״ג",
     "perUnit": "ליחידה"
+  },
+  "style": {
+    "customizeTitle": "התאמת עיצוב",
+    "background": "רקע",
+    "size": "גודל",
+    "color": "צבע",
+    "align": "יישור",
+    "bold": "מודגש",
+    "resetAll": "אפס את כל העיצוב",
+    "roles": {
+      "name": "שם מוצר",
+      "price": "מחיר",
+      "unit": "יחידה",
+      "category": "קטגוריה",
+      "discount": "הנחה",
+      "badge_text": "תג",
+      "old_price": "מחיר ישן",
+      "description": "תיאור"
+    }
   }
 }

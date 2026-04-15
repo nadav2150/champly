@@ -5,7 +5,7 @@ import { renderLabel } from '../../lib/label-renderer';
 import { encodeForTag } from '../../lib/minew-image-encoder';
 import { minorUnitsToDecimalString, parseDecimalToMinorUnits } from '../../lib/money';
 import { resolveScreen } from '../../lib/tag-screen-map';
-import { parseLayoutJson } from '../../lib/template-layout';
+import { parseLayoutJson, parseTemplateStyle } from '../../lib/template-layout';
 import type { TemplateSelectRow } from '../../db/templates.server';
 import type { Product } from './tag-product';
 
@@ -17,6 +17,7 @@ type EditRow = {
   unit: 'per_unit' | 'per_kg';
   categoryName: string;
   templateId: string | null;
+  templateStyle: string | null;
   tagModel: string | null;
   hardwareTagId: string | null;
   originalName: string;
@@ -88,8 +89,9 @@ function renderTagImage(
   };
 
   try {
+    const style = parseTemplateStyle(row.templateStyle);
     const tplCanvas = document.createElement('canvas');
-    renderLabel(tplCanvas, layout, previewData);
+    renderLabel(tplCanvas, layout, previewData, { style });
 
     const tagCanvas = document.createElement('canvas');
     tagCanvas.width = tagScreen.w;
@@ -183,6 +185,7 @@ export function BulkEditSheet({
       unit: p.unit,
       categoryName: p.categoryName,
       templateId: p.templateId,
+      templateStyle: p.templateStyle,
       tagModel: p.tagModel,
       hardwareTagId: p.hardwareTagId,
       originalName: t(productKeyByName[p.name] ?? p.name),

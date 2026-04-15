@@ -240,6 +240,7 @@ export function ProductsTable({
       templateId: string | null;
       categoryId: string | null;
       templateData: string | null;
+      templateStyle: string | null;
       imageBase64: string | null;
       assignTagId: string | null;
       unassignTag: boolean;
@@ -269,6 +270,9 @@ export function ProductsTable({
       fd.set('categoryId', payload.categoryId ?? '');
       if (payload.templateData) {
         fd.set('templateData', payload.templateData);
+      }
+      if (payload.templateStyle) {
+        fd.set('templateStyle', payload.templateStyle);
       }
       if (payload.imageBase64) {
         fd.set('imageBase64', payload.imageBase64);
@@ -300,6 +304,7 @@ export function ProductsTable({
                 unit: payload.unit,
                 templateId: payload.templateId,
                 templateData: payload.templateData,
+                templateStyle: payload.templateStyle,
                 categoryId: payload.categoryId,
                 categoryName: cat?.name ?? p.categoryName,
                 categoryIcon: cat?.icon ?? p.categoryIcon,
@@ -363,6 +368,7 @@ export function ProductsTable({
         unit: editProduct.unit,
         templateId: editProduct.templateId,
         templateData: editProduct.templateData,
+        templateStyle: editProduct.templateStyle,
         categoryId: editProduct.categoryId,
         tagModel: editProduct.tagModel,
       }

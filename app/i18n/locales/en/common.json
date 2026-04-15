@@ -44,7 +44,8 @@
     "save": "Save",
     "delete": "Delete",
     "next": "Next",
-    "back": "Back"
+    "back": "Back",
+    "reset": "Reset"
   },
   "status": {
     "synced": "Synced",
@@ -86,6 +87,25 @@
   "units": {
     "perKg": "per kg",
     "perUnit": "per unit"
+  },
+  "style": {
+    "customizeTitle": "Customize style",
+    "background": "Background",
+    "size": "Size",
+    "color": "Color",
+    "align": "Alignment",
+    "bold": "Bold",
+    "resetAll": "Reset all styles",
+    "roles": {
+      "name": "Product name",
+      "price": "Price",
+      "unit": "Unit",
+      "category": "Category",
+      "discount": "Discount",
+      "badge_text": "Badge",
+      "old_price": "Old price",
+      "description": "Description"
+    }
   },
   "toast": {
     "locateSuccess": "Locate signal sent",

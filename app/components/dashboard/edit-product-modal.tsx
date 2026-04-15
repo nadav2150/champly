@@ -9,10 +9,15 @@ import {
   humanizeField,
   parseLayoutJson,
   parseTemplateData,
+  parseTemplateStyle,
+  sanitizeStyle,
   sanitizeTemplateData,
 } from '../../lib/template-layout';
+import type { TemplateStyle } from '../../lib/template-layout';
+import { applyStyle } from '../../lib/label-renderer';
 import { resolveScreen } from '../../lib/tag-screen-map';
 import { LabelPreview } from './label-preview';
+import { StyleCustomizer } from './style-customizer';
 
 type UnitOption = 'per_unit' | 'per_kg';
 
@@ -24,6 +29,7 @@ export type EditModalProduct = {
   unit: UnitOption;
   templateId: string | null;
   templateData: string | null;
+  templateStyle: string | null;
   categoryId: string | null;
   tagModel: string | null;
 };
@@ -67,6 +73,7 @@ type EditProductModalProps = {
     templateId: string | null;
     categoryId: string | null;
     templateData: string | null;
+    templateStyle: string | null;
     imageBase64: string | null;
     assignTagId: string | null;
     unassignTag: boolean;
@@ -90,6 +97,7 @@ export function EditProductModal({
   const [templateId, setTemplateId] = useState<string>('');
   const [categoryId, setCategoryId] = useState<string>('');
   const [templateDataState, setTemplateDataState] = useState<Record<string, string>>({});
+  const [templateStyleState, setTemplateStyleState] = useState<TemplateStyle>({});
   const [tagAction, setTagAction] = useState<'keep' | 'change' | 'remove'>('keep');
   const [selectedTagId, setSelectedTagId] = useState<string>('');
 
@@ -101,6 +109,7 @@ export function EditProductModal({
       setTemplateId(product.templateId ?? '');
       setCategoryId(product.categoryId ?? '');
       setTemplateDataState(parseTemplateData(product.templateData));
+      setTemplateStyleState(parseTemplateStyle(product.templateStyle));
       setTagAction('keep');
       setSelectedTagId('');
     }
@@ -155,7 +164,14 @@ export function EditProductModal({
   useEffect(() => {
     if (!layout) return;
     setTemplateDataState((prev) => sanitizeTemplateData(prev, layout));
+    setTemplateStyleState((prev) =>
+      Object.keys(prev).length > 0 ? sanitizeStyle(prev, layout) : prev,
+    );
   }, [layout]);
+
+  useEffect(() => {
+    setTemplateStyleState({});
+  }, [templateId]);
 
   const previewData = useMemo(() => {
     const cat = categories.find((c) => c.id === categoryId);
@@ -195,12 +211,24 @@ export function EditProductModal({
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
+    const sanitizedStyleObj = layout
+      ? sanitizeStyle(templateStyleState, layout)
+      : {};
+    const serializedStyle =
+      Object.keys(sanitizedStyleObj).length > 0
+        ? JSON.stringify(sanitizedStyleObj)
+        : null;
+
     let imageBase64: string | null = null;
     if (layout && tagScreen) {
       try {
-        // Render at template size first, then draw stretched to tag resolution
+        const styledLayout =
+          Object.keys(sanitizedStyleObj).length > 0
+            ? applyStyle(layout, sanitizedStyleObj)
+            : layout;
+
         const tplCanvas = document.createElement('canvas');
-        renderLabel(tplCanvas, layout, previewData);
+        renderLabel(tplCanvas, styledLayout, previewData);
 
         const tagCanvas = document.createElement('canvas');
         tagCanvas.width = tagScreen.w;
@@ -231,6 +259,7 @@ export function EditProductModal({
       templateId: templateId.length > 0 ? templateId : null,
       categoryId: categoryId.length > 0 ? categoryId : null,
       templateData: serializedTemplateData,
+      templateStyle: serializedStyle,
       imageBase64,
       assignTagId: tagAction === 'change' && selectedTagId ? selectedTagId : null,
       unassignTag: tagAction === 'remove',
@@ -251,7 +280,7 @@ export function EditProductModal({
         aria-label={t('common:actions.cancel')}
         onClick={onClose}
       />
-      <div className="relative h-full w-full overflow-y-auto bg-dashboard-card p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] lg:h-auto lg:max-h-[90dvh] lg:max-w-2xl lg:rounded-xl lg:border lg:border-dashboard-border lg:p-6 lg:pb-6 lg:shadow-[0px_8px_32px_rgba(0,0,0,0.4)]">
+      <div className="relative h-full w-full overflow-y-auto bg-dashboard-card p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] lg:h-auto lg:max-h-[90dvh] lg:max-w-3xl lg:rounded-xl lg:border lg:border-dashboard-border lg:p-6 lg:pb-6 lg:shadow-[0px_8px_32px_rgba(0,0,0,0.4)]">
         <div className="mb-5 flex items-start justify-between gap-4 lg:mb-6">
           <div>
             <h2
@@ -435,7 +464,7 @@ export function EditProductModal({
             </div>
 
             {/* Right column — template + preview */}
-            <div className="flex flex-col gap-4 lg:w-[260px] lg:shrink-0">
+            <div className="flex flex-col gap-4 lg:w-[320px] lg:shrink-0">
               <div>
                 <label
                   htmlFor={`${formId}-template`}
@@ -471,7 +500,7 @@ export function EditProductModal({
               {editableFields.length > 0 && (
                 <div className="flex flex-col gap-3 rounded-lg border border-white/15 bg-black/20 p-3">
                   <p className="text-[10px] font-semibold uppercase tracking-wider text-white/40">
-                    {t('products:templateFields', { defaultValue: 'Template fields' })}
+                    {t('products:templateFields')}
                   </p>
                   {editableFields.map((field) => (
                     <div key={field}>
@@ -498,16 +527,25 @@ export function EditProductModal({
                 </div>
               )}
 
+              {layout && (
+                <StyleCustomizer
+                  layout={layout}
+                  style={templateStyleState}
+                  onChange={setTemplateStyleState}
+                />
+              )}
+
               <div className="flex flex-1 flex-col rounded-lg border border-white/15 bg-black/20 p-4">
                 <p className="mb-3 text-xs font-medium text-white/50">
                   {t('products:tagPreview')}
                 </p>
-                <div className="flex flex-1 items-center justify-center overflow-x-auto">
+                <div dir="ltr" className="flex flex-1 items-center justify-center overflow-x-auto">
                   {layout ? (
                     <LabelPreview
                       layout={layout}
                       data={previewData}
                       scale={0.55}
+                      style={templateStyleState}
                       aria-label={t('products:tagPreview')}
                     />
                   ) : (
