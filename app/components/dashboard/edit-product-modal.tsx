@@ -497,6 +497,27 @@ export function EditProductModal({
                 )}
               </div>
 
+              <div className="sticky top-0 z-10 rounded-lg border border-white/15 bg-dashboard-card p-3">
+                <p className="mb-2 text-xs font-medium text-white/50">
+                  {t('products:tagPreview')}
+                </p>
+                <div dir="ltr" className="flex items-center justify-center overflow-x-auto">
+                  {layout ? (
+                    <LabelPreview
+                      layout={layout}
+                      data={previewData}
+                      scale={0.45}
+                      style={templateStyleState}
+                      aria-label={t('products:tagPreview')}
+                    />
+                  ) : (
+                    <div className="flex min-h-[60px] w-full items-center justify-center rounded-md border-2 border-dashed border-white/25 px-3 text-center text-xs text-white/45">
+                      {t('products:noTemplatePreview')}
+                    </div>
+                  )}
+                </div>
+              </div>
+
               {editableFields.length > 0 && (
                 <div className="flex flex-col gap-3 rounded-lg border border-white/15 bg-black/20 p-3">
                   <p className="text-[10px] font-semibold uppercase tracking-wider text-white/40">
@@ -534,27 +555,6 @@ export function EditProductModal({
                   onChange={setTemplateStyleState}
                 />
               )}
-
-              <div className="flex flex-1 flex-col rounded-lg border border-white/15 bg-black/20 p-4">
-                <p className="mb-3 text-xs font-medium text-white/50">
-                  {t('products:tagPreview')}
-                </p>
-                <div dir="ltr" className="flex flex-1 items-center justify-center overflow-x-auto">
-                  {layout ? (
-                    <LabelPreview
-                      layout={layout}
-                      data={previewData}
-                      scale={0.55}
-                      style={templateStyleState}
-                      aria-label={t('products:tagPreview')}
-                    />
-                  ) : (
-                    <div className="flex min-h-[100px] w-full items-center justify-center rounded-md border-2 border-dashed border-white/25 px-3 text-center text-xs text-white/45">
-                      {t('products:noTemplatePreview')}
-                    </div>
-                  )}
-                </div>
-              </div>
             </div>
           </div>
 
