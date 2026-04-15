@@ -399,7 +399,8 @@ export function sanitizeTemplateData(
 
 export type StyleRole =
   | 'name' | 'price' | 'unit' | 'category'
-  | 'discount' | 'badge_text' | 'old_price' | 'description';
+  | 'discount' | 'badge_text' | 'old_price' | 'description'
+  | 'detail1' | 'detail2' | 'detail3';
 
 export type SizePreset = 'xs' | 's' | 'm' | 'l' | 'xl' | '2xl' | '3xl';
 
@@ -485,6 +486,30 @@ export const ROLE_RULES: Partial<Record<StyleRole, RoleRule>> = {
     allowedColors: ['black', 'white', 'red', 'yellow'],
     allowBoldToggle: false,
     allowedAligns: ['left', 'center'],
+  },
+  detail1: {
+    labelKey: 'common:style.roles.detail1',
+    sizePresets: ['xs', 's', 'm', 'l', 'xl'],
+    sizeRatios: { xs: 0.7, s: 0.85, m: 1.0, l: 1.3, xl: 1.6 },
+    allowedColors: ['black', 'white', 'red', 'yellow'],
+    allowBoldToggle: true,
+    allowedAligns: ['left', 'center', 'right'],
+  },
+  detail2: {
+    labelKey: 'common:style.roles.detail2',
+    sizePresets: ['xs', 's', 'm', 'l', 'xl'],
+    sizeRatios: { xs: 0.7, s: 0.85, m: 1.0, l: 1.3, xl: 1.6 },
+    allowedColors: ['black', 'white', 'red', 'yellow'],
+    allowBoldToggle: true,
+    allowedAligns: ['left', 'center', 'right'],
+  },
+  detail3: {
+    labelKey: 'common:style.roles.detail3',
+    sizePresets: ['xs', 's', 'm', 'l', 'xl'],
+    sizeRatios: { xs: 0.7, s: 0.85, m: 1.0, l: 1.3, xl: 1.6 },
+    allowedColors: ['black', 'white', 'red', 'yellow'],
+    allowBoldToggle: true,
+    allowedAligns: ['left', 'center', 'right'],
   },
 };
 

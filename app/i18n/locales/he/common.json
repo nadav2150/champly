@@ -104,7 +104,10 @@
       "discount": "הנחה",
       "badge_text": "תג",
       "old_price": "מחיר ישן",
-      "description": "תיאור"
+      "description": "תיאור",
+      "detail1": "פרט 1",
+      "detail2": "פרט 2",
+      "detail3": "פרט 3"
     }
   },
   "toast": {

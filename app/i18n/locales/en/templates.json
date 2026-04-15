@@ -6,8 +6,14 @@
   "kinds": {
     "price": "Price tag",
     "promo": "Promotion",
+    "discount": "Discount",
+    "produce": "Produce",
+    "minimal": "Minimal",
     "info": "Info card",
-    "showcase": "Showcase"
+    "unit_price": "Unit price",
+    "status": "Status",
+    "image_price": "Image + Price",
+    "showcase": "Premium Showcase"
   },
   "variants": "Variants",
   "variantCount": "{{count}} variant(s)",

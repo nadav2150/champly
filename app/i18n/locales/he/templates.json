@@ -6,8 +6,14 @@
   "kinds": {
     "price": "תג מחיר",
     "promo": "מבצע",
+    "discount": "הנחה",
+    "produce": "ירקות ופירות",
+    "minimal": "מינימלי",
     "info": "כרטיס מידע",
-    "showcase": "תצוגה"
+    "unit_price": "מחיר ליחידה",
+    "status": "סטטוס",
+    "image_price": "תמונה + מחיר",
+    "showcase": "תצוגת פרימיום"
   },
   "variants": "וריאנטים",
   "variantCount": "{{count}} וריאנט(ים)",

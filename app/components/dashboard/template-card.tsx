@@ -100,12 +100,14 @@ export function previewDataForKind(kind: string): Record<string, string> {
     case 'showcase':
       return {
         ...SAMPLE_PRODUCT_DATA,
-        name: 'Watch Series 10',
-        price: '€355',
-        discount: 'Rabais de 20%',
-        detail1: 'Communication: Bluetooth',
-        detail2: 'Étanchéité: 50 mètres',
-        detail3: 'Oxygénation: manuelle',
+        name: 'Premium Wireless Headphones',
+        price: '$249.00',
+        category: 'Electronics',
+        discount: 'NEW ARRIVAL',
+        detail1: 'Battery: 30 hours',
+        detail2: 'Noise cancelling: Active',
+        detail3: 'Weight: 250g',
+        unit: 'per unit',
       };
     default:
       return { ...SAMPLE_PRODUCT_DATA };

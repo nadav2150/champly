@@ -104,7 +104,10 @@
       "discount": "Discount",
       "badge_text": "Badge",
       "old_price": "Old price",
-      "description": "Description"
+      "description": "Description",
+      "detail1": "Detail 1",
+      "detail2": "Detail 2",
+      "detail3": "Detail 3"
     }
   },
   "toast": {
