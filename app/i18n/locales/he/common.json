@@ -12,7 +12,9 @@
     "settings": "הגדרות",
     "avatar": "פרופיל משתמש",
     "logout": "התנתק",
-    "switchLanguage": "English"
+    "switchLanguage": "English",
+    "menu": "תפריט",
+    "close": "סגור"
   },
   "actions": {
     "cancel": "ביטול",

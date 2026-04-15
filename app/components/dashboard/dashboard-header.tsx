@@ -1,45 +1,9 @@
 import { useTranslation } from 'react-i18next';
 
-function IconChevronRight({ className }: { className?: string }) {
-  return (
-    <svg className={className} width="10" height="10" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-      <path d="M4.5 2L8.5 6l-4 4" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function IconDots({ className }: { className?: string }) {
-  return (
-    <svg className={className} width="14" height="14" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-      <circle cx="3" cy="8" r="1.5" />
-      <circle cx="8" cy="8" r="1.5" />
-      <circle cx="13" cy="8" r="1.5" />
-    </svg>
-  );
-}
-
 function IconPlus({ className }: { className?: string }) {
   return (
     <svg className={className} width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
       <path d="M10 4v12M4 10h12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function IconTag({ className }: { className?: string }) {
-  return (
-    <svg className={className} width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-      <path d="M3.5 11.5L11.5 3.5a2 2 0 012.8 0l2.2 2.2a2 2 0 010 2.8L8.5 16.5H3v-5.5l.5-.5z" stroke="currentColor" strokeWidth="1.25" strokeLinejoin="round" />
-      <circle cx="6.5" cy="6.5" r="1" fill="currentColor" />
-    </svg>
-  );
-}
-
-function IconPackage({ className }: { className?: string }) {
-  return (
-    <svg className={className} width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-      <path d="M3 6l7-3 7 3v10l-7 3-7-3V6z" stroke="currentColor" strokeWidth="1.25" strokeLinejoin="round" />
-      <path d="M3 6l7 3 7-3M10 9v9" stroke="currentColor" strokeWidth="1.25" />
     </svg>
   );
 }
@@ -63,15 +27,11 @@ function StatDot({ color }: { color: 'green' | 'amber' | 'red' }) {
   return <span className={`size-1.5 shrink-0 rounded-full ${c}`} aria-hidden />;
 }
 
-export type ProductFilterTab = 'all' | 'byCategory' | 'recentlyUpdated';
-
 type DashboardHeaderProps =
   | {
       variant: 'products';
       productStats: { total: number; pending: number; failed: number };
       onAddProduct?: () => void;
-      activeFilter?: ProductFilterTab;
-      onFilterChange?: (tab: ProductFilterTab) => void;
     }
   | {
       variant: 'tags';
@@ -89,8 +49,6 @@ export function DashboardHeader(props: DashboardHeaderProps) {
 
   if (isProducts) {
     const stats = props.productStats;
-    const activeFilter = props.activeFilter ?? 'all';
-    const onFilterChange = props.onFilterChange;
     const onAddProduct = props.onAddProduct;
     return (
       <>
@@ -128,63 +86,6 @@ export function DashboardHeader(props: DashboardHeaderProps) {
                   </div>
                 </div>
               </div>
-              <div
-                className="relative flex max-w-[280px] items-center gap-2 overflow-hidden rounded-lg border border-white/16 bg-dashboard-bg px-3 py-2 shadow-[0px_0px_0px_1px_#162021,0px_1px_0px_0px_#2e464b]"
-                role="status"
-              >
-                <div className="pointer-events-none absolute -bottom-16 -end-16 size-36 rounded-full bg-accent-mint/10 blur-2xl" aria-hidden />
-                <IconPackage className="relative shrink-0 text-white/80" />
-                <p className="relative min-w-0 flex-1 truncate text-xs font-medium text-white">
-                  {stats.pending > 0
-                    ? t('products:productsNeedSync', { count: stats.pending })
-                    : t('common:status.allPricesSynced')}
-                </p>
-                <button
-                  type="button"
-                  className="relative shrink-0 rounded-full border border-white/36 bg-[#152a2d] p-1 shadow-sm"
-                  aria-label={t('common:actions.syncNow')}
-                >
-                  <IconChevronRight className="text-white" />
-                </button>
-              </div>
-            </div>
-            <div className="flex h-10 w-full items-center overflow-x-auto rounded-full border border-white/16 bg-dashboard-tabbar px-2.5 shadow-[0px_0px_0px_1px_#162021,0px_1px_0px_0px_#2e464b] [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-              <div className="flex w-full items-center justify-between gap-2">
-                <div className="flex items-center gap-1.5">
-                  {([
-                    { key: 'all' as const, label: t('products:allProducts') },
-                    { key: 'byCategory' as const, label: t('products:byCategory') },
-                    { key: 'recentlyUpdated' as const, label: t('products:recentlyUpdated') },
-                  ]).map(({ key, label }) => (
-                    <button
-                      key={key}
-                      type="button"
-                      onClick={() => onFilterChange?.(key)}
-                      className={`shrink-0 rounded-full px-4 py-1 text-xs font-medium transition ${
-                        activeFilter === key
-                          ? 'border border-[rgba(233,232,237,0.2)] bg-white/20 text-white shadow-sm'
-                          : 'text-white/70 hover:text-white/90'
-                      }`}
-                    >
-                      {label}
-                    </button>
-                  ))}
-                </div>
-                <div className="hidden items-center gap-2 lg:flex">
-                  <button type="button" className="rounded-full border border-white/36 bg-[#475c5f] p-1.5 shadow-sm" aria-label={t('common:actions.moreOptions')}>
-                    <IconDots className="text-white" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={onAddProduct}
-                    className="relative flex items-center gap-1.5 rounded-full border border-white bg-accent-mint py-1 ps-3 pe-2 text-xs font-medium text-accent-mint-text shadow-sm"
-                  >
-                    {t('common:actions.addProduct')}
-                    <IconPlus className="text-accent-mint-text" />
-                    <span className="pointer-events-none absolute inset-0 rounded-full shadow-[inset_0px_2px_3px_0px_rgba(255,255,255,0.3)]" aria-hidden />
-                  </button>
-                </div>
-              </div>
             </div>
           </div>
         </section>
@@ -192,7 +93,7 @@ export function DashboardHeader(props: DashboardHeaderProps) {
         <button
           type="button"
           onClick={onAddProduct}
-          className="fixed bottom-20 inset-e-4 z-40 flex size-14 items-center justify-center rounded-full border border-white bg-accent-mint shadow-lg active:scale-95 lg:hidden"
+          className="fixed bottom-4 inset-e-4 z-40 flex size-14 items-center justify-center rounded-full border border-white bg-accent-mint shadow-lg active:scale-95 lg:hidden"
           aria-label={t('common:actions.addProduct')}
         >
           <IconPlus className="size-6 text-accent-mint-text" />
@@ -244,58 +145,13 @@ export function DashboardHeader(props: DashboardHeaderProps) {
                 </div>
               </div>
             </div>
-            <div
-              className="relative flex max-w-[280px] items-center gap-2 overflow-hidden rounded-lg border border-white/16 bg-dashboard-bg px-3 py-2 shadow-[0px_0px_0px_1px_#162021,0px_1px_0px_0px_#2e464b]"
-              role="status"
-            >
-              <div className="pointer-events-none absolute -bottom-16 -end-16 size-36 rounded-full bg-accent-mint/10 blur-2xl" aria-hidden />
-              <IconTag className="relative shrink-0 text-white/80" />
-              <p className="relative min-w-0 flex-1 truncate text-xs font-medium text-white">
-                {stats.lowBattery > 0
-                  ? t('tags:tagsLowBattery', { count: stats.lowBattery })
-                  : stats.offline > 0
-                    ? t('tags:tagsOffline', { count: stats.offline })
-                    : t('tags:allTagsHealthy')}
-              </p>
-              <button
-                type="button"
-                className="relative shrink-0 rounded-full border border-white/36 bg-[#152a2d] p-1 shadow-sm"
-                aria-label={t('common:actions.reviewAlerts')}
-              >
-                <IconChevronRight className="text-white" />
-              </button>
-            </div>
-          </div>
-          <div className="flex h-10 w-full items-center overflow-x-auto rounded-full border border-white/16 bg-dashboard-tabbar px-2.5 shadow-[0px_0px_0px_1px_#162021,0px_1px_0px_0px_#2e464b] [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            <div className="flex w-full items-center justify-between gap-2">
-              <div className="flex items-center gap-1.5">
-                <span className="shrink-0 rounded-full border border-[rgba(233,232,237,0.2)] bg-white/20 px-4 py-1 text-xs font-medium text-white shadow-sm">
-                  {t('tags:allTags')}
-                </span>
-                {[t('tags:online'), t('tags:offline'), t('tags:lowBattery')].map((label) => (
-                  <span key={label} className="shrink-0 cursor-default rounded-full px-4 py-1 text-xs text-white/70">
-                    {label}
-                  </span>
-                ))}
-              </div>
-              <div className="hidden items-center gap-2 lg:flex">
-                <button type="button" className="rounded-full border border-white/36 bg-[#475c5f] p-1.5 shadow-sm" aria-label={t('common:actions.moreOptions')}>
-                  <IconDots className="text-white" />
-                </button>
-                <button type="button" className="relative flex items-center gap-1.5 rounded-full border border-white bg-accent-mint py-1 ps-3 pe-2 text-xs font-medium text-accent-mint-text shadow-sm">
-                  {t('common:actions.pairNewTag')}
-                  <IconPlus className="text-accent-mint-text" />
-                  <span className="pointer-events-none absolute inset-0 rounded-full shadow-[inset_0px_2px_3px_0px_rgba(255,255,255,0.3)]" aria-hidden />
-                </button>
-              </div>
-            </div>
           </div>
         </div>
       </section>
       {/* Mobile FAB */}
       <button
         type="button"
-        className="fixed bottom-20 inset-e-4 z-40 flex size-14 items-center justify-center rounded-full border border-white bg-accent-mint shadow-lg active:scale-95 lg:hidden"
+        className="fixed bottom-4 inset-e-4 z-40 flex size-14 items-center justify-center rounded-full border border-white bg-accent-mint shadow-lg active:scale-95 lg:hidden"
         aria-label={t('common:actions.pairNewTag')}
       >
         <IconPlus className="size-6 text-accent-mint-text" />

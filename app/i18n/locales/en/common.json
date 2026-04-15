@@ -12,7 +12,9 @@
     "settings": "Settings",
     "avatar": "User avatar",
     "logout": "Log out",
-    "switchLanguage": "עברית"
+    "switchLanguage": "עברית",
+    "menu": "Menu",
+    "close": "Close"
   },
   "actions": {
     "cancel": "Cancel",

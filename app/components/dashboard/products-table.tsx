@@ -7,7 +7,6 @@ import { IoCreateOutline, IoTrashOutline } from 'react-icons/io5';
 import { minorUnitsToDecimalString } from '../../lib/money';
 import type { TemplateSelectRow } from '../../db/templates.server';
 import type { DashboardOutletContext } from '../../types/dashboard-outlet-context';
-import type { ProductFilterTab } from './dashboard-header';
 import { BulkEditSheet } from './bulk-edit-sheet';
 import { CreateProductModal } from './create-product-modal';
 import { DeleteProductDialog } from './delete-product-dialog';
@@ -128,7 +127,6 @@ type ProductsTableProps = {
   categories: DashboardOutletContext['categories'];
   createOpen?: boolean;
   onCreateOpenChange?: (open: boolean) => void;
-  headerFilter?: ProductFilterTab;
   unlinkedTags: UnlinkedTag[];
 };
 
@@ -138,7 +136,6 @@ export function ProductsTable({
   categories,
   createOpen: externalCreateOpen,
   onCreateOpenChange,
-  headerFilter = 'all',
   unlinkedTags,
 }: ProductsTableProps) {
   const { t } = useTranslation(['common', 'products']);
@@ -191,17 +188,8 @@ export function ProductsTable({
     if (statusFilter !== 'all') {
       result = result.filter((p) => p.syncStatus === statusFilter);
     }
-    if (headerFilter === 'byCategory') {
-      result = [...result].sort((a, b) =>
-        (a.categoryName ?? '').localeCompare(b.categoryName ?? ''),
-      );
-    } else if (headerFilter === 'recentlyUpdated') {
-      result = result.filter(
-        (p) => p.syncStatus === 'pending' || p.syncStatus === 'failed',
-      );
-    }
     return result;
-  }, [products, searchQuery, statusFilter, headerFilter, t]);
+  }, [products, searchQuery, statusFilter, t]);
 
   function toggleSelect(id: string) {
     setSelectedIds((prev) => {

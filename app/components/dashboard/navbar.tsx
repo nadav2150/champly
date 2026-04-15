@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Form, Link, useLocation } from 'react-router';
 import { useTranslation } from 'react-i18next';
-import { IoSettingsOutline, IoNotificationsOutline, IoLogOutOutline, IoLanguageOutline, IoHomeOutline, IoStorefrontOutline } from 'react-icons/io5';
+import { IoSettingsOutline, IoNotificationsOutline, IoLogOutOutline, IoLanguageOutline, IoHomeOutline, IoStorefrontOutline, IoMenuOutline, IoCloseOutline } from 'react-icons/io5';
 import { BiBarcode } from 'react-icons/bi';
 import {
   getLanguageFromPathname,
@@ -182,10 +182,10 @@ const navPillInactive =
 const navPillActive =
   'flex items-center gap-2 rounded-full bg-white py-2 pl-2 pr-4 text-sm font-medium tracking-[-0.28px] text-dashboard-bg';
 
-const mobileTabBase =
-  'flex flex-1 flex-col items-center gap-1 py-2 text-[10px] font-medium transition';
-const mobileTabInactive = `${mobileTabBase} text-white/50`;
-const mobileTabActive = `${mobileTabBase} text-accent-mint`;
+const drawerLinkBase =
+  'flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition';
+const drawerLinkInactive = `${drawerLinkBase} text-white/70 hover:bg-white/5`;
+const drawerLinkActive = `${drawerLinkBase} bg-accent-mint/10 text-accent-mint`;
 
 type NavbarProps = {
   userName?: string;
@@ -194,6 +194,13 @@ type NavbarProps = {
 export function Navbar({ userName = '' }: NavbarProps) {
   const { t } = useTranslation('common');
   const { pathname } = useLocation();
+  const [drawerOpen, setDrawerOpen] = useState(false);
+
+  useEffect(() => {
+    if (!drawerOpen) return;
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = ''; };
+  }, [drawerOpen]);
 
   const initials = userName
     .split(/[\s@]+/)
@@ -213,13 +220,29 @@ export function Navbar({ userName = '' }: NavbarProps) {
   const isTags = normalizedPath === '/dashboard/tags';
   const isTemplates = normalizedPath === '/dashboard/templates';
 
+  const navLinks = [
+    { to: '/dashboard', label: t('nav.home'), icon: <IoHomeOutline className="size-5" />, active: isHome },
+    { to: '/dashboard/stores', label: t('nav.stores'), icon: <IoStorefrontOutline className="size-5" />, active: isStores },
+    { to: '/dashboard/products', label: t('nav.products'), icon: <IconPackage className="size-5" />, active: isProducts },
+    { to: '/dashboard/tags', label: t('nav.tags'), icon: <BiBarcode className="size-5" />, active: isTags },
+    { to: '/dashboard/templates', label: t('nav.templates'), icon: <IconTemplate className="size-5" />, active: isTemplates },
+  ];
+
   return (
     <>
-      {/* Mobile top bar -- avatar + logo, hidden on desktop */}
+      {/* Mobile top bar -- hamburger + logo + avatar, hidden on desktop */}
       <div className="flex items-center justify-between px-4 py-3 lg:hidden">
+        <button
+          type="button"
+          onClick={() => setDrawerOpen(true)}
+          className="rounded-lg p-1.5 text-white/80 transition hover:bg-white/10"
+          aria-label={t('nav.menu')}
+        >
+          <IoMenuOutline size={24} />
+        </button>
         <div className="flex items-center gap-2.5">
-          <img src="/logo_no_text.svg" alt="Champly" className="h-20 w-auto" />
-          <span className="translate-y-1 font-kindred text-xl leading-none tracking-widest text-[#f5f5dc]">CHAMPTY</span>
+          <img src="/logo_no_text.svg" alt="Champly" className="h-12 w-auto" />
+          <span className="translate-y-0.5 font-kindred text-lg leading-none tracking-widest text-[#f5f5dc]">CHAMPTY</span>
         </div>
         <AvatarMenu
           userName={userName}
@@ -228,6 +251,82 @@ export function Navbar({ userName = '' }: NavbarProps) {
           pathname={pathname}
           size="sm"
         />
+      </div>
+
+      {/* Mobile drawer -- hidden on desktop */}
+      <div
+        className={`fixed inset-0 z-60 lg:hidden ${drawerOpen ? 'pointer-events-auto' : 'pointer-events-none'}`}
+        aria-hidden={!drawerOpen}
+      >
+        {/* Backdrop */}
+        <div
+          className={`absolute inset-0 bg-black/60 transition-opacity duration-300 ${drawerOpen ? 'opacity-100' : 'opacity-0'}`}
+          onClick={() => setDrawerOpen(false)}
+        />
+        {/* Drawer panel */}
+        <nav
+          className={`absolute inset-y-0 inset-s-0 flex w-72 flex-col bg-dashboard-bg shadow-2xl transition-transform duration-300 ease-out ${drawerOpen ? 'translate-x-0' : 'ltr:-translate-x-full rtl:translate-x-full'}`}
+          aria-label={t('nav.main')}
+        >
+          {/* Header */}
+          <div className="flex items-center justify-between border-b border-white/10 px-4 py-4">
+            <div className="flex items-center gap-2.5">
+              <img src="/logo_no_text.svg" alt="Champly" className="h-10 w-auto" />
+              <span className="translate-y-0.5 font-kindred text-base leading-none tracking-widest text-[#f5f5dc]">CHAMPTY</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setDrawerOpen(false)}
+              className="rounded-lg p-1.5 text-white/60 transition hover:bg-white/10 hover:text-white"
+              aria-label={t('nav.close')}
+            >
+              <IoCloseOutline size={22} />
+            </button>
+          </div>
+
+          {/* Nav links */}
+          <div className="flex-1 overflow-y-auto px-3 py-4">
+            <div className="flex flex-col gap-1">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.to}
+                  to={toLocalizedPath(link.to, language)}
+                  className={link.active ? drawerLinkActive : drawerLinkInactive}
+                  aria-current={link.active ? 'page' : undefined}
+                  onClick={() => setDrawerOpen(false)}
+                >
+                  {link.icon}
+                  {link.label}
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          {/* Footer -- language switch + logout */}
+          <div className="border-t border-white/10 px-3 py-4">
+            <div className="mb-2 truncate px-4 py-1 text-xs font-medium text-white/40">
+              {userName}
+            </div>
+            <Link
+              to={toLocalizedPath(pathname, language === 'en' ? 'he' : 'en')}
+              reloadDocument
+              className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-white/70 transition hover:bg-white/5"
+              onClick={() => setDrawerOpen(false)}
+            >
+              <IoLanguageOutline className="size-5" />
+              {t('nav.switchLanguage')}
+            </Link>
+            <Form method="post" action="/logout">
+              <button
+                type="submit"
+                className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-red-400 transition hover:bg-white/5"
+              >
+                <IoLogOutOutline className="size-5" />
+                {t('nav.logout')}
+              </button>
+            </Form>
+          </div>
+        </nav>
       </div>
 
       {/* Desktop top navbar -- hidden on mobile */}
@@ -340,53 +439,6 @@ export function Navbar({ userName = '' }: NavbarProps) {
           </div>
         </div>
       </header>
-
-      {/* Mobile bottom tab bar -- hidden on desktop */}
-      <nav
-        className="fixed inset-x-0 bottom-0 z-50 flex items-center border-t border-dashboard-border bg-dashboard-bg pb-[env(safe-area-inset-bottom)] lg:hidden"
-        aria-label={t('nav.main')}
-      >
-        <Link
-          to={toLocalizedPath('/dashboard', language)}
-          className={isHome ? mobileTabActive : mobileTabInactive}
-          aria-current={isHome ? 'page' : undefined}
-        >
-          <IoHomeOutline className="size-5" />
-          {t('nav.home')}
-        </Link>
-        <Link
-          to={toLocalizedPath('/dashboard/stores', language)}
-          className={isStores ? mobileTabActive : mobileTabInactive}
-          aria-current={isStores ? 'page' : undefined}
-        >
-          <IoStorefrontOutline className="size-5" />
-          {t('nav.stores')}
-        </Link>
-        <Link
-          to={toLocalizedPath('/dashboard/products', language)}
-          className={isProducts ? mobileTabActive : mobileTabInactive}
-          aria-current={isProducts ? 'page' : undefined}
-        >
-          <IconPackage className="size-5" />
-          {t('nav.products')}
-        </Link>
-        <Link
-          to={toLocalizedPath('/dashboard/tags', language)}
-          className={isTags ? mobileTabActive : mobileTabInactive}
-          aria-current={isTags ? 'page' : undefined}
-        >
-          <BiBarcode className="size-5" />
-          {t('nav.tags')}
-        </Link>
-        <Link
-          to={toLocalizedPath('/dashboard/templates', language)}
-          className={isTemplates ? mobileTabActive : mobileTabInactive}
-          aria-current={isTemplates ? 'page' : undefined}
-        >
-          <IconTemplate className="size-5" />
-          {t('nav.templates')}
-        </Link>
-      </nav>
     </>
   );
 }
