@@ -16,7 +16,7 @@ import { WhyNow } from '../components/landing/why-now';
 
 export default function LandingPage() {
   return (
-    <main>
+    <main className='overflow-x-hidden'>
       <div className='bg-linear-to-b from-landing-hero-from via-landing-hero-mid to-landing-hero-to text-white'>
         <LandingNavbar />
         <Hero />

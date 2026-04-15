@@ -2,9 +2,19 @@ import type { ReactNode } from 'react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useFetcher } from 'react-router';
 import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
 import { TAG_SCREEN_MAP, resolveScreen } from '../../lib/tag-screen-map';
 import type { Tag } from './tag-product';
 import { HwStatus } from './tag-status';
+
+function Spinner({ className = 'size-3.5' }: { className?: string }) {
+  return (
+    <svg className={`animate-spin ${className}`} viewBox="0 0 24 24" fill="none" aria-hidden>
+      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+    </svg>
+  );
+}
 
 function IconSearch({ className }: { className?: string }) {
   return (
@@ -129,6 +139,18 @@ function PairTagForm({ tagInternalId, productOptions }: PairTagFormProps) {
   const { t } = useTranslation(['common', 'tags']);
   const fetcher = useFetcher();
   const [productId, setProductId] = useState('');
+  const busy = fetcher.state !== 'idle';
+
+  useEffect(() => {
+    if (fetcher.state !== 'idle' || !fetcher.data) return;
+    const res = fetcher.data as { ok: boolean; error?: string };
+    if (res.ok) {
+      toast.success(t('common:toast.pairSuccess'));
+      setProductId('');
+    } else {
+      toast.error(res.error ?? t('common:toast.pairFailed'));
+    }
+  }, [fetcher.state, fetcher.data, t]);
 
   return (
     <fetcher.Form method="post" className="flex flex-wrap items-center gap-1">
@@ -150,11 +172,11 @@ function PairTagForm({ tagInternalId, productOptions }: PairTagFormProps) {
       </select>
       <button
         type="submit"
-        disabled={!productId || fetcher.state !== 'idle'}
+        disabled={!productId || busy}
         className="inline-flex items-center gap-1 rounded-[10px] border border-accent-mint/30 bg-accent-mint/10 px-2 py-1 text-xs font-medium text-churn-low shadow-sm disabled:opacity-40"
       >
-        <IconLink className="shrink-0" />
-        {t('common:actions.pair')}
+        {busy ? <Spinner /> : <IconLink className="shrink-0" />}
+        <span className={busy ? 'sr-only' : ''}>{t('common:actions.pair')}</span>
       </button>
     </fetcher.Form>
   );
@@ -191,7 +213,7 @@ const MODEL_OPTIONS = [
 ];
 
 function TagModelBadge({ model, tagInternalId }: { model: string | null; tagInternalId: string }) {
-  const { t } = useTranslation(['tags']);
+  const { t } = useTranslation(['tags', 'common']);
   const fetcher = useFetcher();
   const [editing, setEditing] = useState(false);
   const screen = resolveScreen(model);
@@ -199,8 +221,15 @@ function TagModelBadge({ model, tagInternalId }: { model: string | null; tagInte
   const busy = fetcher.state !== 'idle';
 
   useEffect(() => {
-    if (fetcher.state === 'idle' && fetcher.data) setEditing(false);
-  }, [fetcher.state, fetcher.data]);
+    if (fetcher.state !== 'idle' || !fetcher.data) return;
+    const res = fetcher.data as { ok: boolean; error?: string };
+    if (res.ok) {
+      toast.success(t('common:toast.modelUpdated'));
+      setEditing(false);
+    } else {
+      toast.error(res.error ?? t('common:toast.modelUpdateFailed'));
+    }
+  }, [fetcher.state, fetcher.data, t]);
 
   const selectLabel = (m: string) => {
     const s = TAG_SCREEN_MAP[m];
@@ -327,15 +356,21 @@ const COMMAND_ITEMS: CommandItem[] = [
 ];
 
 function TagCommandDropdown({ mac }: { mac: string }) {
-  const { t } = useTranslation(['tags']);
+  const { t } = useTranslation(['tags', 'common']);
   const fetcher = useFetcher();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const busy = fetcher.state !== 'idle';
 
-  const result = fetcher.data as
-    | { ok: boolean; commandResult?: { status: string; error?: string; stage1Code?: number; stage2Code?: number }; error?: string }
-    | undefined;
+  useEffect(() => {
+    if (fetcher.state !== 'idle' || !fetcher.data) return;
+    const res = fetcher.data as { ok: boolean; commandResult?: { status: string }; error?: string };
+    if (res.ok) {
+      toast.success(res.commandResult?.status ?? t('common:toast.commandSuccess'));
+    } else {
+      toast.error(res.error ?? t('common:toast.commandFailed'));
+    }
+  }, [fetcher.state, fetcher.data, t]);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -353,7 +388,8 @@ function TagCommandDropdown({ mac }: { mac: string }) {
         disabled={busy}
         className="inline-flex items-center gap-1 rounded-[10px] border border-purple-200 bg-purple-50 px-2.5 py-1.5 text-xs font-medium text-purple-600 shadow-sm disabled:opacity-40"
       >
-        {busy ? t('tags:sending') : t('tags:commandMenu')}
+        {busy ? <Spinner className="size-3.5 text-purple-600" /> : null}
+        <span>{busy ? t('tags:sending') : t('tags:commandMenu')}</span>
         <IconChevronDown />
       </button>
 
@@ -373,14 +409,6 @@ function TagCommandDropdown({ mac }: { mac: string }) {
           ))}
         </div>
       )}
-
-      {result && (
-        <span className={`ms-2 text-[10px] font-medium ${result.ok ? 'text-churn-low' : 'text-churn-high'}`}>
-          {result.ok
-            ? result.commandResult?.status ?? t('tags:commandStatus.success')
-            : result.error ?? t('tags:commandStatus.failed')}
-        </span>
-      )}
     </div>
   );
 }
@@ -389,6 +417,16 @@ function LocateTagButton({ mac, fullWidth }: { mac: string; fullWidth?: boolean 
   const { t } = useTranslation(['tags', 'common']);
   const fetcher = useFetcher();
   const busy = fetcher.state !== 'idle';
+
+  useEffect(() => {
+    if (fetcher.state !== 'idle' || !fetcher.data) return;
+    const res = fetcher.data as { ok: boolean; error?: string };
+    if (res.ok) {
+      toast.success(t('common:toast.locateSuccess'));
+    } else {
+      toast.error(res.error ?? t('common:toast.locateFailed'));
+    }
+  }, [fetcher.state, fetcher.data, t]);
 
   return (
     <fetcher.Form method="post">
@@ -399,19 +437,31 @@ function LocateTagButton({ mac, fullWidth }: { mac: string; fullWidth?: boolean 
         disabled={busy}
         className={`inline-flex items-center justify-center gap-1 rounded-[10px] border border-blue-200 bg-blue-50 px-2.5 py-1.5 text-xs font-medium text-blue-600 shadow-sm disabled:opacity-40 ${fullWidth ? 'w-full' : ''}`}
       >
-        <IconLocate className="shrink-0" />
-        {busy ? t('tags:sending') : t('common:actions.locate')}
+        {busy ? <Spinner className="size-3.5 text-blue-600" /> : <IconLocate className="shrink-0" />}
+        <span className={busy ? 'sr-only' : ''}>{t('common:actions.locate')}</span>
       </button>
     </fetcher.Form>
   );
 }
 
 function RegisterTagForm() {
-  const { t } = useTranslation(['tags']);
+  const { t } = useTranslation(['tags', 'common']);
   const fetcher = useFetcher();
   const [mac, setMac] = useState('');
   const [bleKey, setBleKey] = useState('');
   const busy = fetcher.state !== 'idle';
+
+  useEffect(() => {
+    if (fetcher.state !== 'idle' || !fetcher.data) return;
+    const res = fetcher.data as { ok: boolean; error?: string };
+    if (res.ok) {
+      toast.success(t('common:toast.registerSuccess'));
+      setMac('');
+      setBleKey('');
+    } else {
+      toast.error(res.error ?? t('common:toast.registerFailed'));
+    }
+  }, [fetcher.state, fetcher.data, t]);
 
   return (
     <fetcher.Form method="post" className="flex flex-wrap items-end gap-2 rounded-lg border border-dashed border-content-border bg-surface-subtle/30 p-3">
@@ -441,8 +491,9 @@ function RegisterTagForm() {
       <button
         type="submit"
         disabled={busy || !mac || !bleKey}
-        className="rounded-[10px] border border-accent-mint/30 bg-accent-mint/10 px-3 py-1.5 text-xs font-medium text-churn-low shadow-sm disabled:opacity-40"
+        className="inline-flex items-center gap-1 rounded-[10px] border border-accent-mint/30 bg-accent-mint/10 px-3 py-1.5 text-xs font-medium text-churn-low shadow-sm disabled:opacity-40"
       >
+        {busy && <Spinner />}
         {t('tags:registerTag')}
       </button>
     </fetcher.Form>
@@ -498,6 +549,21 @@ export function TagsTable({ initialTags, productOptions, gateways, bridgeHealth 
   const bulkLocateResult = bulkLocateFetcher.data as
     | { ok: boolean; bulkLocate?: { total: number; succeeded: number }; error?: string }
     | undefined;
+
+  useEffect(() => {
+    if (bulkLocateFetcher.state !== 'idle' || !bulkLocateFetcher.data) return;
+    const res = bulkLocateResult;
+    if (res?.ok && res.bulkLocate) {
+      toast.success(
+        t('common:toast.bulkLocateSuccess', {
+          succeeded: res.bulkLocate.succeeded,
+          total: res.bulkLocate.total,
+        }),
+      );
+    } else {
+      toast.error(res?.error ?? t('common:toast.bulkLocateFailed'));
+    }
+  }, [bulkLocateFetcher.state, bulkLocateFetcher.data, bulkLocateResult, t]);
 
   function getSelectedMacs(): string[] {
     return filtered
@@ -560,16 +626,11 @@ export function TagsTable({ initialTags, productOptions, gateways, bridgeHealth 
                   className="rounded-full border border-blue-300 bg-blue-50 px-4 py-2 text-sm font-medium text-blue-600 shadow-sm disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   <span className="flex items-center gap-1.5">
-                    <IconLocate />
+                    {bulkLocateBusy ? <Spinner className="size-4 text-blue-600" /> : <IconLocate />}
                     {bulkLocateBusy ? t('tags:sending') : t('tags:bulkLocate')}
                   </span>
                 </button>
               </bulkLocateFetcher.Form>
-              {bulkLocateResult?.ok && bulkLocateResult.bulkLocate && (
-                <span className="text-xs font-medium text-churn-low">
-                  {bulkLocateResult.bulkLocate.succeeded}/{bulkLocateResult.bulkLocate.total}
-                </span>
-              )}
               <button
                 type="button"
                 onClick={handleBulkSync}

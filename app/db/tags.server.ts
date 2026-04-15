@@ -257,6 +257,8 @@ export async function getTagMacByProductId(
   return row?.mac ?? null;
 }
 
+const GATEWAY_STALE_MS = 2 * 60 * 1000;
+
 export async function getGatewayStatus(db: AppDatabase) {
   const rows = await db
     .select({
@@ -268,7 +270,16 @@ export async function getGatewayStatus(db: AppDatabase) {
       lastSeen: gateways.lastSeen,
     })
     .from(gateways);
-  return rows;
+
+  const now = Date.now();
+  return rows.map((gw) => {
+    const lastSeenMs = gw.lastSeen ? new Date(gw.lastSeen).getTime() : 0;
+    const isStale = !gw.lastSeen || now - lastSeenMs > GATEWAY_STALE_MS;
+    return {
+      ...gw,
+      status: isStale ? ('offline' as const) : gw.status,
+    };
+  });
 }
 
 export async function listAllTags(db: AppDatabase) {

@@ -84,5 +84,23 @@
   "units": {
     "perKg": "per kg",
     "perUnit": "per unit"
+  },
+  "toast": {
+    "locateSuccess": "Locate signal sent",
+    "locateFailed": "Locate failed",
+    "commandSuccess": "Command sent successfully",
+    "commandFailed": "Command failed",
+    "pairSuccess": "Tag paired successfully",
+    "pairFailed": "Pairing failed",
+    "registerSuccess": "Tag registered",
+    "registerFailed": "Registration failed",
+    "bulkLocateSuccess": "Located {{succeeded}}/{{total}} tags",
+    "bulkLocateFailed": "Bulk locate failed",
+    "priceUpdateSuccess": "Prices updated",
+    "priceUpdateFailed": "Price update failed",
+    "productSaved": "Product saved",
+    "productSaveFailed": "Save failed",
+    "modelUpdated": "Model updated",
+    "modelUpdateFailed": "Model update failed"
   }
 }

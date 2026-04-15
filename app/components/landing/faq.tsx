@@ -37,33 +37,36 @@ export function Faq() {
   );
 
   return (
-    <section className='bg-gradient-to-b from-landing-faq-from to-landing-faq-to py-16 text-white sm:py-24' ref={handleRef}>
+    <section id='faq' className='bg-linear-to-b from-landing-faq-from to-landing-faq-to py-20 text-white sm:py-28' ref={handleRef}>
       <div className='mx-auto max-w-4xl px-5 sm:px-6 lg:px-8'>
-        <h2 className='reveal text-center text-3xl font-bold sm:text-4xl lg:text-5xl'>
-          {t('faq.title')}
-        </h2>
+        <div className='reveal text-center'>
+          <span className='section-badge bg-white/10! text-accent-mint!'>FAQ</span>
+          <h2 className='mt-8 text-3xl font-bold sm:text-4xl lg:text-[3.25rem] lg:leading-[1.1]'>
+            {t('faq.title')}
+          </h2>
+        </div>
 
-        <div className='mt-12 space-y-3'>
+        <div className='mt-14 space-y-3'>
           {items.map((item, index) => {
             const isOpen = index === openIndex;
             return (
               <article
                 key={item.question}
-                className={`reveal reveal-delay-${Math.min(index + 1, 6)}${revealed ? ' visible' : ''} overflow-hidden rounded-xl border transition-all ${
+                className={`reveal reveal-delay-${Math.min(index + 1, 6)}${revealed ? ' visible' : ''} overflow-hidden rounded-2xl border transition-all ${
                   isOpen
-                    ? 'border-accent-mint/30 bg-white/10'
-                    : 'border-white/10 bg-white/5 hover:border-white/20 hover:bg-white/[0.08]'
+                    ? 'border-accent-mint/25 bg-white/10'
+                    : 'border-white/8 bg-white/4 hover:border-white/15 hover:bg-white/6'
                 } backdrop-blur-sm`}
               >
                 <button
                   type='button'
                   onClick={() => setOpenIndex(isOpen ? -1 : index)}
-                  className='flex w-full items-center justify-between gap-4 px-6 py-5 text-start'
+                  className='flex w-full items-center justify-between gap-4 px-7 py-6 text-start'
                 >
                   <span className='text-lg font-semibold sm:text-xl'>{item.question}</span>
                   <span
-                    className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xl transition-transform ${
-                      isOpen ? 'rotate-45 bg-accent-mint/20 text-accent-mint' : 'bg-white/10 text-white/70'
+                    className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-lg font-medium transition-all duration-300 ${
+                      isOpen ? 'rotate-45 bg-accent-mint/20 text-accent-mint' : 'bg-white/10 text-white/60'
                     }`}
                   >
                     +
@@ -75,7 +78,7 @@ export function Faq() {
                   }`}
                 >
                   <div className='overflow-hidden'>
-                    <p className='px-6 pb-5 text-base leading-relaxed text-white/80'>
+                    <p className='px-7 pb-6 text-base leading-relaxed text-white/70'>
                       {item.answer}
                     </p>
                   </div>

@@ -17,27 +17,31 @@ export function TargetAudience() {
   const ref = useReveal();
 
   return (
-    <section className='bg-white py-16 sm:py-24' ref={ref}>
-      <div className='mx-auto max-w-4xl px-5 sm:px-6 lg:px-8'>
+    <section className='bg-white py-20 sm:py-28' ref={ref}>
+      <div className='mx-auto max-w-5xl px-5 sm:px-6 lg:px-8'>
         <div className='reveal text-center'>
-          <h2 className='text-3xl font-bold text-slate-900 sm:text-4xl lg:text-5xl'>
+          <span className='section-badge'>{t('targetAudience.title')}</span>
+          <h2 className='mt-8 text-3xl font-bold text-slate-900 sm:text-4xl lg:text-[3.25rem] lg:leading-[1.1]'>
             {t('targetAudience.title')}
           </h2>
-          <p className='mt-4 text-lg text-slate-600'>
+          <p className='mt-5 text-lg text-slate-600'>
             {t('targetAudience.subtitle')}
           </p>
         </div>
 
-        <div className='mt-12 grid gap-4 sm:grid-cols-2'>
+        <div className='mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-3'>
           {itemKeys.map((key, index) => (
             <div
               key={key}
-              className={`reveal reveal-delay-${index + 1} flex items-center gap-3 rounded-xl border border-landing-border bg-landing-surface p-4 transition-all hover:border-accent-mint/40 hover:shadow-md`}
+              className={`reveal reveal-delay-${index + 1} group rounded-2xl border border-landing-border bg-landing-surface p-6 transition-all hover:-translate-y-1 hover:border-accent-mint/40 hover:shadow-lg hover:shadow-accent-mint/5`}
             >
-              <HiOutlineCheckCircle className='h-6 w-6 shrink-0 text-churn-low' />
-              <p className='text-base font-medium text-slate-800'>
-                {t(`targetAudience.items.${key}`)}
-              </p>
+              <div className='mb-4 h-1 w-12 rounded-full bg-linear-to-r from-accent-mint to-churn-low transition-all group-hover:w-20' />
+              <div className='flex items-start gap-3'>
+                <HiOutlineCheckCircle className='mt-0.5 h-6 w-6 shrink-0 text-churn-low' />
+                <p className='text-base font-medium text-slate-800'>
+                  {t(`targetAudience.items.${key}`)}
+                </p>
+              </div>
             </div>
           ))}
         </div>

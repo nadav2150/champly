@@ -84,5 +84,23 @@
   "units": {
     "perKg": "לק״ג",
     "perUnit": "ליחידה"
+  },
+  "toast": {
+    "locateSuccess": "אות איתור נשלח",
+    "locateFailed": "איתור נכשל",
+    "commandSuccess": "הפקודה נשלחה בהצלחה",
+    "commandFailed": "הפקודה נכשלה",
+    "pairSuccess": "התגית שויכה בהצלחה",
+    "pairFailed": "השיוך נכשל",
+    "registerSuccess": "התגית נרשמה",
+    "registerFailed": "הרישום נכשל",
+    "bulkLocateSuccess": "אותרו {{succeeded}}/{{total}} תגיות",
+    "bulkLocateFailed": "איתור מרובה נכשל",
+    "priceUpdateSuccess": "המחירים עודכנו",
+    "priceUpdateFailed": "עדכון המחירים נכשל",
+    "productSaved": "המוצר נשמר",
+    "productSaveFailed": "השמירה נכשלה",
+    "modelUpdated": "הדגם עודכן",
+    "modelUpdateFailed": "עדכון הדגם נכשל"
   }
 }

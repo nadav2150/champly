@@ -1,7 +1,8 @@
 import type { ReactNode } from 'react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useFetcher } from 'react-router';
 import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
 import { IoCreateOutline, IoTrashOutline } from 'react-icons/io5';
 import { minorUnitsToDecimalString } from '../../lib/money';
 import type { TemplateSelectRow } from '../../db/templates.server';
@@ -13,6 +14,15 @@ import { DeleteProductDialog } from './delete-product-dialog';
 import { EditProductModal } from './edit-product-modal';
 import type { Product } from './tag-product';
 import { TagStatus, type TagSyncStatus } from './tag-status';
+
+function Spinner({ className = 'size-3.5' }: { className?: string }) {
+  return (
+    <svg className={`animate-spin ${className}`} viewBox="0 0 24 24" fill="none" aria-hidden>
+      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+    </svg>
+  );
+}
 
 function IconSearch({ className }: { className?: string }) {
   return (
@@ -45,6 +55,16 @@ function LocateProductTagButton({ mac }: { mac: string }) {
   const fetcher = useFetcher();
   const busy = fetcher.state !== 'idle';
 
+  useEffect(() => {
+    if (fetcher.state !== 'idle' || !fetcher.data) return;
+    const res = fetcher.data as { ok: boolean; error?: string };
+    if (res.ok) {
+      toast.success(t('common:toast.locateSuccess'));
+    } else {
+      toast.error(res.error ?? t('common:toast.locateFailed'));
+    }
+  }, [fetcher.state, fetcher.data, t]);
+
   return (
     <fetcher.Form method="post">
       <input type="hidden" name="intent" value="send-locate" />
@@ -54,8 +74,8 @@ function LocateProductTagButton({ mac }: { mac: string }) {
         disabled={busy}
         className="inline-flex items-center gap-1 rounded-[10px] border border-blue-200 bg-blue-50 px-2.5 py-1.5 text-xs font-medium text-blue-600 shadow-sm disabled:opacity-40"
       >
-        <IconLocate className="shrink-0" />
-        {t('common:actions.locate')}
+        {busy ? <Spinner className="size-3.5 text-blue-600" /> : <IconLocate className="shrink-0" />}
+        <span className={busy ? 'sr-only' : ''}>{t('common:actions.locate')}</span>
       </button>
     </fetcher.Form>
   );
@@ -138,10 +158,25 @@ export function ProductsTable({
   } | null>(null);
   const [bulkEditOpen, setBulkEditOpen] = useState(false);
   const [bulkEditKey, setBulkEditKey] = useState(0);
+  const lastFetcherIntent = useRef<string | null>(null);
 
   useEffect(() => {
     setProducts(initialProducts);
   }, [initialProducts]);
+
+  useEffect(() => {
+    if (fetcher.state !== 'idle' || !fetcher.data) return;
+    const res = fetcher.data as { ok: boolean; error?: string };
+    const intent = lastFetcherIntent.current;
+    if (intent === 'update-product') {
+      if (res.ok) toast.success(t('common:toast.productSaved'));
+      else toast.error(res.error ?? t('common:toast.productSaveFailed'));
+    } else if (intent === 'bulk-price-update') {
+      if (res.ok) toast.success(t('common:toast.priceUpdateSuccess'));
+      else toast.error(res.error ?? t('common:toast.priceUpdateFailed'));
+    }
+    lastFetcherIntent.current = null;
+  }, [fetcher.state, fetcher.data, t]);
 
   const filtered = useMemo(() => {
     let result = products;
@@ -223,6 +258,7 @@ export function ProductsTable({
       if (payload.imageBase64) {
         fd.set('imageBase64', payload.imageBase64);
       }
+      lastFetcherIntent.current = 'update-product';
       fetcher.submit(fd, { method: 'post' });
 
       const cat = categories.find((c) => c.id === payload.categoryId);
@@ -267,6 +303,7 @@ export function ProductsTable({
     const fd = new FormData();
     fd.set('intent', 'bulk-price-update');
     fd.set('ids', JSON.stringify([...selectedIds]));
+    lastFetcherIntent.current = 'bulk-price-update';
     fetcher.submit(fd, { method: 'post' });
 
     setProducts((prev) =>
@@ -412,8 +449,11 @@ export function ProductsTable({
                   type="button"
                   onClick={handleBulkPriceUpdate}
                   disabled={selectedIds.size === 0 || fetcher.state !== 'idle'}
-                  className="hidden rounded-full border border-dashboard-border bg-dashboard-card px-4 py-2 text-sm font-medium text-white shadow-sm disabled:cursor-not-allowed disabled:opacity-40 sm:block"
+                  className="hidden items-center gap-1.5 rounded-full border border-dashboard-border bg-dashboard-card px-4 py-2 text-sm font-medium text-white shadow-sm disabled:cursor-not-allowed disabled:opacity-40 sm:inline-flex"
                 >
+                  {fetcher.state !== 'idle' && lastFetcherIntent.current === 'bulk-price-update' && (
+                    <Spinner className="size-4" />
+                  )}
                   {t('common:actions.bulkPriceUpdate')}
                 </button>
               </div>

@@ -73,6 +73,11 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     console.error('Failed to load tags data:', err);
   }
 
+  const mqttDown = !bridgeHealth || bridgeHealth.mqtt !== 'connected';
+  if (mqttDown) {
+    gatewayList = gatewayList.map((gw) => ({ ...gw, status: 'offline' as const }));
+  }
+
   return data(
     { tags, tagStats, productOptions, gateways: gatewayList, bridgeHealth },
     { headers },

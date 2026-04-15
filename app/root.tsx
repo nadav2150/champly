@@ -10,6 +10,8 @@ import {
 import { useEffect } from "react";
 import { I18nextProvider, useTranslation } from "react-i18next";
 
+import { Toaster } from 'sonner';
+
 import type { Route } from "./+types/root";
 import "./app.css";
 import i18next, { setI18nLanguage } from "./i18n/i18n";
@@ -62,6 +64,14 @@ export default function App() {
   return (
     <I18nextProvider i18n={i18next}>
       <Outlet />
+      <Toaster
+        position="bottom-center"
+        toastOptions={{
+          className: 'text-sm font-medium',
+        }}
+        richColors
+        closeButton
+      />
     </I18nextProvider>
   );
 }
