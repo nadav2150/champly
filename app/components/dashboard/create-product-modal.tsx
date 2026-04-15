@@ -254,7 +254,7 @@ export function CreateProductModal({
         aria-label={t('common:actions.cancel')}
         onClick={onClose}
       />
-      <div className="relative h-full w-full overflow-y-auto bg-dashboard-card p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] lg:h-auto lg:max-h-[90dvh] lg:max-w-3xl lg:rounded-xl lg:border lg:border-dashboard-border lg:p-6 lg:pb-6 lg:shadow-[0px_8px_32px_rgba(0,0,0,0.4)]">
+      <div className="relative h-full w-full overflow-y-auto bg-dashboard-card p-5 pb-0 lg:flex lg:max-h-[90dvh] lg:max-w-3xl lg:flex-col lg:rounded-xl lg:border lg:border-dashboard-border lg:p-6 lg:pb-6 lg:shadow-[0px_8px_32px_rgba(0,0,0,0.4)]">
         <div className="mb-5 flex items-start justify-between gap-4 lg:mb-6">
           <h2
             id={`${formId}-title`}
@@ -277,10 +277,10 @@ export function CreateProductModal({
           </p>
         ) : null}
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-          <div className="flex flex-col gap-5 lg:flex-row lg:gap-6">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-5 lg:min-h-0 lg:flex-1">
+          <div className="flex flex-col gap-5 pb-48 lg:min-h-0 lg:flex-1 lg:flex-row lg:gap-6 lg:pb-0">
             {/* Left column — form fields */}
-            <div className="flex min-w-0 flex-1 flex-col gap-4">
+            <div className="flex min-w-0 flex-1 flex-col gap-4 lg:overflow-y-auto">
               <div>
                 <label
                   htmlFor={`${formId}-name`}
@@ -408,7 +408,7 @@ export function CreateProductModal({
             </div>
 
             {/* Right column — template + preview */}
-            <div className="flex flex-col gap-4 lg:w-[320px] lg:shrink-0">
+            <div className="flex flex-col gap-4 lg:min-h-0 lg:w-[320px] lg:shrink-0">
               <div>
                 <label
                   htmlFor={`${formId}-template`}
@@ -431,7 +431,7 @@ export function CreateProductModal({
                 </select>
               </div>
 
-              <div className="sticky top-0 z-10 rounded-lg border border-white/15 bg-dashboard-card p-3">
+              <div className="hidden shrink-0 rounded-lg border border-white/15 bg-dashboard-card p-3 lg:block">
                 <p className="mb-2 text-xs font-medium text-white/50">
                   {t('products:tagPreview')}
                 </p>
@@ -452,66 +452,81 @@ export function CreateProductModal({
                 </div>
               </div>
 
-              {editableFields.length > 0 && (
-                <div className="flex flex-col gap-3 rounded-lg border border-white/15 bg-black/20 p-3">
-                  <p className="text-[10px] font-semibold uppercase tracking-wider text-white/40">
-                    {t('products:templateFields')}
-                  </p>
-                  {editableFields.map((field) => (
-                    <div key={field}>
-                      <label
-                        htmlFor={`${formId}-td-${field}`}
-                        className="mb-1 block text-xs font-medium text-white/60"
-                      >
-                        {humanizeField(field)}
-                      </label>
-                      <input
-                        id={`${formId}-td-${field}`}
-                        type="text"
-                        value={templateDataState[field] ?? ''}
-                        onChange={(e) =>
-                          setTemplateDataState((prev) => ({
-                            ...prev,
-                            [field]: e.target.value,
-                          }))
-                        }
-                        className="w-full rounded-lg border border-white/20 bg-dashboard-bg px-3 py-2 text-sm text-white placeholder:text-white/30 focus:border-accent-mint focus:outline-none"
-                      />
-                    </div>
-                  ))}
-                </div>
-              )}
+              <div className="flex flex-col gap-4 lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:pb-1">
+                {editableFields.length > 0 && (
+                  <div className="flex flex-col gap-3 rounded-lg border border-white/15 bg-black/20 p-3">
+                    <p className="text-[10px] font-semibold uppercase tracking-wider text-white/40">
+                      {t('products:templateFields')}
+                    </p>
+                    {editableFields.map((field) => (
+                      <div key={field}>
+                        <label
+                          htmlFor={`${formId}-td-${field}`}
+                          className="mb-1 block text-xs font-medium text-white/60"
+                        >
+                          {humanizeField(field)}
+                        </label>
+                        <input
+                          id={`${formId}-td-${field}`}
+                          type="text"
+                          value={templateDataState[field] ?? ''}
+                          onChange={(e) =>
+                            setTemplateDataState((prev) => ({
+                              ...prev,
+                              [field]: e.target.value,
+                            }))
+                          }
+                          className="w-full rounded-lg border border-white/20 bg-dashboard-bg px-3 py-2 text-sm text-white placeholder:text-white/30 focus:border-accent-mint focus:outline-none"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
 
-              {layout && (
-                <StyleCustomizer
-                  layout={layout}
-                  style={templateStyleState}
-                  onChange={setTemplateStyleState}
-                />
-              )}
+                {layout && (
+                  <StyleCustomizer
+                    layout={layout}
+                    style={templateStyleState}
+                    onChange={setTemplateStyleState}
+                  />
+                )}
+              </div>
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-3 border-t border-white/10 pt-4">
-            <button
-              type="submit"
-              disabled={busy}
-              className="relative flex-1 rounded-full border border-white bg-accent-mint py-3 text-sm font-medium text-accent-mint-text shadow-[0px_0px_0px_1px_#162021] disabled:opacity-50 lg:py-2.5"
-            >
-              {busy ? '…' : t('common:actions.createProduct')}
-              <span
-                className="pointer-events-none absolute inset-0 rounded-full shadow-[inset_0px_4px_4px_0px_rgba(255,255,255,0.35)]"
-                aria-hidden
-              />
-            </button>
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={busy}
-              className="rounded-full border border-white/30 px-5 py-3 text-sm font-medium text-white/90 hover:bg-white/10 disabled:opacity-50 lg:py-2.5"
-            >
-              {t('common:actions.cancel')}
-            </button>
+          <div className="sticky bottom-0 z-20 -mx-5 -mb-5 border-t border-white/10 bg-dashboard-card px-5 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-3 lg:static lg:mx-0 lg:mb-0 lg:border-t lg:bg-transparent lg:px-0 lg:pb-0 lg:pt-4">
+            {layout && (
+              <div dir="ltr" className="mb-3 flex items-center justify-center overflow-x-auto rounded-lg border border-white/10 bg-black/20 p-2 lg:hidden">
+                <LabelPreview
+                  layout={layout}
+                  data={previewData}
+                  scale={0.35}
+                  style={templateStyleState}
+                  aria-label={t('products:tagPreview')}
+                />
+              </div>
+            )}
+            <div className="flex flex-wrap gap-3">
+              <button
+                type="submit"
+                disabled={busy}
+                className="relative flex-1 rounded-full border border-white bg-accent-mint py-3 text-sm font-medium text-accent-mint-text shadow-[0px_0px_0px_1px_#162021] disabled:opacity-50 lg:py-2.5"
+              >
+                {busy ? '…' : t('common:actions.createProduct')}
+                <span
+                  className="pointer-events-none absolute inset-0 rounded-full shadow-[inset_0px_4px_4px_0px_rgba(255,255,255,0.35)]"
+                  aria-hidden
+                />
+              </button>
+              <button
+                type="button"
+                onClick={onClose}
+                disabled={busy}
+                className="rounded-full border border-white/30 px-5 py-3 text-sm font-medium text-white/90 hover:bg-white/10 disabled:opacity-50 lg:py-2.5"
+              >
+                {t('common:actions.cancel')}
+              </button>
+            </div>
           </div>
         </form>
       </div>

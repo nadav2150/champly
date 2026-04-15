@@ -334,8 +334,9 @@ export function applyStyle(
     if (ovr.size) {
       const ratio = rule.sizeRatios[ovr.size] ?? 1;
       const newSize = Math.round(el.fontSize * ratio);
-      const maxFit = el.w ? Math.floor(el.w * 0.9) : newSize;
-      patched.fontSize = Math.min(newSize, maxFit);
+      const maxW = el.w ? Math.floor(el.w * 0.9) : newSize;
+      const maxH = Math.floor(layout.height * 0.45);
+      patched.fontSize = Math.min(newSize, maxW, maxH);
     }
 
     if (ovr.color && rule.allowedColors.includes(ovr.color)) {
