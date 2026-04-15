@@ -4,7 +4,13 @@ import type { DashboardOutletContext } from '../../types/dashboard-outlet-contex
 import { renderLabel } from '../../lib/label-renderer';
 import { encodeForTag } from '../../lib/minew-image-encoder';
 import { minorUnitsToDecimalString, parseDecimalToMinorUnits } from '../../lib/money';
-import { parseLayoutJson } from '../../lib/template-layout';
+import {
+  getEditableFields,
+  humanizeField,
+  parseLayoutJson,
+  parseTemplateData,
+  sanitizeTemplateData,
+} from '../../lib/template-layout';
 import { resolveScreen } from '../../lib/tag-screen-map';
 import { LabelPreview } from './label-preview';
 
@@ -17,6 +23,7 @@ export type EditModalProduct = {
   hardwareTagId: string;
   unit: UnitOption;
   templateId: string | null;
+  templateData: string | null;
   categoryId: string | null;
   tagModel: string | null;
 };
@@ -59,6 +66,7 @@ type EditProductModalProps = {
     unit: UnitOption;
     templateId: string | null;
     categoryId: string | null;
+    templateData: string | null;
     imageBase64: string | null;
     assignTagId: string | null;
     unassignTag: boolean;
@@ -81,6 +89,7 @@ export function EditProductModal({
   const [unit, setUnit] = useState<UnitOption>('per_kg');
   const [templateId, setTemplateId] = useState<string>('');
   const [categoryId, setCategoryId] = useState<string>('');
+  const [templateDataState, setTemplateDataState] = useState<Record<string, string>>({});
   const [tagAction, setTagAction] = useState<'keep' | 'change' | 'remove'>('keep');
   const [selectedTagId, setSelectedTagId] = useState<string>('');
 
@@ -91,6 +100,7 @@ export function EditProductModal({
       setUnit(product.unit);
       setTemplateId(product.templateId ?? '');
       setCategoryId(product.categoryId ?? '');
+      setTemplateDataState(parseTemplateData(product.templateData));
       setTagAction('keep');
       setSelectedTagId('');
     }
@@ -137,6 +147,16 @@ export function EditProductModal({
     return parseLayoutJson(matchingLayoutJson);
   }, [matchingLayoutJson]);
 
+  const editableFields = useMemo(
+    () => (layout ? getEditableFields(layout) : []),
+    [layout],
+  );
+
+  useEffect(() => {
+    if (!layout) return;
+    setTemplateDataState((prev) => sanitizeTemplateData(prev, layout));
+  }, [layout]);
+
   const previewData = useMemo(() => {
     const cat = categories.find((c) => c.id === categoryId);
     const categoryDisplay = cat
@@ -152,8 +172,9 @@ export function EditProductModal({
       unit: unitLabel,
       category: categoryDisplay || '—',
       currency: '₪',
+      ...templateDataState,
     };
-  }, [categories, categoryId, name, price, product?.name, t, unit]);
+  }, [categories, categoryId, name, price, product?.name, t, unit, templateDataState]);
 
   const displayTagId = useMemo(() => {
     if (!product) return '—';
@@ -194,6 +215,12 @@ export function EditProductModal({
       }
     }
 
+    const sanitized = layout
+      ? sanitizeTemplateData(templateDataState, layout)
+      : {};
+    const serializedTemplateData =
+      Object.keys(sanitized).length > 0 ? JSON.stringify(sanitized) : null;
+
     onSave({
       id: activeProduct.id,
       name: name.trim() || activeProduct.name,
@@ -203,6 +230,7 @@ export function EditProductModal({
       unit,
       templateId: templateId.length > 0 ? templateId : null,
       categoryId: categoryId.length > 0 ? categoryId : null,
+      templateData: serializedTemplateData,
       imageBase64,
       assignTagId: tagAction === 'change' && selectedTagId ? selectedTagId : null,
       unassignTag: tagAction === 'remove',
@@ -439,6 +467,36 @@ export function EditProductModal({
                   </p>
                 )}
               </div>
+
+              {editableFields.length > 0 && (
+                <div className="flex flex-col gap-3 rounded-lg border border-white/15 bg-black/20 p-3">
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-white/40">
+                    {t('products:templateFields', { defaultValue: 'Template fields' })}
+                  </p>
+                  {editableFields.map((field) => (
+                    <div key={field}>
+                      <label
+                        htmlFor={`${formId}-td-${field}`}
+                        className="mb-1 block text-xs font-medium text-white/60"
+                      >
+                        {humanizeField(field)}
+                      </label>
+                      <input
+                        id={`${formId}-td-${field}`}
+                        type="text"
+                        value={templateDataState[field] ?? ''}
+                        onChange={(e) =>
+                          setTemplateDataState((prev) => ({
+                            ...prev,
+                            [field]: e.target.value,
+                          }))
+                        }
+                        className="w-full rounded-lg border border-white/20 bg-dashboard-bg px-3 py-2 text-sm text-white placeholder:text-white/30 focus:border-accent-mint focus:outline-none"
+                      />
+                    </div>
+                  ))}
+                </div>
+              )}
 
               <div className="flex flex-1 flex-col rounded-lg border border-white/15 bg-black/20 p-4">
                 <p className="mb-3 text-xs font-medium text-white/50">

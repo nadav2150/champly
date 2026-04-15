@@ -3,7 +3,12 @@ import { useFetcher } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import type { DashboardOutletContext } from '../../types/dashboard-outlet-context';
 import { parseDecimalToMinorUnits } from '../../lib/money';
-import { parseLayoutJson } from '../../lib/template-layout';
+import {
+  getEditableFields,
+  humanizeField,
+  parseLayoutJson,
+  sanitizeTemplateData,
+} from '../../lib/template-layout';
 import { LabelPreview } from './label-preview';
 
 const CREATE_NEW_CATEGORY = '__new__';
@@ -40,6 +45,7 @@ export function CreateProductModal({
   const [newCategoryName, setNewCategoryName] = useState('');
   const [newCategoryIcon, setNewCategoryIcon] = useState('📦');
   const [templateId, setTemplateId] = useState('');
+  const [templateDataState, setTemplateDataState] = useState<Record<string, string>>({});
   const [clientError, setClientError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -55,6 +61,7 @@ export function CreateProductModal({
     setNewCategoryName('');
     setNewCategoryIcon('📦');
     setTemplateId('');
+    setTemplateDataState({});
     setClientError(null);
   }, [open, categories]);
 
@@ -76,6 +83,12 @@ export function CreateProductModal({
         fd.set('unit', unit);
         fd.set('categoryId', d.id);
         if (templateId) fd.set('templateId', templateId);
+        const sanitized = layout
+          ? sanitizeTemplateData(templateDataState, layout)
+          : {};
+        if (Object.keys(sanitized).length > 0) {
+          fd.set('templateData', JSON.stringify(sanitized));
+        }
         fetcher.submit(fd, { method: 'post' });
       } else {
         submittedRef.current = false;
@@ -109,6 +122,16 @@ export function CreateProductModal({
     return parseLayoutJson(raw);
   }, [selectedTemplate?.layoutJson]);
 
+  const editableFields = useMemo(
+    () => (layout ? getEditableFields(layout) : []),
+    [layout],
+  );
+
+  useEffect(() => {
+    if (!layout) return;
+    setTemplateDataState((prev) => sanitizeTemplateData(prev, layout));
+  }, [layout]);
+
   const previewData = useMemo(() => {
     const cat = categories.find((c) => c.id === categoryId);
     const categoryDisplay = cat
@@ -124,8 +147,9 @@ export function CreateProductModal({
       unit: unitLabel,
       category: categoryDisplay || '—',
       currency: '₪',
+      ...templateDataState,
     };
-  }, [categories, categoryId, name, price, t, unit]);
+  }, [categories, categoryId, name, price, t, unit, templateDataState]);
 
   if (!open) {
     return null;
@@ -144,6 +168,12 @@ export function CreateProductModal({
     fd.set('unit', unit);
     fd.set('categoryId', resolvedCategoryId);
     if (templateId) fd.set('templateId', templateId);
+    const sanitized = layout
+      ? sanitizeTemplateData(templateDataState, layout)
+      : {};
+    if (Object.keys(sanitized).length > 0) {
+      fd.set('templateData', JSON.stringify(sanitized));
+    }
     lastSubmitRef.current = 'create-product';
     fetcher.submit(fd, { method: 'post' });
   }
@@ -376,6 +406,36 @@ export function CreateProductModal({
                   ))}
                 </select>
               </div>
+
+              {editableFields.length > 0 && (
+                <div className="flex flex-col gap-3 rounded-lg border border-white/15 bg-black/20 p-3">
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-white/40">
+                    {t('products:templateFields', { defaultValue: 'Template fields' })}
+                  </p>
+                  {editableFields.map((field) => (
+                    <div key={field}>
+                      <label
+                        htmlFor={`${formId}-td-${field}`}
+                        className="mb-1 block text-xs font-medium text-white/60"
+                      >
+                        {humanizeField(field)}
+                      </label>
+                      <input
+                        id={`${formId}-td-${field}`}
+                        type="text"
+                        value={templateDataState[field] ?? ''}
+                        onChange={(e) =>
+                          setTemplateDataState((prev) => ({
+                            ...prev,
+                            [field]: e.target.value,
+                          }))
+                        }
+                        className="w-full rounded-lg border border-white/20 bg-dashboard-bg px-3 py-2 text-sm text-white placeholder:text-white/30 focus:border-accent-mint focus:outline-none"
+                      />
+                    </div>
+                  ))}
+                </div>
+              )}
 
               <div className="flex flex-1 flex-col rounded-lg border border-white/15 bg-black/20 p-4">
                 <p className="mb-3 text-xs font-medium text-white/50">

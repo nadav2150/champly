@@ -12,6 +12,7 @@ export type LayoutField =
   | 'currency'
   | 'description'
   | 'discount'
+  | 'badge_text'
   | 'detail1'
   | 'detail2'
   | 'detail3'
@@ -129,7 +130,7 @@ function isEslColor(v: unknown): v is EslColor {
 
 const VALID_FIELDS = new Set<string>([
   'name', 'price', 'unit', 'category', 'currency',
-  'description', 'discount', 'detail1', 'detail2', 'detail3', 'imageUrl',
+  'description', 'discount', 'badge_text', 'detail1', 'detail2', 'detail3', 'imageUrl',
 ]);
 
 function isLayoutField(v: unknown): v is LayoutField {
@@ -338,4 +339,68 @@ export function parseLayoutJson(json: string): TemplateLayout | null {
   } catch {
     return null;
   }
+}
+
+const AUTO_FIELDS = new Set<string>([
+  'name', 'price', 'unit', 'category', 'currency',
+]);
+
+export function getEditableFields(layout: TemplateLayout): string[] {
+  const fields = new Set<string>();
+  for (const el of layout.elements) {
+    if ('field' in el && el.field && !AUTO_FIELDS.has(el.field)) {
+      fields.add(el.field);
+    }
+  }
+  return [...fields];
+}
+
+export function parseTemplateData(
+  raw: string | null | undefined,
+): Record<string, string> {
+  if (!raw) return {};
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
+      return {};
+    }
+    const result: Record<string, string> = {};
+    for (const [k, v] of Object.entries(parsed as Record<string, unknown>)) {
+      if (typeof v === 'string') result[k] = v;
+    }
+    return result;
+  } catch {
+    return {};
+  }
+}
+
+export function sanitizeTemplateData(
+  data: Record<string, string>,
+  layout: TemplateLayout,
+): Record<string, string> {
+  const allowed = new Set(getEditableFields(layout));
+  const clean: Record<string, string> = {};
+  for (const [k, v] of Object.entries(data)) {
+    if (allowed.has(k) && typeof v === 'string' && v.trim().length > 0) {
+      clean[k] = v;
+    }
+  }
+  return clean;
+}
+
+const FIELD_LABELS: Record<string, string> = {
+  badge_text: 'Badge text',
+  discount: 'Discount',
+  detail1: 'Detail 1',
+  detail2: 'Detail 2',
+  detail3: 'Detail 3',
+  description: 'Description',
+  imageUrl: 'Image URL',
+};
+
+export function humanizeField(field: string): string {
+  return (
+    FIELD_LABELS[field] ??
+    field.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
+  );
 }

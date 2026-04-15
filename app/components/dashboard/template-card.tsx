@@ -39,7 +39,7 @@ function KindBadge({ kind }: { kind: string }) {
 
 export function previewDataForKind(kind: string): Record<string, string> {
   if (kind === 'promo') {
-    return { ...SAMPLE_PRODUCT_DATA, category: 'SALE', discount: 'Rabais de 20%' };
+    return { ...SAMPLE_PRODUCT_DATA, badge_text: 'SALE', discount: '20% OFF' };
   }
   if (kind === 'showcase') {
     return {

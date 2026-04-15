@@ -12,6 +12,7 @@ export type Product = {
   unit: 'per_unit' | 'per_kg';
   syncStatus: TagSyncStatus;
   templateId: string | null;
+  templateData: string | null;
   hardwareTagId: string | null;
   tagModel: string | null;
 };

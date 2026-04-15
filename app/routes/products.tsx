@@ -49,6 +49,11 @@ export async function action({ request, context }: Route.ActionArgs) {
   if (intent === 'update-product') {
     const templateRaw = formData.get('templateId');
     const categoryRaw = formData.get('categoryId');
+    const templateDataRaw = formData.get('templateData');
+    const templateData =
+      templateDataRaw && String(templateDataRaw).length > 0
+        ? String(templateDataRaw)
+        : null;
     const updated = await updateProductFields(db, user.id, {
       id: String(formData.get('id') ?? ''),
       name: String(formData.get('name') ?? ''),
@@ -65,6 +70,7 @@ export async function action({ request, context }: Route.ActionArgs) {
         categoryRaw && String(categoryRaw).length > 0
           ? String(categoryRaw)
           : null,
+      templateData,
     });
     if (!updated) {
       return data({ ok: false as const, error: 'forbidden' }, { headers });
@@ -130,6 +136,7 @@ export async function action({ request, context }: Route.ActionArgs) {
     const storeId =
       storeRaw && String(storeRaw).length > 0 ? String(storeRaw) : null;
     const templateRaw = formData.get('templateId');
+    const templateDataRaw = formData.get('templateData');
     const created = await createProduct(db, {
       userId: user.id,
       name,
@@ -141,6 +148,10 @@ export async function action({ request, context }: Route.ActionArgs) {
       templateId:
         templateRaw && String(templateRaw).length > 0
           ? String(templateRaw)
+          : null,
+      templateData:
+        templateDataRaw && String(templateDataRaw).length > 0
+          ? String(templateDataRaw)
           : null,
     });
     if ('error' in created) {

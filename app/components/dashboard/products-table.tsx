@@ -239,6 +239,7 @@ export function ProductsTable({
       unit: 'per_unit' | 'per_kg';
       templateId: string | null;
       categoryId: string | null;
+      templateData: string | null;
       imageBase64: string | null;
       assignTagId: string | null;
       unassignTag: boolean;
@@ -266,6 +267,9 @@ export function ProductsTable({
         fd.set('templateId', payload.templateId);
       }
       fd.set('categoryId', payload.categoryId ?? '');
+      if (payload.templateData) {
+        fd.set('templateData', payload.templateData);
+      }
       if (payload.imageBase64) {
         fd.set('imageBase64', payload.imageBase64);
       }
@@ -295,6 +299,7 @@ export function ProductsTable({
                 priceCents: payload.priceCents,
                 unit: payload.unit,
                 templateId: payload.templateId,
+                templateData: payload.templateData,
                 categoryId: payload.categoryId,
                 categoryName: cat?.name ?? p.categoryName,
                 categoryIcon: cat?.icon ?? p.categoryIcon,
@@ -357,6 +362,7 @@ export function ProductsTable({
         hardwareTagId: editProduct.hardwareTagId ?? '—',
         unit: editProduct.unit,
         templateId: editProduct.templateId,
+        templateData: editProduct.templateData,
         categoryId: editProduct.categoryId,
         tagModel: editProduct.tagModel,
       }

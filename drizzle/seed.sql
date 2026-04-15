@@ -35,7 +35,7 @@ INSERT OR REPLACE INTO template_variants VALUES (
   'ESL-2.13',
   296,
   128,
-  '{"width":296,"height":128,"background":"white","elements":[{"type":"rect","x":0,"y":0,"w":296,"h":36,"color":"red"},{"type":"label","text":"SALE","x":12,"y":26,"fontSize":16,"fontWeight":"bold","color":"white"},{"type":"text","field":"name","x":12,"y":60,"fontSize":15,"fontWeight":"bold","align":"left","color":"black","maxLines":1,"w":180},{"type":"text","field":"price","x":12,"y":98,"fontSize":36,"fontWeight":"bold","align":"left","color":"red"},{"type":"badge","field":"discount","x":150,"y":78,"fontSize":12,"fontWeight":"bold","color":"white","bgColor":"red","radius":4,"paddingX":8,"paddingY":4},{"type":"text","field":"unit","x":12,"y":122,"fontSize":11,"fontWeight":"normal","align":"left","color":"black"}]}',
+  '{"width":296,"height":128,"background":"white","elements":[{"type":"rect","x":0,"y":0,"w":296,"h":36,"color":"red"},{"type":"badge","field":"badge_text","x":8,"y":8,"fontSize":16,"fontWeight":"bold","color":"white","bgColor":"red","radius":4,"paddingX":8,"paddingY":4},{"type":"text","field":"name","x":12,"y":60,"fontSize":15,"fontWeight":"bold","align":"left","color":"black","maxLines":1,"w":180},{"type":"text","field":"price","x":12,"y":98,"fontSize":36,"fontWeight":"bold","align":"left","color":"red"},{"type":"badge","field":"discount","x":150,"y":78,"fontSize":12,"fontWeight":"bold","color":"white","bgColor":"red","radius":4,"paddingX":8,"paddingY":4},{"type":"text","field":"unit","x":12,"y":122,"fontSize":11,"fontWeight":"normal","align":"left","color":"black"}]}',
   NULL
 );
 
